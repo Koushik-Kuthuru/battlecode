@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -75,6 +76,11 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     const foundChallenge = challenges.find((c) => c.id === params.id) || null;
     if (foundChallenge && currentUser) {
       setChallenge(foundChallenge);
+
+      // Mark the challenge as in-progress as soon as it's opened
+      const inProgressChallenges = JSON.parse(localStorage.getItem(`inProgressChallenges_${currentUser.email}`) || '{}');
+      inProgressChallenges[params.id] = true;
+      localStorage.setItem(`inProgressChallenges_${currentUser.email}`, JSON.stringify(inProgressChallenges));
       
       const savedCode = localStorage.getItem(`code_${currentUser.email}_${params.id}`);
       // Only show solution if challenge is completed, otherwise start with empty code

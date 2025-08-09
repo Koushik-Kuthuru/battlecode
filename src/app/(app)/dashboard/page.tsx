@@ -34,15 +34,9 @@ export default function DashboardPage() {
       setCurrentUser(user);
       const savedCompletions = JSON.parse(localStorage.getItem(`completedChallenges_${user.email}`) || '{}');
       setCompletedChallenges(savedCompletions);
-
-      const inProgress: Record<string, boolean> = {};
-      challenges.forEach(challenge => {
-        const savedCode = localStorage.getItem(`code_${user.email}_${challenge.id}`);
-        if (savedCode && !savedCompletions[challenge.id]) {
-          inProgress[challenge.id] = true;
-        }
-      });
-      setInProgressChallenges(inProgress);
+      
+      const savedInProgress = JSON.parse(localStorage.getItem(`inProgressChallenges_${user.email}`) || '{}');
+      setInProgressChallenges(savedInProgress);
     }
   }, [router]);
   
