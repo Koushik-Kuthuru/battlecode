@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CodeEditor } from '@/components/code-editor';
 import {
@@ -38,9 +38,10 @@ type TestResult = {
 type RunType = 'run' | 'submit';
 type MobileView = 'description' | 'code' | 'results';
 
-export default function ChallengePage({ params }: { params: { id:string } }) {
+export default function ChallengePage() {
+  const params = useParams();
   const router = useRouter();
-  const challengeId = params.id;
+  const challengeId = params.id as string;
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [code, setCode] = useState('');
@@ -140,9 +141,18 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
 
 
   useEffect(() => {
-    const handleContextmenu = (e: MouseEvent) => e.preventDefault();
+    const handleContextmenu = (e: MouseEvent) => {
+      // Allow context menu in the editor, but prevent it elsewhere if desired
+      if ((e.target as HTMLElement).closest('.monaco-editor')) {
+        return;
+      }
+      e.preventDefault();
+    };
     const handleKeydown = (e: KeyboardEvent) => {
-      // Block developer tools
+      // Block developer tools, but not inside the editor
+      if ((e.target as HTMLElement).closest('.monaco-editor')) {
+        return;
+      }
       if (
         e.key === 'F12' ||
         (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
@@ -156,7 +166,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
         });
       }
       
-      // Block copy, paste, cut
+      // Block copy, paste, cut, but not inside the editor
        if (e.ctrlKey && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
          e.preventDefault();
          toast({
@@ -408,7 +418,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   }
 
   const DescriptionPanel = () => (
-    <div className="relative flex flex-col h-full bg-card p-4 md:p-6" onCopy={(e) => e.preventDefault()}>
+    <div className="relative flex flex-col h-full bg-card p-4 md:p-6">
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full pr-4">
           <div className="flex items-start justify-between mb-4">
@@ -611,5 +621,3 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
 }
-
-    
