@@ -1,22 +1,30 @@
+
 import Link from 'next/link';
 import type { Challenge } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, CheckCircle, Award } from 'lucide-react';
+import { ArrowRight, CheckCircle, Award, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ChallengeCardProps {
   challenge: Challenge;
   isCompleted: boolean;
+  isInProgress: boolean;
 }
 
-export function ChallengeCard({ challenge, isCompleted }: ChallengeCardProps) {
+export function ChallengeCard({ challenge, isCompleted, isInProgress }: ChallengeCardProps) {
   const difficultyColors = {
     Easy: 'bg-green-500',
     Medium: 'bg-yellow-500',
     Hard: 'bg-red-500',
   };
+
+  const getButtonText = () => {
+    if (isCompleted) return 'Review';
+    if (isInProgress) return 'Continue';
+    return 'Start Challenge';
+  }
 
   return (
     <Card className="flex h-full flex-col transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg">
@@ -24,6 +32,7 @@ export function ChallengeCard({ challenge, isCompleted }: ChallengeCardProps) {
         <div className="flex items-start justify-between">
             <CardTitle className="flex items-center gap-2">
                 {isCompleted && <CheckCircle className="h-5 w-5 text-green-500" />}
+                {isInProgress && !isCompleted && <RefreshCw className="h-5 w-5 text-blue-500 animate-spin" />}
                 {challenge.title}
             </CardTitle>
           <div className="flex items-center gap-2">
@@ -51,7 +60,7 @@ export function ChallengeCard({ challenge, isCompleted }: ChallengeCardProps) {
       <CardFooter>
         <Button asChild className="w-full">
           <Link href={`/challenge/${challenge.id}`}>
-            {isCompleted ? 'Review' : 'Start Challenge'} <ArrowRight className="ml-2 h-4 w-4" />
+            {getButtonText()} <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
       </CardFooter>

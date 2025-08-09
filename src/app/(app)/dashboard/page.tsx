@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const [hasMore, setHasMore] = useState(true);
   const loaderRef = useRef(null);
   const [completedChallenges, setCompletedChallenges] = useState<Record<string, boolean>>({});
+  const [inProgressChallenges, setInProgressChallenges] = useState<Record<string, boolean>>({});
   const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
 
   useEffect(() => {
@@ -33,6 +34,15 @@ export default function DashboardPage() {
       setCurrentUser(user);
       const savedCompletions = JSON.parse(localStorage.getItem(`completedChallenges_${user.email}`) || '{}');
       setCompletedChallenges(savedCompletions);
+
+      const inProgress: Record<string, boolean> = {};
+      challenges.forEach(challenge => {
+        const savedCode = localStorage.getItem(`code_${user.email}_${challenge.id}`);
+        if (savedCode && !savedCompletions[challenge.id]) {
+          inProgress[challenge.id] = true;
+        }
+      });
+      setInProgressChallenges(inProgress);
     }
   }, [router]);
   
@@ -111,7 +121,12 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {displayedChallenges.map((challenge) => (
-            <ChallengeCard key={challenge.id} challenge={challenge} isCompleted={!!completedChallenges[challenge.id]} />
+            <ChallengeCard 
+              key={challenge.id} 
+              challenge={challenge} 
+              isCompleted={!!completedChallenges[challenge.id]}
+              isInProgress={!!inProgressChallenges[challenge.id]} 
+            />
           ))}
         </div>
         
