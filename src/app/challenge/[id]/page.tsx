@@ -1,637 +1,98 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { CodeEditor } from "@/components/code-editor";
+import { app, db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
+import type { Challenge } from "@/lib/data";
 
-'use client';
-
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { type Challenge } from '@/lib/data';
-import { notFound, useRouter, useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { CodeEditor } from '@/components/code-editor';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { generateTestCases } from '@/ai/flows/generate-test-cases';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, CheckCircle2, XCircle, Award, ArrowRight, Save, Code as CodeIcon, FileText, BarChart2, EyeOff, RotateCcw } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { cn } from '@/lib/utils';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection, getDocs } from 'firebase/firestore';
-import { app } from '@/lib/firebase';
-
-type CurrentUser = {
-  uid: string;
-  name: string;
-  email: string;
-}
-
-type TestResult = {
-    input: string;
-    expected: string;
-    actual: string;
-    passed: boolean;
-};
-
-type RunType = 'run' | 'submit';
-type MobileView = 'description' | 'code' | 'results';
-
-export default function ChallengePage() {
+export default function ChallengeDetail() {
   const params = useParams();
-  const router = useRouter();
-  const { toast } = useToast();
-  
-  const challengeId = params.id as string;
+  const challengeId = Array.isArray(params.id) ? params.id[0] : params.id;
   const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [code, setCode] = useState('');
-  const [language, setLanguage] = useState('');
-  const [generatedTests, setGeneratedTests] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState<{
-    results: TestResult[];
-    score: number;
-    penalty: number;
-  } | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [desktopActiveTab, setDesktopActiveTab] = useState('description');
-  const [mobileView, setMobileView] = useState<MobileView>('description');
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [tabSwitchCount, setTabSwitchCount] = useState(0);
-  const [showPenaltyDialog, setShowPenaltyDialog] = useState(false);
+  const [solution, setSolution] = useState("");
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  const handleCodeChange = useCallback((value: string) => {
-    setCode(value);
-  }, []);
-
-  const { nextChallengeId } = useMemo(() => {
-    if (!challengeId || !challenges.length) return { nextChallengeId: null };
-    const currentChallengeIndex = challenges.findIndex((c) => c.id === challengeId);
-    if (currentChallengeIndex === -1) return { nextChallengeId: null };
-    const nextChallenge = challenges[currentChallengeIndex + 1];
-    return { nextChallengeId: nextChallenge ? nextChallenge.id : null };
-  }, [challengeId, challenges]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userDocRef = doc(db, 'users', user.uid);
-        getDoc(userDocRef).then(userDoc => {
-          if(userDoc.exists()) {
-              const userData = userDoc.data();
-              setCurrentUser({ uid: user.uid, name: userData.name, email: user.email! });
-          } else {
-             router.push('/login');
-          }
-        });
-      } else {
-        router.push('/login');
-      }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
     });
     return () => unsubscribe();
-  }, [auth, router, db]);
+  }, [auth]);
 
+  // Fetch challenge data
   useEffect(() => {
-    if (!challengeId || !currentUser) return;
-    
-    const fetchChallengeData = async () => {
+    if (!challengeId) return;
+    const fetchChallenge = async () => {
       setIsLoading(true);
-      try {
-        const challengesCollection = collection(db, 'challenges');
-        const challengesSnapshot = await getDocs(challengesCollection);
-        const allChallenges = challengesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
-        setChallenges(allChallenges);
-        
-        const challengeDocRef = doc(db, 'challenges', challengeId);
-        const challengeDocSnap = await getDoc(challengeDocRef);
-        
-        if (challengeDocSnap.exists()) {
-           const foundChallenge = { id: challengeDocSnap.id, ...challengeDocSnap.data() } as Challenge;
-           setChallenge(foundChallenge);
-           
-           const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challengeId);
-           const challengeStateSnap = await getDoc(challengeStateRef);
-
-           if (challengeStateSnap.exists()) {
-             const data = challengeStateSnap.data();
-             setCode(data.code || '');
-             setIsCompleted(data.completed || false);
-             setTabSwitchCount(data.tabSwitches || 0);
-
-             if(data.completed) {
-                setCode(data.code || foundChallenge.solution);
-             }
-
-           } else {
-             const userChallengeDataRef = doc(db, `users/${currentUser.uid}/challengeData/inProgress`);
-             await setDoc(userChallengeDataRef, { [challengeId]: true }, { merge: true });
-             await setDoc(challengeStateRef, { inProgress: true }, { merge: true });
-           }
-
-            setLanguage(foundChallenge.language);
-            setSubmissionResult(null); 
-            setGeneratedTests([]); 
-            setDesktopActiveTab('description');
-            setMobileView('description');
-
-        } else {
-           notFound();
-        }
-      } catch (error) {
-          console.error("Error fetching challenge:", error);
-          toast({ variant: 'destructive', title: 'Error', description: 'Failed to load challenge.' });
-          notFound();
-      } finally {
-        setIsLoading(false);
+      const docRef = doc(db, "challenges", challengeId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setChallenge({ id: docSnap.id, ...docSnap.data() } as Challenge);
       }
+      // setIsLoading(false) will be handled after fetching solution
     };
+    fetchChallenge();
+  }, [challengeId]);
 
-    fetchChallengeData();
-  }, [challengeId, currentUser, db, toast]);
-
-
+  // Fetch user’s saved solution
   useEffect(() => {
-    const handleContextmenu = (e: MouseEvent) => {
-      e.preventDefault();
+    if (!user || !challengeId) {
+      if(challenge) setIsLoading(false); // If there's a challenge but no user, stop loading
+      return;
     };
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
-        (e.metaKey && e.altKey && ['I', 'J', 'C'].includes(e.key.toUpperCase()))
-      ) {
-        e.preventDefault();
-        toast({
-          variant: 'destructive',
-          title: 'Action Prohibited',
-          description: 'Developer tools are disabled during assessments.',
-        });
+
+    const fetchSolution = async () => {
+      const solRef = doc(db, `users/${user.uid}/solutions`, challengeId);
+      const solSnap = await getDoc(solRef);
+      if (solSnap.exists()) {
+        setSolution(solSnap.data().code);
+      } else if (challenge) {
+        setSolution(challenge.solution); // Start with default solution if none saved
       }
+      setIsLoading(false);
     };
 
-    document.addEventListener('contextmenu', handleContextmenu);
-    document.addEventListener('keydown', handleKeydown);
+    fetchSolution();
+  }, [user, challengeId, challenge]);
 
-    return () => {
-      document.removeEventListener('contextmenu', handleContextmenu);
-      document.removeEventListener('keydown', handleKeydown);
-    };
-  }, [toast]);
-  
-  useEffect(() => {
-    const handleVisibilityChange = async () => {
-      if (document.hidden && challenge && currentUser && !isCompleted) {
-          const newSwitchCount = tabSwitchCount + 1;
-          setTabSwitchCount(newSwitchCount);
-          const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
-          await setDoc(challengeStateRef, { tabSwitches: newSwitchCount }, { merge: true });
-          setShowPenaltyDialog(true);
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [challenge, currentUser, isCompleted, tabSwitchCount, db]);
+  // Auto-save to cloud
+  const saveSolution = async (newCode: string) => {
+    setSolution(newCode);
+    if (!user || !challengeId) return;
 
-  useEffect(() => {
-    if (submissionResult || generatedTests.length > 0) {
-      setMobileView('results');
-    }
-  }, [submissionResult, generatedTests]);
+    const solRef = doc(db, `users/${user.uid}/solutions`, challengeId);
+    await setDoc(solRef, {
+      code: newCode,
+      updatedAt: new Date(),
+    }, { merge: true });
 
-  const handleSaveCode = async () => {
-    if (!currentUser || !challenge) return;
-    const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
-    await setDoc(challengeStateRef, { code }, { merge: true });
-    toast({
-        title: 'Code Saved!',
-        description: 'Your progress has been saved.',
-    });
-  }
-
-  const handleResetCode = async () => {
-    if (!currentUser || !challenge) return;
-    setCode(''); 
-    const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
-    await updateDoc(challengeStateRef, { code: '' });
-    toast({
-        title: 'Code Reset!',
-        description: 'Your code for this challenge has been cleared.',
-    });
-  }
-
-
-  const getPenaltyPoints = (difficulty: 'Easy' | 'Medium' | 'Hard'): number => {
-    switch (difficulty) {
-        case 'Easy': return 2;
-        case 'Medium': return 3;
-        case 'Hard': return 6;
-        default: return 0;
-    }
-  };
-  
-  const handleCodeExecution = async (runType: RunType) => {
-    if (!challenge || !currentUser) return;
-    
-    if (runType === 'submit') {
-      await handleSaveCode();
-    }
-
-    if (runType === 'run') setIsRunning(true);
-    if (runType === 'submit') setIsSubmitting(true);
-    
-    setSubmissionResult(null);
-    setGeneratedTests([]);
-
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    const testCasesToUse = runType === 'run' ? challenge.examples.map(ex => ({input: ex.input, output: ex.output})) : challenge.testCases;
-    
-    const isCorrectSolution = code.trim() === challenge.solution.trim();
-
-    const results: TestResult[] = testCasesToUse.map(testCase => {
-        const passed = isCorrectSolution;
-        return {
-            input: testCase.input,
-            expected: testCase.output,
-            actual: passed ? testCase.output : 'Wrong Answer',
-            passed: passed,
-        };
-    });
-
-    const passedCount = results.filter(r => r.passed).length;
-    const totalCount = testCasesToUse.length;
-    const passRate = totalCount > 0 ? passedCount / totalCount : 0;
-    
-    const baseScore = Math.round(challenge.points * passRate);
-    const penaltyPerSwitch = getPenaltyPoints(challenge.difficulty);
-    const penalty = tabSwitchCount * penaltyPerSwitch;
-    const finalScore = Math.max(0, baseScore - penalty);
-    
-    setSubmissionResult({ results, score: finalScore, penalty });
-    setDesktopActiveTab('results');
-    setMobileView('results');
-    
-    if (runType === 'run') setIsRunning(false);
-    if (runType === 'submit') {
-      setIsSubmitting(false);
-      
-      const userDocRef = doc(db, 'users', currentUser.uid);
-      const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
-
-      if (passRate === 1) {
-          if (!isCompleted) {
-            setIsCompleted(true);
-            
-            await updateDoc(userDocRef, {
-                points: increment(finalScore)
-            });
-            
-            const completedChallengesRef = doc(db, `users/${currentUser.uid}/challengeData/completed`);
-            await setDoc(completedChallengesRef, { [challenge.id]: true }, { merge: true });
-
-            const inProgressChallengesRef = doc(db, `users/${currentUser.uid}/challengeData/inProgress`);
-            await setDoc(inProgressChallengesRef, { [challenge.id]: false }, { merge: true });
-
-            await setDoc(challengeStateRef, { completed: true, score: finalScore }, { merge: true });
-          }
-      }
-
-      toast({
-          title: passRate === 1 ? 'Accepted!' : 'Some tests failed on submission',
-          description: `You passed ${passedCount}/${totalCount} cases. You earned ${finalScore} after a ${penalty} penalty.`,
-          variant: passRate === 1 ? 'default' : 'destructive',
-      });
-    }
+    const inProgressRef = doc(db, `users/${user.uid}/challengeData/inProgress`);
+    await setDoc(inProgressRef, { [challengeId]: true }, { merge: true });
   };
 
-  if (isLoading || !currentUser || !challenge) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div>Loading...</div>
-      </div>
-    );
+  if (isLoading || !challenge) {
+    return <div className="flex h-full items-center justify-center">Loading challenge...</div>;
   }
-
-  const SubmissionResultView = () => {
-    if(!submissionResult) return null;
-
-    const passedCount = submissionResult.results.filter(r => r.passed).length;
-    const totalCount = submissionResult.results.length;
-    const allPassed = passedCount === totalCount;
-    
-    return (
-        <Card className="h-full flex flex-col">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    {allPassed ? (
-                        <CheckCircle2 className="h-7 w-7 text-green-500"/>
-                    ) : (
-                        <XCircle className="h-7 w-7 text-red-500"/>
-                    )}
-                    <span>{allPassed ? 'Accepted' : 'Wrong Answer'}</span>
-                </CardTitle>
-                <CardDescription>
-                    {`You passed ${passedCount} of ${totalCount} test cases.`}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col overflow-hidden">
-                <div className="mb-4 flex items-center gap-4 rounded-lg bg-muted/50 p-4">
-                    <Award className="h-8 w-8 text-primary"/>
-                    <div>
-                        <p className="font-bold text-lg">{submissionResult.score} Awarded</p>
-                        <p className="text-sm text-muted-foreground">
-                            {submissionResult.penalty > 0 ? `(${submissionResult.penalty} penalty for tab switching)` : 'Keep up the great work!'}
-                        </p>
-                    </div>
-                </div>
-                <Tabs defaultValue="case-0" className="flex-1 flex flex-col overflow-hidden">
-                    <TabsList>
-                        {submissionResult.results.map((_, index) => (
-                            <TabsTrigger key={index} value={`case-${index}`}>Case {index + 1}</TabsTrigger>
-                        ))}
-                    </TabsList>
-                    <div className="flex-1 overflow-auto mt-2">
-                    <ScrollArea className="h-full">
-                    {submissionResult.results.map((result, index) => (
-                        <TabsContent key={index} value={`case-${index}`} className="mt-0">
-                           <div className="space-y-2 font-mono text-sm">
-                                <div>
-                                    <p className="font-semibold">Input:</p>
-                                    <pre className="mt-1 rounded-md bg-slate-950 p-2 text-slate-50">{result.input}</pre>
-                                </div>
-                                <div>
-                                    <p className="font-semibold">Expected Output:</p>
-                                    <pre className="mt-1 rounded-md bg-slate-950 p-2 text-slate-50">{result.expected}</pre>
-                                </div>
-                                <div>
-                                    <p className="font-semibold">Your Output:</p>
-                                     <pre className={`mt-1 rounded-md p-2 ${result.passed ? 'bg-green-950/50 text-green-400' : 'bg-red-950/50 text-red-400'}`}>{result.actual}</pre>
-                                </div>
-                           </div>
-                        </TabsContent>
-                    ))}
-                    </ScrollArea>
-                    </div>
-                </Tabs>
-            </CardContent>
-        </Card>
-    )
-  }
-
-  const GeneratedTestsView = () => {
-    if (isGenerating || generatedTests.length > 0) {
-        return (
-            <Card className="h-full">
-                <CardHeader>
-                    <CardTitle>Generated Test Cases</CardTitle>
-                    <CardDescription>
-                        {isGenerating ? "AI is generating test cases based on your code..." : "Test cases generated from your code after tab switch."}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {isGenerating ? (
-                        <div className="flex items-center gap-2">
-                           <Terminal className="h-4 w-4 animate-spin"/> 
-                           <p>Generating...</p>
-                        </div>
-                    ) : (
-                        <Alert>
-                          <Terminal className="h-4 w-4" />
-                          <AlertTitle>Heads up!</AlertTitle>
-                          <AlertDescription>
-                            <pre className="mt-2 w-full whitespace-pre-wrap rounded-md bg-slate-950 p-4 font-mono text-sm text-slate-50">
-                                {generatedTests.join('\n\n')}
-                            </pre>
-                          </AlertDescription>
-                        </Alert>
-                    )}
-                </CardContent>
-            </Card>
-        )
-    }
-    return null;
-  }
-
-  const DescriptionPanel = () => (
-    <div className="relative flex flex-col h-full bg-card p-4 md:p-6">
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full pr-4">
-          <div className="flex items-start justify-between mb-4">
-            <h1 className="text-3xl font-bold">{challenge.title}</h1>
-             <div className="flex items-center gap-4">
-                <Badge variant="outline" className={
-                  challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
-                  challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
-                  'border-red-500 text-red-500'
-                }>{challenge.difficulty}</Badge>
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Award className="h-4 w-4" />
-                  <span>{challenge.points}</span>
-                </Badge>
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap gap-2 mb-4">
-              {challenge.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
-          </div>
-
-          <Separator className="my-6" />
-
-          <Tabs value={desktopActiveTab} onValueChange={setDesktopActiveTab} className="hidden md:flex flex-col h-full">
-              <TabsList className="mb-4">
-                  <TabsTrigger value="description">Description</TabsTrigger>
-                  <TabsTrigger value="results" disabled={!submissionResult && generatedTests.length === 0}>Results</TabsTrigger>
-              </TabsList>
-              <TabsContent value="description" className="flex-1 overflow-auto">
-                 <article className="prose prose-sm dark:prose-invert max-w-none">
-                      <p>{challenge.description}</p>
-                      
-                      {challenge.examples.map((example, index) => (
-                          <div key={index} className="mt-4">
-                              <p className="font-semibold">Example {index + 1}:</p>
-                              <div className="mt-2 rounded-md bg-muted/50 p-3 font-mono text-sm">
-                                  <p><strong>Input:</strong> {example.input}</p>
-                                  <p><strong>Output:</strong> {example.output}</p>
-                                  {example.explanation && <p className="mt-2"><strong>Explanation:</strong> {example.explanation}</p>}
-                              </div>
-                          </div>
-                      ))}
-                 </article>
-              </TabsContent>
-              <TabsContent value="results" className="flex-1 overflow-auto">
-                  <div className="h-full">
-                    {submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}
-                  </div>
-              </TabsContent>
-          </Tabs>
-          
-           {/* Mobile-only Description/Result content */}
-          <div className="md:hidden">
-              {mobileView === 'description' && (
-                  <article className="prose prose-sm dark:prose-invert max-w-none">
-                    <p>{challenge.description}</p>
-                    {challenge.examples.map((example, index) => (
-                      <div key={index} className="mt-4">
-                          <p className="font-semibold">Example {index + 1}:</p>
-                          <div className="mt-2 rounded-md bg-muted/50 p-3 font-mono text-sm">
-                              <p><strong>Input:</strong> {example.input}</p>
-                              <p><strong>Output:</strong> {example.output}</p>
-                              {example.explanation && <p className="mt-2"><strong>Explanation:</strong> {example.explanation}</p>}
-                          </div>
-                      </div>
-                    ))}
-                  </article>
-              )}
-          </div>
-        </ScrollArea>
-      </div>
-    </div>
-  );
-
-  const EditorPanel = () => (
-    <div className="flex flex-col h-full overflow-hidden flex-1 bg-card">
-         <div className="p-4 flex justify-between items-center border-b bg-card">
-               <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="C">C</SelectItem>
-                    <SelectItem value="C++">C++</SelectItem>
-                    <SelectItem value="Java">Java</SelectItem>
-                    <SelectItem value="Python">Python</SelectItem>
-                    <SelectItem value="JavaScript">JavaScript</SelectItem>
-                  </SelectContent>
-              </Select>
-          </div>
-          <div className="flex-1 relative">
-              <CodeEditor value={code} onChange={handleCodeChange} language={language.toLowerCase()} />
-          </div>
-          <div className="p-4 bg-card border-t flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <Button variant="outline" onClick={handleSaveCode} disabled={!code}>
-                  <Save className="mr-2 h-4 w-4" /> Save
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive-outline">
-                      <RotateCcw className="mr-2 h-4 w-4" /> Reset
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently delete your current code for this challenge. You can't undo this action.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleResetCode}>Reset Code</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                {nextChallengeId && isCompleted && (
-                  <Button variant="outline" onClick={() => router.push(`/challenge/${nextChallengeId}`)}>
-                      Next Challenge <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="flex items-center gap-4">
-                {(isRunning || isSubmitting) && <Progress value={undefined} className="w-32 h-1 animate-pulse" />}
-                <Button variant="outline" onClick={() => handleCodeExecution('run')} disabled={isRunning || isSubmitting || !code}>
-                    {isRunning ? 'Running...' : 'Run Code'}
-                </Button>
-                <Button onClick={() => handleCodeExecution('submit')} disabled={isRunning || isSubmitting || !code}>
-                    {isSubmitting ? 'Submitting...' : 'Submit'}
-                </Button>
-              </div>
-          </div>
-    </div>
-  );
-  
-  const penaltyPoints = challenge ? getPenaltyPoints(challenge.difficulty) : 0;
-  const totalPenalty = tabSwitchCount * penaltyPoints;
 
   return (
-    <div className="flex flex-1 flex-col md:flex-row overflow-hidden h-full">
-      <AlertDialog open={showPenaltyDialog} onOpenChange={setShowPenaltyDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <EyeOff className="h-6 w-6 text-destructive" />
-              Tab Switch Detected
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Switching tabs during a challenge is discouraged. A penalty per switch will be applied to your submission score.
-              <br />
-              <br />
-              This is a <strong>{challenge.difficulty}</strong> challenge. You lose <strong>{penaltyPoints}</strong> per switch.
-              <br/>
-              You have switched tabs <strong>{tabSwitchCount} time{tabSwitchCount > 1 ? 's' : ''}</strong>, for a total penalty of <strong>{totalPenalty}</strong>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowPenaltyDialog(false)}>Okay</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Mobile View with Tabs */}
-      <div className="md:hidden flex flex-col h-full">
-        <div className="flex-shrink-0 border-b">
-          <Tabs value={mobileView} onValueChange={(v) => setMobileView(v as MobileView)} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="description" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" /> Description
-              </TabsTrigger>
-              <TabsTrigger value="code" className="flex items-center gap-2">
-                <CodeIcon className="h-4 w-4" /> Code
-              </TabsTrigger>
-              <TabsTrigger value="results" className="flex items-center gap-2" disabled={!submissionResult && generatedTests.length === 0}>
-                <BarChart2 className="h-4 w-4" /> Results
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        <div className="flex-1 overflow-auto">
-          {mobileView === 'description' && <div className="h-full"><DescriptionPanel /></div>}
-          {mobileView === 'code' && <div className="h-full"><EditorPanel /></div>}
-          {mobileView === 'results' && <div className="p-4 h-full">{submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}</div>}
-        </div>
+    <div className="flex flex-col h-full p-4 gap-4">
+      <div className="flex-shrink-0">
+        <h1 className="text-2xl font-bold mb-1">{challenge.title}</h1>
+        <p className="text-muted-foreground">{challenge.description}</p>
       </div>
 
-      {/* Desktop View */}
-       <div className='hidden md:flex h-full w-full overflow-hidden'>
-         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-            <ResizablePanel defaultSize={50}>
-                <DescriptionPanel />
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel defaultSize={50}>
-                <EditorPanel />
-            </ResizablePanel>
-         </ResizablePanelGroup>
-       </div>
+      <div className="flex-grow relative border rounded-md overflow-hidden">
+        <CodeEditor
+          value={solution}
+          onChange={(val) => saveSolution(val)}
+          language={challenge.language.toLowerCase()}
+        />
+      </div>
     </div>
   );
 }
-
-    
