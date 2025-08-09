@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateTestCases } from '@/ai/flows/generate-test-cases';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, CheckCircle2, XCircle, Award, ChevronsLeft, ChevronsRight, ArrowRight } from 'lucide-react';
+import { Terminal, CheckCircle2, XCircle, Award, ChevronsLeft, ChevronsRight, ArrowRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -281,62 +281,67 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   
   return (
     <div className="flex h-screen flex-col">
-      <div className={`flex flex-1 grid ${isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'md:grid-cols-[1fr,1fr]'} overflow-hidden`}>
+      <div className={`flex flex-1 grid ${isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'grid-cols-[minmax(300px,1fr),2fr]'} overflow-hidden transition-all duration-300`}>
         {/* Left Panel */}
-        <div className={`relative flex flex-col h-full transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0" : "w-full p-6"}`}>
-          <button 
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-              className="absolute z-20 right-[-12px] top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background border shadow-md flex items-center justify-center hover:bg-muted"
-          >
-              {isSidebarCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
-          </button>
-          <ScrollArea className="flex-1 -mr-6 pr-6">
-            <div className={`flex items-center justify-between mb-4 ${isSidebarCollapsed ? 'invisible' : ''}`}>
-              <h1 className="text-3xl font-bold">{challenge.title}</h1>
-              <Badge variant="outline" className={
-                challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
-                challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
-                'border-red-500 text-red-500'
-              }>{challenge.difficulty}</Badge>
-            </div>
-            
-            <div className={`flex flex-wrap gap-2 mb-4 ${isSidebarCollapsed ? 'invisible' : ''}`}>
-                {challenge.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
-            </div>
+        <div className={`relative flex flex-col h-full bg-card border-r transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0 overflow-hidden" : "w-full p-6"}`}>
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full pr-4">
+              <div className="flex items-start justify-between mb-4">
+                <h1 className="text-3xl font-bold">{challenge.title}</h1>
+                <Badge variant="outline" className={
+                  challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
+                  challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
+                  'border-red-500 text-red-500'
+                }>{challenge.difficulty}</Badge>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mb-4">
+                  {challenge.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+              </div>
 
-            <Separator className={`my-6 ${isSidebarCollapsed ? 'invisible' : ''}`} />
+              <Separator className="my-6" />
 
-            <Tabs defaultValue="description" className={`${isSidebarCollapsed ? 'invisible' : ''}`}>
-                <TabsList className="mb-4">
-                    <TabsTrigger value="description">Description</TabsTrigger>
-                    <TabsTrigger value="results" disabled={!submissionResult && generatedTests.length === 0}>Results</TabsTrigger>
-                </TabsList>
-                <TabsContent value="description">
-                   <article className="prose prose-sm dark:prose-invert max-w-none">
-                        <p>{challenge.description}</p>
-                        
-                        {challenge.examples.map((example, index) => (
-                            <div key={index} className="mt-4">
-                                <p className="font-semibold">Example {index + 1}:</p>
-                                <div className="mt-2 rounded-md bg-muted/50 p-3 font-mono text-sm">
-                                    <p><strong>Input:</strong> {example.input}</p>
-                                    <p><strong>Output:</strong> {example.output}</p>
-                                    {example.explanation && <p className="mt-2"><strong>Explanation:</strong> {example.explanation}</p>}
-                                </div>
-                            </div>
-                        ))}
-                   </article>
-                </TabsContent>
-                <TabsContent value="results">
-                    {submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}
-                </TabsContent>
-            </Tabs>
-          </ScrollArea>
+              <Tabs defaultValue="description">
+                  <TabsList className="mb-4">
+                      <TabsTrigger value="description">Description</TabsTrigger>
+                      <TabsTrigger value="results" disabled={!submissionResult && generatedTests.length === 0}>Results</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="description">
+                     <article className="prose prose-sm dark:prose-invert max-w-none">
+                          <p>{challenge.description}</p>
+                          
+                          {challenge.examples.map((example, index) => (
+                              <div key={index} className="mt-4">
+                                  <p className="font-semibold">Example {index + 1}:</p>
+                                  <div className="mt-2 rounded-md bg-muted/50 p-3 font-mono text-sm">
+                                      <p><strong>Input:</strong> {example.input}</p>
+                                      <p><strong>Output:</strong> {example.output}</p>
+                                      {example.explanation && <p className="mt-2"><strong>Explanation:</strong> {example.explanation}</p>}
+                                  </div>
+                              </div>
+                          ))}
+                     </article>
+                  </TabsContent>
+                  <TabsContent value="results">
+                      {submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}
+                  </TabsContent>
+              </Tabs>
+            </ScrollArea>
+          </div>
         </div>
         
         {/* Right Panel */}
         <div className="flex flex-col h-full overflow-hidden">
-             <div className="p-4 flex justify-end items-center border-b">
+             <div className="p-4 flex justify-between items-center border-b">
+                  <Button 
+                      onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                  >
+                      {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+                      <span className="sr-only">Toggle Sidebar</span>
+                  </Button>
                    <Select value={language} onValueChange={setLanguage}>
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Language" />
