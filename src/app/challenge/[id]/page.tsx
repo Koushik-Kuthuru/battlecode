@@ -490,7 +490,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
             <ResizablePanel defaultSize={50}>
                 <DescriptionPanel />
             </ResizablePanel>
-            <ResizableHandle withHandle />
+            <ResizableHandle />
             <ResizablePanel defaultSize={50}>
                 <EditorPanel />
             </ResizablePanel>
