@@ -16,11 +16,12 @@ import { useToast } from '@/hooks/use-toast';
 import { generateTestCases } from '@/ai/flows/generate-test-cases';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, CheckCircle2, XCircle, Award } from 'lucide-react';
+import { Terminal, CheckCircle2, XCircle, Award, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 type TestResult = {
     input: string;
@@ -40,6 +41,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     score: number;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -111,7 +113,11 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   }, [code, language, challenge, toast, submissionResult]);
 
   if (!challenge) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
   }
 
   const handleCodeChange = (value: string | undefined) => {
@@ -254,68 +260,97 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   }
   
   return (
-    <div className="container mx-auto grid max-w-7xl grid-cols-1 gap-8 p-4 md:grid-cols-2 md:p-8">
-      <div className="flex flex-col gap-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl">{challenge.title}</CardTitle>
-                <Badge variant="outline" className={
-                  challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
-                  challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
-                  'border-red-500 text-red-500'
-                }>{challenge.difficulty}</Badge>
-            </div>
-            <CardDescription>{challenge.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {challenge.examples.map((example, index) => (
-                <div key={index}>
-                  <p className="font-semibold">Example {index + 1}:</p>
-                  <div className="mt-2 rounded-md bg-muted/50 p-3 text-sm font-mono">
-                    <p><strong>Input:</strong> {example.input}</p>
-                    <p><strong>Output:</strong> {example.output}</p>
-                    {example.explanation && (
-                      <p><strong>Explanation:</strong> {example.explanation}</p>
-                    )}
-                  </div>
+    <div className="flex h-screen flex-col">
+       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+        
+        {/* Left Panel */}
+        <div className={`flex flex-col h-full transition-all duration-300 ${isSidebarCollapsed ? "md:w-0" : "md:w-full"}`}>
+            <ScrollArea className="flex-1 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h1 className="text-3xl font-bold">{challenge.title}</h1>
+                  <Badge variant="outline" className={
+                    challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
+                    challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
+                    'border-red-500 text-red-500'
+                  }>{challenge.difficulty}</Badge>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        
-        {submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}
-        
-      </div>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {challenge.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                </div>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Your Solution</h2>
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="C">C</SelectItem>
-              <SelectItem value="C++">C++</SelectItem>
-              <SelectItem value="Java">Java</SelectItem>
-              <SelectItem value="Python">Python</SelectItem>
-              <SelectItem value="JavaScript">JavaScript</SelectItem>
-            </SelectContent>
-          </Select>
+                <Separator className="my-6" />
+
+                <Tabs defaultValue="description">
+                    <TabsList className="mb-4">
+                        <TabsTrigger value="description">Description</TabsTrigger>
+                        <TabsTrigger value="results" disabled={!submissionResult && generatedTests.length === 0}>Results</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="description">
+                       <article className="prose prose-sm dark:prose-invert max-w-none">
+                            <p>{challenge.description}</p>
+                            
+                            {challenge.examples.map((example, index) => (
+                                <div key={index} className="mt-4">
+                                    <p className="font-semibold">Example {index + 1}:</p>
+                                    <div className="mt-2 rounded-md bg-muted/50 p-3 font-mono text-sm">
+                                        <p><strong>Input:</strong> {example.input}</p>
+                                        <p><strong>Output:</strong> {example.output}</p>
+                                        {example.explanation && <p className="mt-2"><strong>Explanation:</strong> {example.explanation}</p>}
+                                    </div>
+                                </div>
+                            ))}
+                       </article>
+                    </TabsContent>
+                    <TabsContent value="results">
+                        {submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}
+                    </TabsContent>
+                </Tabs>
+            </ScrollArea>
         </div>
-        <CodeEditor value={code} onChange={handleCodeChange} language={language} />
-        <Button onClick={handleSubmit} disabled={isSubmitting || !code} className="w-full">
-            {isSubmitting ? (
-              <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                Submitting...
-              </>
-            ) : 'Submit Solution'}
-        </Button>
-        {isSubmitting && <Progress value={undefined} className="w-full h-1 animate-pulse" />}
+        
+        {/* Resize Handle */}
+        <div className="relative group flex items-center">
+            <button 
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+                className="absolute z-10 left-[-12px] top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background border shadow-md flex items-center justify-center hover:bg-muted"
+            >
+                {isSidebarCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
+            </button>
+            <Separator orientation="vertical" className="h-full" />
+        </div>
+
+        {/* Right Panel */}
+        <div className="flex flex-col h-full overflow-hidden">
+            <div className="p-4 flex justify-end items-center">
+                 <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="C">C</SelectItem>
+                      <SelectItem value="C++">C++</SelectItem>
+                      <SelectItem value="Java">Java</SelectItem>
+                      <SelectItem value="Python">Python</SelectItem>
+                      <SelectItem value="JavaScript">JavaScript</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="flex-1 relative">
+                <CodeEditor value={code} onChange={handleCodeChange} language={language} />
+            </div>
+            <div className="p-4 bg-background border-t flex items-center justify-end gap-4">
+                {isSubmitting && <Progress value={undefined} className="w-1/2 h-1 animate-pulse" />}
+                <Button onClick={handleSubmit} disabled={isSubmitting || !code} className="min-w-[120px]">
+                    {isSubmitting ? (
+                    <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                        Submitting...
+                    </>
+                    ) : 'Submit'}
+                </Button>
+            </div>
+        </div>
       </div>
     </div>
   );
