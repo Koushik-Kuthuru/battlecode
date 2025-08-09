@@ -2,9 +2,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useForm, useFieldArray, FormProvider } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,48 +12,36 @@ import { useToast } from '@/hooks/use-toast';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 
-const exampleSchema = z.object({
-  input: z.string().min(1, 'Input is required'),
-  output: z.string().min(1, 'Output is required'),
-  explanation: z.string().optional(),
-});
-
-const testCaseSchema = z.object({
-  input: z.string().min(1, 'Input is required'),
-  output: z.string().min(1, 'Output is required'),
-});
-
-const challengeSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  difficulty: z.enum(['Easy', 'Medium', 'Hard']),
-  language: z.enum(['C', 'C++', 'Java', 'Python', 'JavaScript']),
-  points: z.coerce.number().min(1, 'Points must be at least 1'),
-  description: z.string().min(1, 'Description is required'),
-  tags: z.string().min(1, 'Tags are required'),
-  solution: z.string().min(1, 'Solution code is required'),
-  examples: z.array(exampleSchema).min(1, 'At least one example is required'),
-  testCases: z.array(testCaseSchema).min(1, 'At least one test case is required'),
-});
-
-type ChallengeFormValues = z.infer<typeof challengeSchema>;
 type SortType = 'title' | 'difficulty';
 
 const DIFFICULTY_ORDER: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3 };
 
+type FormData = Omit<Challenge, 'id' | 'tags'> & { tags: string };
+
+const defaultFormData: FormData = {
+  title: '',
+  difficulty: 'Easy',
+  language: 'Python',
+  points: 10,
+  description: '',
+  tags: '',
+  solution: '',
+  examples: [{ input: '', output: '', explanation: '' }],
+  testCases: [{ input: '', output: '' }],
+};
 
 export default function ManageChallengesPage() {
   const { toast } = useToast();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const [editingChallengeId, setEditingChallengeId] = useState<string | null>(null);
   const [languageFilter, setLanguageFilter] = useState('All');
   const [sortType, setSortType] = useState<SortType>('title');
-
+  const [formData, setFormData] = useState<FormData>(defaultFormData);
 
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -65,16 +50,13 @@ export default function ManageChallengesPage() {
         const challengeSnapshot = await getDocs(challengesCollection);
         
         if (challengeSnapshot.empty) {
-          // Seed the database if it's empty
           const batch = writeBatch(db);
           initialChallenges.forEach((challenge) => {
-            // we remove the `id` field from the initial data as Firestore will generate it.
             const { id, ...challengeData } = challenge;
-            const docRef = doc(collection(db, "challenges")); // Create a new doc with auto-generated ID
+            const docRef = doc(collection(db, "challenges"));
             batch.set(docRef, { ...challengeData, createdAt: serverTimestamp() });
           });
           await batch.commit();
-          // Refetch after seeding
           const newChallengeSnapshot = await getDocs(challengesCollection);
           const challengesList = newChallengeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
           setChallenges(challengesList);
@@ -86,7 +68,6 @@ export default function ManageChallengesPage() {
           const challengesList = challengeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
           setChallenges(challengesList);
         }
-
       } catch (error) {
         console.error("Error fetching or seeding challenges: ", error);
         toast({
@@ -100,51 +81,42 @@ export default function ManageChallengesPage() {
     };
     fetchChallenges();
   }, [toast]);
+  
+  const handleInputChange = (field: keyof Omit<FormData, 'examples' | 'testCases'>, value: string | number) => {
+    setFormData(prev => ({...prev, [field]: value}));
+  }
 
-  const form = useForm<ChallengeFormValues>({
-    resolver: zodResolver(challengeSchema),
-    defaultValues: {
-      title: '',
-      difficulty: 'Easy',
-      language: 'Python',
-      points: 10,
-      description: '',
-      tags: '',
-      solution: '',
-      examples: [{ input: '', output: '', explanation: '' }],
-      testCases: [{ input: '', output: '' }],
-    },
-  });
+  const handleArrayChange = (arrayName: 'examples' | 'testCases', index: number, field: string, value: string) => {
+    setFormData(prev => {
+        const newArray = [...prev[arrayName]];
+        newArray[index] = {...newArray[index], [field]: value};
+        return {...prev, [arrayName]: newArray};
+    });
+  }
 
-  const { fields: exampleFields, append: appendExample, remove: removeExample } = useFieldArray({
-    control: form.control,
-    name: 'examples',
-  });
+  const addArrayItem = (arrayName: 'examples' | 'testCases') => {
+    setFormData(prev => ({
+        ...prev,
+        [arrayName]: [...prev[arrayName], arrayName === 'examples' ? { input: '', output: '', explanation: '' } : { input: '', output: '' }]
+    }));
+  }
 
-  const { fields: testCaseFields, append: appendTestCase, remove: removeTestCase } = useFieldArray({
-    control: form.control,
-    name: 'testCases',
-  });
+  const removeArrayItem = (arrayName: 'examples' | 'testCases', index: number) => {
+      setFormData(prev => ({
+        ...prev,
+        [arrayName]: prev[arrayName].filter((_, i) => i !== index)
+      }));
+  }
 
   const handleAddNewClick = () => {
-    setEditingChallenge(null);
-    form.reset({
-        title: '',
-        difficulty: 'Easy',
-        language: 'Python',
-        points: 10,
-        description: '',
-        tags: '',
-        solution: '',
-        examples: [{ input: '', output: '', explanation: '' }],
-        testCases: [{ input: '', output: '' }],
-    });
+    setEditingChallengeId(null);
+    setFormData(defaultFormData);
     setIsFormVisible(true);
   };
   
   const handleEditClick = (challenge: Challenge) => {
-      setEditingChallenge(challenge);
-      form.reset({
+      setEditingChallengeId(challenge.id);
+      setFormData({
         ...challenge,
         tags: Array.isArray(challenge.tags) ? challenge.tags.join(', ') : '',
       });
@@ -153,34 +125,35 @@ export default function ManageChallengesPage() {
 
   const handleCancel = () => {
     setIsFormVisible(false);
-    setEditingChallenge(null);
-    form.reset();
+    setEditingChallengeId(null);
+    setFormData(defaultFormData);
   }
 
-  const onSubmit = async (values: ChallengeFormValues) => {
-    const challengeData: Omit<Challenge, 'id'> & { id?: string } = {
-        ...values,
-        tags: values.tags.split(',').map(tag => tag.trim()),
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const challengeDataToSave = {
+        ...formData,
+        tags: formData.tags.split(',').map(tag => tag.trim()),
     };
 
     try {
-      if (editingChallenge) {
-          const challengeRef = doc(db, 'challenges', editingChallenge.id);
-          await setDoc(challengeRef, challengeData, { merge: true });
-          setChallenges(challenges.map(c => c.id === editingChallenge.id ? { ...challengeData, id: editingChallenge.id } as Challenge : c));
+      if (editingChallengeId) {
+          const challengeRef = doc(db, 'challenges', editingChallengeId);
+          await setDoc(challengeRef, challengeDataToSave, { merge: true });
+          setChallenges(challenges.map(c => c.id === editingChallengeId ? { ...challengeDataToSave, id: editingChallengeId } : c));
           toast({
               title: 'Challenge Updated!',
-              description: `Successfully updated "${challengeData.title}".`,
+              description: `Successfully updated "${challengeDataToSave.title}".`,
           });
       } else {
           const docRef = await addDoc(collection(db, 'challenges'), {
-            ...challengeData,
+            ...challengeDataToSave,
             createdAt: serverTimestamp()
           });
-          setChallenges([...challenges, { ...challengeData, id: docRef.id } as Challenge]);
+          setChallenges([...challenges, { ...challengeDataToSave, id: docRef.id }]);
           toast({
               title: 'Challenge Added!',
-              description: `Successfully added "${challengeData.title}".`,
+              description: `Successfully added "${challengeDataToSave.title}".`,
           });
       }
     } catch (error) {
@@ -224,227 +197,127 @@ export default function ManageChallengesPage() {
       {isFormVisible ? (
         <Card>
           <CardHeader>
-            <CardTitle>{editingChallenge ? 'Edit Challenge' : 'Create New Challenge'}</CardTitle>
+            <CardTitle>{editingChallengeId ? 'Edit Challenge' : 'Create New Challenge'}</CardTitle>
             <CardDescription>
-                {editingChallenge ? 'Modify the details of the existing challenge.' : 'Fill out the form below to add a new challenge.'}
+                {editingChallengeId ? 'Modify the details of the existing challenge.' : 'Fill out the form below to add a new challenge.'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <FormProvider {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Two Sum" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid md:grid-cols-3 gap-6">
-                   <FormField
-                      control={form.control}
-                      name="difficulty"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Difficulty</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger><SelectValue placeholder="Select difficulty" /></SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Easy">Easy</SelectItem>
-                              <SelectItem value="Medium">Medium</SelectItem>
-                              <SelectItem value="Hard">Hard</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="language"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Default Language</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger><SelectValue placeholder="Select language" /></SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                               <SelectItem value="C">C</SelectItem>
-                               <SelectItem value="C++">C++</SelectItem>
-                               <SelectItem value="Java">Java</SelectItem>
-                               <SelectItem value="Python">Python</SelectItem>
-                               <SelectItem value="JavaScript">JavaScript</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="points"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Points</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="e.g., 10" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="space-y-2">
+                    <Label htmlFor='title'>Title</Label>
+                    <Input id='title' placeholder="e.g., Two Sum" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} required />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Detailed problem description..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid md:grid-cols-3 gap-6">
+                   <div className="space-y-2">
+                       <Label>Difficulty</Label>
+                       <Select value={formData.difficulty} onValueChange={(value) => handleInputChange('difficulty', value)}>
+                           <SelectTrigger><SelectValue placeholder="Select difficulty" /></SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="Easy">Easy</SelectItem>
+                             <SelectItem value="Medium">Medium</SelectItem>
+                             <SelectItem value="Hard">Hard</SelectItem>
+                           </SelectContent>
+                       </Select>
+                   </div>
+                   <div className="space-y-2">
+                       <Label>Default Language</Label>
+                       <Select value={formData.language} onValueChange={(value) => handleInputChange('language', value)}>
+                           <SelectTrigger><SelectValue placeholder="Select language" /></SelectTrigger>
+                           <SelectContent>
+                              <SelectItem value="C">C</SelectItem>
+                              <SelectItem value="C++">C++</SelectItem>
+                              <SelectItem value="Java">Java</SelectItem>
+                              <SelectItem value="Python">Python</SelectItem>
+                              <SelectItem value="JavaScript">JavaScript</SelectItem>
+                           </SelectContent>
+                       </Select>
+                   </div>
+                   <div className="space-y-2">
+                       <Label htmlFor="points">Points</Label>
+                       <Input id="points" type="number" placeholder="e.g., 10" value={formData.points} onChange={e => handleInputChange('points', parseInt(e.target.value, 10) || 0)} required />
+                   </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea id="description" placeholder="Detailed problem description..." value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} required />
+                </div>
                 
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tags</FormLabel>
-                       <FormControl>
-                         <Input placeholder="e.g., Array, Hash Table, Two Pointers" {...field} />
-                       </FormControl>
-                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-2">
+                    <Label htmlFor="tags">Tags</Label>
+                    <Input id="tags" placeholder="e.g., Array, Hash Table, Two Pointers" value={formData.tags} onChange={(e) => handleInputChange('tags', e.target.value)} required/>
+                </div>
 
                 <div className="space-y-4">
                   <Label>Examples</Label>
-                  {exampleFields.map((field, index) => (
-                    <Card key={field.id} className="p-4 relative">
+                  {formData.examples.map((_, index) => (
+                    <Card key={index} className="p-4 relative">
                        <div className="grid md:grid-cols-2 gap-4">
-                           <FormField
-                              control={form.control}
-                              name={`examples.${index}.input`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Input</FormLabel>
-                                  <FormControl><Textarea {...field} /></FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name={`examples.${index}.output`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Output</FormLabel>
-                                  <FormControl><Textarea {...field} /></FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                           <div className="space-y-2">
+                               <Label>Input</Label>
+                               <Textarea value={formData.examples[index].input} onChange={(e) => handleArrayChange('examples', index, 'input', e.target.value)} required />
+                           </div>
+                           <div className="space-y-2">
+                               <Label>Output</Label>
+                               <Textarea value={formData.examples[index].output} onChange={(e) => handleArrayChange('examples', index, 'output', e.target.value)} required />
+                           </div>
                        </div>
-                       <FormField
-                          control={form.control}
-                          name={`examples.${index}.explanation`}
-                          render={({ field }) => (
-                            <FormItem className="mt-4">
-                              <FormLabel>Explanation (Optional)</FormLabel>
-                              <FormControl><Textarea {...field} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                       <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2" onClick={() => removeExample(index)}>
+                       <div className="mt-4 space-y-2">
+                           <Label>Explanation (Optional)</Label>
+                           <Textarea value={formData.examples[index].explanation} onChange={(e) => handleArrayChange('examples', index, 'explanation', e.target.value)} />
+                       </div>
+                       <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2" onClick={() => removeArrayItem('examples', index)}>
                          <Trash2 className="h-4 w-4" />
                        </Button>
                     </Card>
                   ))}
-                  <Button type="button" variant="outline" onClick={() => appendExample({ input: '', output: '', explanation: '' })}>
+                  <Button type="button" variant="outline" onClick={() => addArrayItem('examples')}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Example
                   </Button>
                 </div>
                 
                 <div className="space-y-4">
                    <Label>Test Cases</Label>
-                   {testCaseFields.map((field, index) => (
-                     <Card key={field.id} className="p-4 relative">
+                   {formData.testCases.map((_, index) => (
+                     <Card key={index} className="p-4 relative">
                         <div className="grid md:grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name={`testCases.${index}.input`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Input</FormLabel>
-                                  <FormControl><Textarea {...field} /></FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name={`testCases.${index}.output`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Output</FormLabel>
-                                  <FormControl><Textarea {...field} /></FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                            <div className="space-y-2">
+                                <Label>Input</Label>
+                                <Textarea value={formData.testCases[index].input} onChange={(e) => handleArrayChange('testCases', index, 'input', e.target.value)} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Output</Label>
+                                <Textarea value={formData.testCases[index].output} onChange={(e) => handleArrayChange('testCases', index, 'output', e.target.value)} required />
+                            </div>
                         </div>
-                        <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2" onClick={() => removeTestCase(index)}>
+                        <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2" onClick={() => removeArrayItem('testCases', index)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                      </Card>
                    ))}
-                   <Button type="button" variant="outline" onClick={() => appendTestCase({ input: '', output: '' })}>
+                   <Button type="button" variant="outline" onClick={() => addArrayItem('testCases')}>
                      <PlusCircle className="mr-2 h-4 w-4" /> Add Test Case
                    </Button>
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="solution"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Solution Code</FormLabel>
-                      <FormControl>
-                         <div className="h-64 rounded-md border">
-                           <CodeEditor
-                             value={field.value}
-                             onChange={field.onChange}
-                             language={form.watch('language')}
-                           />
-                         </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-2">
+                   <Label>Solution Code</Label>
+                   <div className="h-64 rounded-md border">
+                     <CodeEditor
+                       value={formData.solution}
+                       onChange={(value) => handleInputChange('solution', value || '')}
+                       language={formData.language}
+                     />
+                   </div>
+                </div>
 
                 <div className="flex gap-4">
-                    <Button type="submit">{editingChallenge ? 'Update Challenge' : 'Create Challenge'}</Button>
+                    <Button type="submit">{editingChallengeId ? 'Update Challenge' : 'Create Challenge'}</Button>
                     <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
                 </div>
               </form>
-            </FormProvider>
           </CardContent>
         </Card>
       ) : (
