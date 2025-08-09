@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, use } from 'react';
 import { challenges, type Challenge } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -38,8 +38,9 @@ type TestResult = {
 type RunType = 'run' | 'submit';
 type MobileView = 'description' | 'code' | 'results';
 
-export default function ChallengePage({ params }: { params: { id:string } }) {
+export default function ChallengePage({ params: paramsProp }: { params: { id:string } }) {
   const router = useRouter();
+  const params = use(paramsProp);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('');
@@ -61,10 +62,13 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   const [showPenaltyDialog, setShowPenaltyDialog] = useState(false);
 
 
-  const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
-  const nextChallengeId = currentChallengeIndex !== -1 && currentChallengeIndex < challenges.length - 1 
-    ? challenges[currentChallengeIndex + 1].id 
-    : null;
+  const { nextChallengeId } = useMemo(() => {
+    const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
+    const nextChallengeId = currentChallengeIndex !== -1 && currentChallengeIndex < challenges.length - 1 
+      ? challenges[currentChallengeIndex + 1].id 
+      : null;
+    return { nextChallengeId };
+  }, [params.id]);
   
   useEffect(() => {
     // Ensure this runs client-side only
@@ -99,7 +103,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       }
 
       // Load tab switch count
-      const savedSwitches = parseInt(localStorage.getItem(`tabSwitches_${currentUser.email}_${challenge.id}`) || '0', 10);
+      const savedSwitches = parseInt(localStorage.getItem(`tabSwitches_${currentUser.email}_${foundChallenge.id}`) || '0', 10);
       setTabSwitchCount(savedSwitches);
 
       setLanguage(foundChallenge.language);
