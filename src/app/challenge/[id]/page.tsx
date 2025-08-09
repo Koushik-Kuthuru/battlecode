@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, use } from 'react';
-import { challenges as defaultChallenges, type Challenge } from '@/lib/data';
+import { type Challenge } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CodeEditor } from '@/components/code-editor';
@@ -26,6 +26,8 @@ import { Separator } from '@/components/ui/separator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 
 type TestResult = {
@@ -41,8 +43,8 @@ type MobileView = 'description' | 'code' | 'results';
 export default function ChallengePage({ params: paramsProp }: { params: { id:string } }) {
   const router = useRouter();
   const params = use(paramsProp);
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [challenges, setChallenges] = useState<Challenge[]>([]); // Keep this to find next challenge
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('');
   const [generatedTests, setGeneratedTests] = useState<string[]>([]);
@@ -73,10 +75,6 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
   }, [params.id, challenges]);
   
   useEffect(() => {
-    // Ensure this runs client-side only
-    const storedChallenges = JSON.parse(localStorage.getItem('challenges') || 'null');
-    setChallenges(storedChallenges || defaultChallenges);
-
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
     if (!user) {
       router.push('/login');
@@ -86,42 +84,58 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
   }, [router]);
 
   useEffect(() => {
-    if (!params.id || challenges.length === 0) return;
-    const foundChallenge = challenges.find((c) => c.id === params.id) || null;
-    if (foundChallenge && currentUser) {
-      setChallenge(foundChallenge);
+    if (!params.id || !currentUser) return;
+    
+    const fetchChallenge = async () => {
+      try {
+        const challengeRef = doc(db, 'challenges', params.id);
+        const challengeSnap = await getDoc(challengeRef);
 
-      // Mark the challenge as in-progress as soon as it's opened
-      const inProgressChallenges = JSON.parse(localStorage.getItem(`inProgressChallenges_${currentUser.email}`) || '{}');
-      inProgressChallenges[params.id] = true;
-      localStorage.setItem(`inProgressChallenges_${currentUser.email}`, JSON.stringify(inProgressChallenges));
-      
-      const savedCode = localStorage.getItem(`code_${currentUser.email}_${params.id}`);
-      // Only show solution if challenge is completed, otherwise start with empty code
-      const completedChallenges = JSON.parse(localStorage.getItem(`completedChallenges_${currentUser.email}`) || '{}');
-      const challengeIsCompleted = completedChallenges[params.id] || false;
-      setIsCompleted(challengeIsCompleted);
-      
-      if (challengeIsCompleted) {
-         setCode(savedCode || foundChallenge.solution);
-      } else {
-        const initialCode = savedCode || '';
-        setCode(initialCode);
+        if (challengeSnap.exists()) {
+          const foundChallenge = { id: challengeSnap.id, ...challengeSnap.data() } as Challenge;
+           setChallenge(foundChallenge);
+
+            // Mark the challenge as in-progress as soon as it's opened
+            const inProgressChallenges = JSON.parse(localStorage.getItem(`inProgressChallenges_${currentUser.email}`) || '{}');
+            inProgressChallenges[params.id] = true;
+            localStorage.setItem(`inProgressChallenges_${currentUser.email}`, JSON.stringify(inProgressChallenges));
+            
+            const savedCode = localStorage.getItem(`code_${currentUser.email}_${params.id}`);
+            // Only show solution if challenge is completed, otherwise start with empty code
+            const completedChallenges = JSON.parse(localStorage.getItem(`completedChallenges_${currentUser.email}`) || '{}');
+            const challengeIsCompleted = completedChallenges[params.id] || false;
+            setIsCompleted(challengeIsCompleted);
+            
+            if (challengeIsCompleted) {
+               setCode(savedCode || foundChallenge.solution);
+            } else {
+              const initialCode = savedCode || '';
+              setCode(initialCode);
+            }
+
+            // Load tab switch count
+            const savedSwitches = parseInt(localStorage.getItem(`tabSwitches_${currentUser.email}_${foundChallenge.id}`) || '0', 10);
+            setTabSwitchCount(savedSwitches);
+
+            setLanguage(foundChallenge.language);
+            setSubmissionResult(null); // Reset results when challenge changes
+            setGeneratedTests([]); // Reset generated tests
+            setDesktopActiveTab('description'); // Reset tab to description
+            setMobileView('description');
+
+        } else {
+           notFound();
+        }
+      } catch (error) {
+          console.error("Error fetching challenge:", error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to load challenge.' });
+          notFound();
       }
+    };
 
-      // Load tab switch count
-      const savedSwitches = parseInt(localStorage.getItem(`tabSwitches_${currentUser.email}_${foundChallenge.id}`) || '0', 10);
-      setTabSwitchCount(savedSwitches);
+    fetchChallenge();
+  }, [params.id, currentUser, toast]);
 
-      setLanguage(foundChallenge.language);
-      setSubmissionResult(null); // Reset results when challenge changes
-      setGeneratedTests([]); // Reset generated tests
-      setDesktopActiveTab('description'); // Reset tab to description
-      setMobileView('description');
-    } else if(!foundChallenge) {
-      notFound();
-    }
-  }, [params.id, currentUser, challenges]);
 
   useEffect(() => {
     const handleContextmenu = (e: MouseEvent) => e.preventDefault();

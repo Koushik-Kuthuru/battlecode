@@ -4,19 +4,20 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChallengeCard } from '@/components/challenge-card';
-import { challenges as defaultChallenges, type Challenge } from '@/lib/data';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { type Challenge } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Trophy } from 'lucide-react';
-import Link from 'next/link';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 const ITEMS_PER_PAGE = 6;
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [displayedChallenges, setDisplayedChallenges] = useState<Challenge[]>([]);
   const [page, setPage] = useState(1);
@@ -25,13 +26,9 @@ export default function DashboardPage() {
   const [completedChallenges, setCompletedChallenges] = useState<Record<string, boolean>>({});
   const [inProgressChallenges, setInProgressChallenges] = useState<Record<string, boolean>>({});
   const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // We need to ensure localStorage is accessed only on the client side.
-    const storedChallenges = JSON.parse(localStorage.getItem('challenges') || 'null');
-    const allChallenges = storedChallenges || defaultChallenges;
-    setChallenges(allChallenges);
-
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
     if (!user) {
       router.push('/login');
@@ -45,6 +42,28 @@ export default function DashboardPage() {
     }
   }, [router]);
   
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      setIsLoading(true);
+      try {
+        const challengesCollection = collection(db, 'challenges');
+        const challengeSnapshot = await getDocs(challengesCollection);
+        const challengesList = challengeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+        setChallenges(challengesList);
+      } catch (error) {
+        console.error("Error fetching challenges: ", error);
+        toast({
+          variant: 'destructive',
+          title: 'Error fetching challenges',
+          description: 'Could not load challenges from the database. Please try again later.'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchChallenges();
+  }, [toast]);
+
   const loadMoreChallenges = () => {
     const nextPage = page + 1;
     const newChallenges = challenges.slice(0, nextPage * ITEMS_PER_PAGE);
@@ -85,7 +104,7 @@ export default function DashboardPage() {
     };
   }, [hasMore, page, displayedChallenges]);
 
-  if (!currentUser) {
+  if (!currentUser || isLoading) {
       return (
           <div className="flex h-screen items-center justify-center">
               <div>Loading...</div>
