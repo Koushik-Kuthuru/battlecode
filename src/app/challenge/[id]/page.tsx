@@ -331,9 +331,9 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   }
   
   return (
-    <div className={`flex flex-1 grid ${isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'grid-cols-[minmax(450px,1fr),2fr]'} overflow-hidden transition-all duration-300`}>
+    <div className={`flex flex-1 flex-col md:grid ${isSidebarCollapsed ? 'md:grid-cols-[auto,1fr]' : 'md:grid-cols-[minmax(0,1fr),minmax(0,2fr)]'} overflow-hidden transition-all duration-300`}>
       {/* Left Panel */}
-      <div className={`relative flex flex-col h-full bg-card border-r transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0 overflow-hidden" : "w-full p-6"}`}>
+      <div className={`relative flex flex-col h-full bg-card md:border-r transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0 overflow-hidden hidden md:block" : "w-full p-6"}`}>
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full pr-4">
             <div className="flex items-start justify-between mb-4">
@@ -381,13 +381,13 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
       </div>
       
       {/* Right Panel */}
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden flex-1">
            <div className="p-4 flex justify-between items-center border-b bg-card">
                 <Button 
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-8 w-8 hidden md:inline-flex"
                 >
                     {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
                     <span className="sr-only">Toggle Sidebar</span>
@@ -405,7 +405,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-h-[300px] md:min-h-0">
                 <CodeEditor value={code} onChange={handleCodeChange} language={language} />
             </div>
             <div className="p-4 bg-card border-t flex items-center justify-between gap-4">
