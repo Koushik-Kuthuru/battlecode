@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 export default function ChallengeLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<{name: string, email: string} | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState('');
   const { setTheme, theme } = useTheme();
 
   useEffect(() => {
@@ -23,6 +24,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
         router.push('/login');
     } else {
         setCurrentUser(user);
+        const userProfile = JSON.parse(localStorage.getItem(`userProfile_${user.email}`) || '{}');
+        setProfileImageUrl(userProfile.imageUrl || '');
     }
   }, [router]);
 
@@ -71,7 +74,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
                 <Link href="/profile">
                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={JSON.parse(localStorage.getItem(`userProfile_${currentUser.email}`) || '{}').imageUrl} alt={currentUser.name} />
+                        <AvatarImage src={profileImageUrl} alt={currentUser.name} />
                         <AvatarFallback>
                           <User />
                         </AvatarFallback>
