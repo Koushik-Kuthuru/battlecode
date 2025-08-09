@@ -5,8 +5,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
+import { User, KeyRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 type UserData = {
     email: string;
@@ -15,6 +16,7 @@ type UserData = {
     points: number;
     branch: string;
     year: string;
+    password?: string;
     imageUrl?: string;
 };
 
@@ -28,6 +30,7 @@ const BRANCH_MAP: Record<string, string> = {
 
 export default function ManageUsersPage() {
     const [users, setUsers] = useState<UserData[]>([]);
+    const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         const storedUsers = JSON.parse(localStorage.getItem('users') || '{}');
@@ -41,6 +44,7 @@ export default function ManageUsersPage() {
                 email,
                 name: userData.name,
                 studentId: userData.studentId,
+                password: userData.password,
                 points: leaderboardEntry.points,
                 branch: profile.branch ? BRANCH_MAP[profile.branch] || profile.branch : 'N/A',
                 year: profile.year ? `${profile.year} Year` : 'N/A',
@@ -48,11 +52,14 @@ export default function ManageUsersPage() {
             };
         });
         
-        // Sort users by points in descending order
         combinedData.sort((a, b) => b.points - a.points);
         
         setUsers(combinedData);
     }, []);
+
+    const togglePasswordVisibility = (email: string) => {
+        setVisiblePasswords(prev => ({ ...prev, [email]: !prev[email] }));
+    }
 
     return (
         <div className="container mx-auto py-8">
@@ -69,6 +76,7 @@ export default function ManageUsersPage() {
                                 <TableRow>
                                     <TableHead>User</TableHead>
                                     <TableHead>Student ID</TableHead>
+                                    <TableHead>Password</TableHead>
                                     <TableHead>Branch & Year</TableHead>
                                     <TableHead className="text-right">Points</TableHead>
                                 </TableRow>
@@ -90,6 +98,14 @@ export default function ManageUsersPage() {
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline">{user.studentId}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <span>{visiblePasswords[user.email] ? user.password : '••••••••'}</span>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => togglePasswordVisibility(user.email)}>
+                                                    <KeyRound className="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <p>{user.branch}</p>
