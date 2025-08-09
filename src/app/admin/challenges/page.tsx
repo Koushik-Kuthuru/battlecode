@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { challenges as initialChallenges, type Challenge } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { app } from '@/lib/firebase';
 
 type SortType = 'title' | 'difficulty';
 
@@ -40,38 +42,45 @@ export default function ManageChallengesPage() {
   const [languageFilter, setLanguageFilter] = useState('All');
   const [sortType, setSortType] = useState<SortType>('title');
   const [formData, setFormData] = useState<FormData>(defaultFormData);
-  const [isClient, setIsClient] = useState(false);
+  
+  const db = getFirestore(app);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const fetchChallenges = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const challengesCollection = collection(db, 'challenges');
+      const challengesSnapshot = await getDocs(challengesCollection);
 
-  useEffect(() => {
-    if (isClient) {
-      try {
-        const storedChallenges = localStorage.getItem('challenges');
-        if (storedChallenges) {
-          setChallenges(JSON.parse(storedChallenges));
-        } else {
-          localStorage.setItem('challenges', JSON.stringify(initialChallenges));
-          setChallenges(initialChallenges);
-          toast({
-            title: 'Challenges Seeded',
-            description: 'Initial challenges have been loaded.',
-          });
-        }
-      } catch (error) {
-         console.error("Error loading challenges from localStorage: ", error);
-         toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Could not load challenges.'
-         });
-      } finally {
-          setIsLoading(false);
+      if (challengesSnapshot.empty) {
+        // Seed initial challenges if the collection is empty
+        await Promise.all(initialChallenges.map(challenge => {
+            const challengeRef = doc(db, 'challenges', challenge.id);
+            return setDoc(challengeRef, challenge);
+        }));
+        setChallenges(initialChallenges);
+        toast({
+          title: 'Challenges Seeded',
+          description: 'Initial challenges have been loaded into Firestore.',
+        });
+      } else {
+        const challengesList = challengesSnapshot.docs.map(doc => doc.data() as Challenge);
+        setChallenges(challengesList);
       }
+    } catch (error) {
+       console.error("Error loading challenges from Firestore: ", error);
+       toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not load challenges from Firestore.'
+       });
+    } finally {
+        setIsLoading(false);
     }
-  }, [isClient, toast]);
+  }, [db, toast]);
+  
+  useEffect(() => {
+    fetchChallenges();
+  }, [fetchChallenges]);
   
   const handleInputChange = useCallback((field: keyof Omit<FormData, 'examples' | 'testCases'>, value: string | number) => {
     setFormData(prev => ({...prev, [field]: value}));
@@ -126,41 +135,36 @@ export default function ManageChallengesPage() {
     setFormData(defaultFormData);
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title) {
         toast({ variant: 'destructive', title: 'Error', description: 'Title is required.' });
         return;
     }
-    const challengeDataToSave = {
+    const challengeDataToSave: Challenge = {
+        id: editingChallengeId || new Date().toISOString(), // Use existing ID or create new
         ...formData,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
     };
 
     try {
-      let updatedChallenges: Challenge[];
-      if (editingChallengeId) {
-          updatedChallenges = challenges.map(c => c.id === editingChallengeId ? { ...challengeDataToSave, id: editingChallengeId } : c)
-          toast({
-              title: 'Challenge Updated!',
-              description: `Successfully updated "${challengeDataToSave.title}".`,
-          });
-      } else {
-          const newChallenge = { ...challengeDataToSave, id: new Date().toISOString() };
-          updatedChallenges = [...challenges, newChallenge];
-          toast({
-              title: 'Challenge Added!',
-              description: `Successfully added "${challengeDataToSave.title}".`,
-          });
-      }
-      setChallenges(updatedChallenges);
-      localStorage.setItem('challenges', JSON.stringify(updatedChallenges));
+      const challengeRef = doc(db, 'challenges', challengeDataToSave.id);
+      await setDoc(challengeRef, challengeDataToSave, { merge: true });
+      
+      toast({
+          title: `Challenge ${editingChallengeId ? 'Updated' : 'Added'}!`,
+          description: `Successfully saved "${challengeDataToSave.title}".`,
+      });
+      
+      // Refresh local state
+      fetchChallenges();
+
     } catch (error) {
         console.error("Error saving challenge: ", error);
         toast({
           variant: 'destructive',
           title: 'Error Saving Challenge',
-          description: 'Could not save the challenge to local storage.'
+          description: 'Could not save the challenge to Firestore.'
         });
     } finally {
       handleCancel();
@@ -181,10 +185,6 @@ export default function ManageChallengesPage() {
       });
   }, [challenges, languageFilter, sortType]);
   
-  if (!isClient) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
-  }
-
   if (isFormVisible) {
      return (
         <Card>
