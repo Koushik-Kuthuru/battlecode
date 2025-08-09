@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Medal } from 'lucide-react';
+import { Medal, User } from 'lucide-react';
 
 type LeaderboardEntry = {
   rank: number;
   name: string;
   points: number;
+  email: string;
+  imageUrl?: string;
 };
 
 const getBadge = (rank: number) => {
@@ -32,12 +34,17 @@ export default function LeaderboardPage() {
     // We need to ensure localStorage is accessed only on the client side.
     if (typeof window !== 'undefined') {
         const storedLeaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
-        const sortedUsers = Object.values(storedLeaderboard)
-          .sort((a: any, b: any) => b.points - a.points)
-          .map((user: any, index) => ({
-            ...user,
-            rank: index + 1
-          }));
+        const sortedUsers = Object.entries(storedLeaderboard)
+          .sort(([, a]: any, [, b]: any) => b.points - a.points)
+          .map(([email, userData]: [string, any], index) => {
+             const userProfile = JSON.parse(localStorage.getItem(`userProfile_${email}`) || '{}');
+             return {
+                ...userData,
+                email,
+                rank: index + 1,
+                imageUrl: userProfile.imageUrl,
+             }
+          });
         setLeaderboardData(sortedUsers);
     }
   }, []);
@@ -71,8 +78,10 @@ export default function LeaderboardPage() {
                     <TableCell>
                       <div className="flex items-center gap-4">
                         <Avatar>
-                           <AvatarImage src={`https://i.pravatar.cc/150?u=${user.name}`} alt={user.name} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                           <AvatarImage src={user.imageUrl} alt={user.name} />
+                          <AvatarFallback>
+                            <User />
+                          </AvatarFallback>
                         </Avatar>
                         <span>{user.name}</span>
                       </div>
