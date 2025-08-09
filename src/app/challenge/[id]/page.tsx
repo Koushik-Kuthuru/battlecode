@@ -290,7 +290,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
 
       toast({
           title: passRate === 1 ? 'Accepted!' : 'Some tests failed on submission',
-          description: `You passed ${passedCount}/${totalCount} cases. You earned ${finalScore} points after a ${penalty} point penalty.`,
+          description: `You passed ${passedCount}/${totalCount} cases. You earned ${finalScore} after a ${penalty} penalty.`,
           variant: passRate === 1 ? 'default' : 'destructive',
       });
     }
@@ -322,9 +322,9 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                 <div className="mb-4 flex items-center gap-4 rounded-lg bg-muted/50 p-4">
                     <Award className="h-8 w-8 text-primary"/>
                     <div>
-                        <p className="font-bold text-lg">{submissionResult.score} Points Awarded</p>
+                        <p className="font-bold text-lg">{submissionResult.score} Awarded</p>
                         <p className="text-sm text-muted-foreground">
-                            {submissionResult.penalty > 0 ? `(${submissionResult.penalty} point penalty for tab switching)` : 'Keep up the great work!'}
+                            {submissionResult.penalty > 0 ? `(${submissionResult.penalty} penalty for tab switching)` : 'Keep up the great work!'}
                         </p>
                     </div>
                 </div>
@@ -410,7 +410,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                 }>{challenge.difficulty}</Badge>
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <Award className="h-4 w-4" />
-                  <span>{challenge.points} Points</span>
+                  <span>{challenge.points}</span>
                 </Badge>
             </div>
           </div>
@@ -531,9 +531,9 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
               Switching tabs during a challenge is discouraged. A penalty per switch will be applied to your submission score.
               <br />
               <br />
-              This is a <strong>{challenge.difficulty}</strong> challenge. You lose <strong>{penaltyPoints} points</strong> per switch.
+              This is a <strong>{challenge.difficulty}</strong> challenge. You lose <strong>{penaltyPoints}</strong> per switch.
               <br/>
-              You have switched tabs <strong>{tabSwitchCount} time{tabSwitchCount > 1 ? 's' : ''}</strong>, for a total penalty of <strong>{totalPenalty} points</strong>.
+              You have switched tabs <strong>{tabSwitchCount} time{tabSwitchCount > 1 ? 's' : ''}</strong>, for a total penalty of <strong>{totalPenalty}</strong>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -581,5 +581,3 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
 }
-
-    

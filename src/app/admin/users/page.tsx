@@ -97,7 +97,7 @@ export default function ManageUsersPage() {
                                     <TableHead>Student ID</TableHead>
                                     <TableHead>Password</TableHead>
                                     <TableHead>Branch & Year</TableHead>
-                                    <TableHead className="text-right">Points</TableHead>
+                                    <TableHead className="text-right">Score</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

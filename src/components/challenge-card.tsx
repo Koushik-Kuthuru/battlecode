@@ -42,7 +42,7 @@ export function ChallengeCard({ challenge, isCompleted, isInProgress }: Challeng
               isCompleted && "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-500/50"
             )}>
               <Award className="h-4 w-4" />
-              <span>{challenge.points} Points</span>
+              <span>{challenge.points}</span>
             </Badge>
           </div>
         </div>

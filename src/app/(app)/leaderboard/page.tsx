@@ -63,7 +63,7 @@ export default function LeaderboardPage() {
                 <TableRow>
                   <TableHead className="w-[80px] text-center">Rank</TableHead>
                   <TableHead>User</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
+                  <TableHead className="text-right">Score</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

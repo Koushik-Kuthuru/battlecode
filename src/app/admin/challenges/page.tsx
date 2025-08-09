@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -354,7 +353,7 @@ export default function ManageChallengesPage() {
                   <div key={challenge.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg gap-4">
                     <div>
                       <h3 className="font-semibold">{challenge.title}</h3>
-                      <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} Points - {challenge.language}</p>
+                      <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} - {challenge.language}</p>
                     </div>
                      <Button variant="outline" size="sm" onClick={() => handleEditClick(challenge)}>
                          <Edit className="mr-2 h-4 w-4" />
@@ -373,5 +372,3 @@ export default function ManageChallengesPage() {
     </div>
   );
 }
-
-    
