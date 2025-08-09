@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { type Challenge, challenges as initialChallenges } from '@/lib/data';
+import { type Challenge } from '@/lib/data';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CodeEditor } from '@/components/code-editor';
@@ -27,7 +27,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection, getDocs, writeBatch } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
 type CurrentUser = {
@@ -81,24 +81,31 @@ export default function ChallengePage() {
   }, []);
 
   const { nextChallengeId } = useMemo(() => {
-    if (!challengeId) return { nextChallengeId: null };
+    if (!challengeId || !challenges.length) return { nextChallengeId: null };
     const currentChallengeIndex = challenges.findIndex((c) => c.id === challengeId);
-    const nextChallengeId = currentChallengeIndex !== -1 && currentChallengeIndex < challenges.length - 1 
-      ? challenges[currentChallengeIndex + 1].id 
-      : null;
-    return { nextChallengeId };
+    if (currentChallengeIndex === -1) return { nextChallengeId: null };
+    const nextChallenge = challenges[currentChallengeIndex + 1];
+    return { nextChallengeId: nextChallenge ? nextChallenge.id : null };
   }, [challengeId, challenges]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setCurrentUser({ uid: user.uid, name: user.displayName || 'User', email: user.email! });
+        const userDocRef = doc(db, 'users', user.uid);
+        getDoc(userDocRef).then(userDoc => {
+          if(userDoc.exists()) {
+              const userData = userDoc.data();
+              setCurrentUser({ uid: user.uid, name: userData.name, email: user.email! });
+          } else {
+             router.push('/login');
+          }
+        });
       } else {
         router.push('/login');
       }
     });
     return () => unsubscribe();
-  }, [auth, router]);
+  }, [auth, router, db]);
 
   useEffect(() => {
     if (!challengeId || !currentUser) return;
@@ -106,7 +113,6 @@ export default function ChallengePage() {
     const fetchChallengeData = async () => {
       setIsLoading(true);
       try {
-        // Fetch all challenges
         const challengesCollection = collection(db, 'challenges');
         const challengesSnapshot = await getDocs(challengesCollection);
         const allChallenges = challengesSnapshot.docs.map(doc => doc.data() as Challenge);
@@ -131,7 +137,8 @@ export default function ChallengePage() {
              }
 
            } else {
-             // Mark as in-progress
+             const userChallengeDataRef = doc(db, `users/${currentUser.uid}/challengeData/inProgress`);
+             await setDoc(userChallengeDataRef, { [challengeId]: true }, { merge: true });
              await setDoc(challengeStateRef, { inProgress: true }, { merge: true });
            }
 
@@ -190,9 +197,8 @@ export default function ChallengePage() {
       if (document.hidden && challenge && currentUser && !isCompleted) {
           const newSwitchCount = tabSwitchCount + 1;
           setTabSwitchCount(newSwitchCount);
-          // Save tab switch count to Firestore
-           const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
-           await setDoc(challengeStateRef, { tabSwitches: newSwitchCount }, { merge: true });
+          const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
+          await setDoc(challengeStateRef, { tabSwitches: newSwitchCount }, { merge: true });
           setShowPenaltyDialog(true);
       }
     };
@@ -251,7 +257,6 @@ export default function ChallengePage() {
     setSubmissionResult(null);
     setGeneratedTests([]);
 
-    // Simulate running test cases
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     const testCasesToUse = runType === 'run' ? challenge.examples.map(ex => ({input: ex.input, output: ex.output})) : challenge.testCases;
@@ -285,17 +290,23 @@ export default function ChallengePage() {
     if (runType === 'submit') {
       setIsSubmitting(false);
       
+      const userDocRef = doc(db, 'users', currentUser.uid);
       const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
 
       if (passRate === 1) {
-          if (!isCompleted) { // Only award points and mark as complete if not already completed
+          if (!isCompleted) {
             setIsCompleted(true);
             
-            // Use a transaction to update user points and challenge status atomically
-            const userDocRef = doc(db, 'users', currentUser.uid);
             await updateDoc(userDocRef, {
                 points: increment(finalScore)
             });
+            
+            const completedChallengesRef = doc(db, `users/${currentUser.uid}/challengeData/completed`);
+            await setDoc(completedChallengesRef, { [challenge.id]: true }, { merge: true });
+
+            const inProgressChallengesRef = doc(db, `users/${currentUser.uid}/challengeData/inProgress`);
+            await setDoc(inProgressChallengesRef, { [challenge.id]: false }, { merge: true });
+
             await setDoc(challengeStateRef, { completed: true, score: finalScore }, { merge: true });
           }
       }
@@ -620,3 +631,5 @@ export default function ChallengePage() {
     </div>
   );
 }
+
+    
