@@ -63,6 +63,7 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
 
 
   const { nextChallengeId } = useMemo(() => {
+    if (!params.id) return { nextChallengeId: null };
     const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
     const nextChallengeId = currentChallengeIndex !== -1 && currentChallengeIndex < challenges.length - 1 
       ? challenges[currentChallengeIndex + 1].id 
@@ -81,6 +82,7 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
   }, [router]);
 
   useEffect(() => {
+    if (!params.id) return;
     const foundChallenge = challenges.find((c) => c.id === params.id) || null;
     if (foundChallenge && currentUser) {
       setChallenge(foundChallenge);
@@ -99,7 +101,8 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
       if (challengeIsCompleted) {
          setCode(savedCode || foundChallenge.solution);
       } else {
-        setCode(savedCode || '');
+        const initialCode = savedCode || '';
+        setCode(initialCode);
       }
 
       // Load tab switch count
