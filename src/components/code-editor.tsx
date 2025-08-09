@@ -26,13 +26,10 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
       onCopy={handleIllegalAction}
       onPaste={handleIllegalAction}
       onCut={handleIllegalAction}
-      className={cn(
-        'min-h-[400px] w-full flex-1 resize-none rounded-lg border bg-muted/20 p-1',
-        'focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2'
-      )}
+      className="absolute inset-0"
     >
       <Editor
-        height="400px"
+        height="100%"
         language={editorLanguage}
         value={value}
         onChange={onChange}

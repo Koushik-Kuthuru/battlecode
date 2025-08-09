@@ -281,11 +281,17 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   
   return (
     <div className="flex h-screen flex-col">
-      <div className={`flex-1 grid ${isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'md:grid-cols-[1fr,1fr]'} overflow-hidden`}>
+      <div className={`flex flex-1 grid ${isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'md:grid-cols-[1fr,1fr]'} overflow-hidden`}>
         {/* Left Panel */}
-        <div className={`flex flex-col h-full transition-all duration-300 ${isSidebarCollapsed ? "w-0 invisible" : "w-full"}`}>
-          <ScrollArea className="flex-1 p-6">
-            <div className="flex items-center justify-between mb-4">
+        <div className={`relative flex flex-col h-full transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0" : "w-full p-6"}`}>
+          <button 
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+              className="absolute z-20 right-[-12px] top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background border shadow-md flex items-center justify-center hover:bg-muted"
+          >
+              {isSidebarCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
+          </button>
+          <ScrollArea className="flex-1 -mr-6 pr-6">
+            <div className={`flex items-center justify-between mb-4 ${isSidebarCollapsed ? 'invisible' : ''}`}>
               <h1 className="text-3xl font-bold">{challenge.title}</h1>
               <Badge variant="outline" className={
                 challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
@@ -294,13 +300,13 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
               }>{challenge.difficulty}</Badge>
             </div>
             
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className={`flex flex-wrap gap-2 mb-4 ${isSidebarCollapsed ? 'invisible' : ''}`}>
                 {challenge.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
             </div>
 
-            <Separator className="my-6" />
+            <Separator className={`my-6 ${isSidebarCollapsed ? 'invisible' : ''}`} />
 
-            <Tabs defaultValue="description">
+            <Tabs defaultValue="description" className={`${isSidebarCollapsed ? 'invisible' : ''}`}>
                 <TabsList className="mb-4">
                     <TabsTrigger value="description">Description</TabsTrigger>
                     <TabsTrigger value="results" disabled={!submissionResult && generatedTests.length === 0}>Results</TabsTrigger>
@@ -328,21 +334,9 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
           </ScrollArea>
         </div>
         
-        {/* Resize Handle and Right Panel Wrapper */}
-        <div className="relative flex flex-col h-full overflow-hidden">
-          <div className="relative group flex items-center h-full">
-              <button 
-                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-                  className="absolute z-10 left-[-12px] top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background border shadow-md flex items-center justify-center hover:bg-muted"
-              >
-                  {isSidebarCollapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
-              </button>
-              <Separator orientation="vertical" className="h-full" />
-          </div>
-
-          {/* Right Panel */}
-          <div className="absolute inset-0 flex flex-col h-full overflow-hidden ml-1">
-              <div className="p-4 flex justify-end items-center">
+        {/* Right Panel */}
+        <div className="flex flex-col h-full overflow-hidden">
+             <div className="p-4 flex justify-end items-center border-b">
                    <Select value={language} onValueChange={setLanguage}>
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Language" />
@@ -377,7 +371,6 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
                     </Button>
                   </div>
               </div>
-          </div>
         </div>
       </div>
     </div>
