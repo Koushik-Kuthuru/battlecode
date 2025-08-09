@@ -23,8 +23,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { cn } from '@/lib/utils';
 
 
 type TestResult = {
@@ -100,6 +100,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   useEffect(() => {
     const handleContextmenu = (e: MouseEvent) => e.preventDefault();
     const handleKeydown = (e: KeyboardEvent) => {
+      // Block developer tools
       if (
         e.key === 'F12' ||
         (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
@@ -111,6 +112,16 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
           title: 'Action Prohibited',
           description: 'Developer tools are disabled during assessments.',
         });
+      }
+      
+      // Block copy, paste, cut
+      if (e.ctrlKey && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
+         e.preventDefault();
+         toast({
+            variant: 'destructive',
+            title: 'Action Prohibited',
+            description: 'Copy/Paste/Cut is disabled to ensure a fair assessment.',
+         });
       }
     };
 
@@ -505,5 +516,3 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
 }
-
-    
