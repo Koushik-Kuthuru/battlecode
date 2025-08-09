@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, use } from 'react';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,6 @@ import { Separator } from '@/components/ui/separator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { use } from 'react';
 
 
 type TestResult = {
@@ -40,8 +39,10 @@ type RunType = 'run' | 'submit';
 type MobileView = 'description' | 'code' | 'results';
 
 export default function ChallengePage() {
-  const params = useParams();
+  const params = use(useParams());
   const router = useRouter();
+  const { toast } = useToast();
+  
   const challengeId = params.id as string;
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -60,9 +61,13 @@ export default function ChallengePage() {
   const [mobileView, setMobileView] = useState<MobileView>('description');
   const [isCompleted, setIsCompleted] = useState(false);
   const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
-  const { toast } = useToast();
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [showPenaltyDialog, setShowPenaltyDialog] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleCodeChange = useCallback((value: string | undefined) => {
     setCode(value || '');
@@ -78,13 +83,15 @@ export default function ChallengePage() {
   }, [challengeId, challenges]);
   
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    if (!user) {
-      router.push('/login');
-    } else {
-      setCurrentUser(user);
+    if (isClient) {
+      const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+      if (!user) {
+        router.push('/login');
+      } else {
+        setCurrentUser(user);
+      }
     }
-  }, [router]);
+  }, [router, isClient]);
 
   useEffect(() => {
     if (!challengeId || !currentUser) return;
@@ -300,7 +307,7 @@ export default function ChallengePage() {
     }
   };
 
-  if (!challenge || !currentUser) {
+  if (!isClient || !challenge || !currentUser) {
     return (
       <div className="flex h-full items-center justify-center">
         <div>Loading...</div>
@@ -612,3 +619,5 @@ export default function ChallengePage() {
     </div>
   );
 }
+
+    
