@@ -187,41 +187,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
              <ScrollArea className="flex-1">
                 <main className="bg-muted/40 p-4 md:p-8">{children}</main>
             </ScrollArea>
-            {/* Desktop Right Sidebar */}
-            <aside className="w-80 flex-shrink-0 border-l hidden lg:block">
-              <ScrollArea className="h-full p-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                       <Trophy className="h-5 w-5 text-primary" />
-                       Your Rank
-                    </CardTitle>
-                    <CardDescription>Your current position and points on the leaderboard.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      {userStats ? (
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Rank</span>
-                                <span className="font-bold text-2xl">#{userStats.rank}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Points</span>
-                                <span className="font-bold text-2xl">{userStats.points.toLocaleString()}</span>
-                            </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Start competing to see your rank!</p>
-                      )}
-                      <Button asChild className="w-full mt-6">
-                          <Link href="/leaderboard">
-                            View Full Leaderboard <ArrowRight className="ml-2 h-4 w-4"/>
-                          </Link>
-                      </Button>
-                  </CardContent>
-                </Card>
-              </ScrollArea>
-            </aside>
         </div>
 
         {/* Mobile Bottom Navigation */}
