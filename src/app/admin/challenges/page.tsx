@@ -9,11 +9,31 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { type Challenge, challenges as initialChallenges } from '@/lib/data';
+import { type Challenge } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+
+// This is a placeholder for the initial challenges to seed the DB.
+const initialChallenges: Challenge[] = [
+  {
+    id: '1',
+    title: 'Two Sum',
+    difficulty: 'Easy',
+    language: 'Python',
+    points: 10,
+    description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.',
+    tags: ['Array', 'Hash Table'],
+    examples: [
+      { input: 'nums = [2, 7, 11, 15], target = 9', output: '[0, 1]', explanation: 'Because nums[0] + nums[1] == 9, we return [0, 1].' },
+      { input: 'nums = [3, 2, 4], target = 6', output: '[1, 2]' }
+    ],
+    testCases: [ { input: 'nums = [2, 7, 11, 15], target = 9', output: '[0, 1]' } ],
+    solution: 'class Solution:\n    def twoSum(self, nums: list[int], target: int) -> list[int]:\n        pass'
+  },
+];
+
 
 type SortType = 'title' | 'difficulty';
 
@@ -53,7 +73,7 @@ export default function ManageChallengesPage() {
           const batch = writeBatch(db);
           initialChallenges.forEach((challenge) => {
             const { id, ...challengeData } = challenge;
-            const docRef = doc(collection(db, "challenges"));
+            const docRef = doc(db, "challenges", id); // Use explicit ID for seeding
             batch.set(docRef, { ...challengeData, createdAt: serverTimestamp() });
           });
           await batch.commit();
@@ -89,6 +109,7 @@ export default function ManageChallengesPage() {
   const handleArrayChange = (arrayName: 'examples' | 'testCases', index: number, field: string, value: string) => {
     setFormData(prev => {
         const newArray = [...prev[arrayName]];
+        // @ts-ignore
         newArray[index] = {...newArray[index], [field]: value};
         return {...prev, [arrayName]: newArray};
     });
@@ -104,6 +125,7 @@ export default function ManageChallengesPage() {
   const removeArrayItem = (arrayName: 'examples' | 'testCases', index: number) => {
       setFormData(prev => ({
         ...prev,
+        // @ts-ignore
         [arrayName]: prev[arrayName].filter((_, i) => i !== index)
       }));
   }
@@ -131,11 +153,16 @@ export default function ManageChallengesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.title) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Title is required.' });
+        return;
+    }
     const challengeDataToSave = {
         ...formData,
-        tags: formData.tags.split(',').map(tag => tag.trim()),
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
     };
 
+    setIsLoading(true);
     try {
       if (editingChallengeId) {
           const challengeRef = doc(db, 'challenges', editingChallengeId);
@@ -150,7 +177,7 @@ export default function ManageChallengesPage() {
             ...challengeDataToSave,
             createdAt: serverTimestamp()
           });
-          setChallenges([...challenges, { ...challengeDataToSave, id: docRef.id }]);
+          setChallenges(prev => [...prev, { ...challengeDataToSave, id: docRef.id }]);
           toast({
               title: 'Challenge Added!',
               description: `Successfully added "${challengeDataToSave.title}".`,
@@ -164,6 +191,7 @@ export default function ManageChallengesPage() {
           description: 'Could not save the challenge to the database.'
         });
     } finally {
+      setIsLoading(false);
       handleCancel();
     }
   };
@@ -182,19 +210,8 @@ export default function ManageChallengesPage() {
       });
   }, [challenges, languageFilter, sortType]);
   
-  return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Manage Challenges</h1>
-        {!isFormVisible && (
-          <Button onClick={handleAddNewClick}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add New Challenge
-          </Button>
-        )}
-      </div>
-
-      {isFormVisible ? (
+  if (isFormVisible) {
+     return (
         <Card>
           <CardHeader>
             <CardTitle>{editingChallengeId ? 'Edit Challenge' : 'Create New Challenge'}</CardTitle>
@@ -242,18 +259,18 @@ export default function ManageChallengesPage() {
 
                 <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" placeholder="Detailed problem description..." value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} required />
+                    <Textarea id="description" placeholder="Detailed problem description..." value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} required rows={5} />
                 </div>
                 
                 <div className="space-y-2">
-                    <Label htmlFor="tags">Tags</Label>
+                    <Label htmlFor="tags">Tags (comma-separated)</Label>
                     <Input id="tags" placeholder="e.g., Array, Hash Table, Two Pointers" value={formData.tags} onChange={(e) => handleInputChange('tags', e.target.value)} required/>
                 </div>
 
                 <div className="space-y-4">
                   <Label>Examples</Label>
                   {formData.examples.map((_, index) => (
-                    <Card key={index} className="p-4 relative">
+                    <Card key={index} className="p-4 relative bg-muted/50">
                        <div className="grid md:grid-cols-2 gap-4">
                            <div className="space-y-2">
                                <Label>Input</Label>
@@ -268,7 +285,7 @@ export default function ManageChallengesPage() {
                            <Label>Explanation (Optional)</Label>
                            <Textarea value={formData.examples[index].explanation} onChange={(e) => handleArrayChange('examples', index, 'explanation', e.target.value)} />
                        </div>
-                       <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2" onClick={() => removeArrayItem('examples', index)}>
+                       <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => removeArrayItem('examples', index)}>
                          <Trash2 className="h-4 w-4" />
                        </Button>
                     </Card>
@@ -281,7 +298,7 @@ export default function ManageChallengesPage() {
                 <div className="space-y-4">
                    <Label>Test Cases</Label>
                    {formData.testCases.map((_, index) => (
-                     <Card key={index} className="p-4 relative">
+                     <Card key={index} className="p-4 relative bg-muted/50">
                         <div className="grid md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Input</Label>
@@ -292,7 +309,7 @@ export default function ManageChallengesPage() {
                                 <Textarea value={formData.testCases[index].output} onChange={(e) => handleArrayChange('testCases', index, 'output', e.target.value)} required />
                             </div>
                         </div>
-                        <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2" onClick={() => removeArrayItem('testCases', index)}>
+                        <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => removeArrayItem('testCases', index)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                      </Card>
@@ -313,69 +330,84 @@ export default function ManageChallengesPage() {
                    </div>
                 </div>
 
-                <div className="flex gap-4">
-                    <Button type="submit">{editingChallengeId ? 'Update Challenge' : 'Create Challenge'}</Button>
-                    <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
+                <div className="flex gap-4 pt-4">
+                    <Button type="submit" disabled={isLoading}>{isLoading ? 'Saving...' : editingChallengeId ? 'Update Challenge' : 'Create Challenge'}</Button>
+                    <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
                 </div>
               </form>
           </CardContent>
         </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Existing Challenges</CardTitle>
-             {isLoading ? (
-                <CardDescription>Loading challenges...</CardDescription>
-             ) : (
-                <div className="mt-4 flex items-center gap-4">
-                    <Select value={languageFilter} onValueChange={setLanguageFilter}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by language" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All">All Languages</SelectItem>
-                            <SelectItem value="C">C</SelectItem>
-                            <SelectItem value="C++">C++</SelectItem>
-                            <SelectItem value="Java">Java</SelectItem>
-                            <SelectItem value="Python">Python</SelectItem>
-                            <SelectItem value="JavaScript">JavaScript</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <div className="flex items-center gap-2">
-                        <Button variant={sortType === 'title' ? 'secondary' : 'ghost'} onClick={() => setSortType('title')}>
-                            <ArrowDownAZ className="mr-2 h-4 w-4" />
-                            Sort by Title
-                        </Button>
-                        <Button variant={sortType === 'difficulty' ? 'secondary' : 'ghost'} onClick={() => setSortType('difficulty')}>
-                            <ArrowDownUp className="mr-2 h-4 w-4" />
-                            Sort by Difficulty
-                        </Button>
+     );
+  }
+
+  return (
+    <div className="container mx-auto py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Manage Challenges</h1>
+        <Button onClick={handleAddNewClick}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add New Challenge
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Existing Challenges</CardTitle>
+           {isLoading ? (
+              <CardDescription>Loading challenges...</CardDescription>
+           ) : (
+              <div className="mt-4 flex flex-col md:flex-row items-center gap-4">
+                  <Select value={languageFilter} onValueChange={setLanguageFilter}>
+                      <SelectTrigger className="w-full md:w-[180px]">
+                          <SelectValue placeholder="Filter by language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="All">All Languages</SelectItem>
+                          <SelectItem value="C">C</SelectItem>
+                          <SelectItem value="C++">C++</SelectItem>
+                          <SelectItem value="Java">Java</SelectItem>
+                          <SelectItem value="Python">Python</SelectItem>
+                          <SelectItem value="JavaScript">JavaScript</SelectItem>
+                      </SelectContent>
+                  </Select>
+                  <div className="flex items-center gap-2">
+                      <Button variant={sortType === 'title' ? 'secondary' : 'ghost'} onClick={() => setSortType('title')}>
+                          <ArrowDownAZ className="mr-2 h-4 w-4" />
+                          Sort by Title
+                      </Button>
+                      <Button variant={sortType === 'difficulty' ? 'secondary' : 'ghost'} onClick={() => setSortType('difficulty')}>
+                          <ArrowDownUp className="mr-2 h-4 w-4" />
+                          Sort by Difficulty
+                      </Button>
+                  </div>
+              </div>
+           )}
+        </CardHeader>
+        <CardContent>
+           {isLoading ? (
+              <div className="text-center py-16">Loading challenges...</div>
+           ) : (
+              <div className="space-y-4">
+                {sortedAndFilteredChallenges.length > 0 ? sortedAndFilteredChallenges.map(challenge => (
+                  <div key={challenge.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg gap-4">
+                    <div>
+                      <h3 className="font-semibold">{challenge.title}</h3>
+                      <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} - {challenge.language}</p>
                     </div>
-                </div>
-             )}
-          </CardHeader>
-          <CardContent>
-             {isLoading ? (
-                <div className="text-center">Loading...</div>
-             ) : (
-                <div className="space-y-4">
-                  {sortedAndFilteredChallenges.map(challenge => (
-                    <div key={challenge.id} className="flex justify-between items-center p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-semibold">{challenge.title}</h3>
-                        <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} points - {challenge.language}</p>
-                      </div>
-                       <Button variant="outline" size="sm" onClick={() => handleEditClick(challenge)}>
-                           <Edit className="mr-2 h-4 w-4" />
-                           Edit
-                       </Button>
-                    </div>
-                  ))}
-                </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                     <Button variant="outline" size="sm" onClick={() => handleEditClick(challenge)}>
+                         <Edit className="mr-2 h-4 w-4" />
+                         Edit
+                     </Button>
+                  </div>
+                )) : (
+                  <div className="text-center py-16 text-muted-foreground">
+                    No challenges found.
+                  </div>
+                )}
+              </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
