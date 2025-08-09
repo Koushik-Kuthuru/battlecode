@@ -12,12 +12,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { type Challenge } from '@/lib/data';
+import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 
 const exampleSchema = z.object({
   input: z.string().min(1, 'Input is required'),
@@ -63,14 +63,36 @@ export default function ManageChallengesPage() {
       try {
         const challengesCollection = collection(db, 'challenges');
         const challengeSnapshot = await getDocs(challengesCollection);
-        const challengesList = challengeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
-        setChallenges(challengesList);
+        
+        if (challengeSnapshot.empty) {
+          // Seed the database if it's empty
+          const batch = writeBatch(db);
+          initialChallenges.forEach((challenge) => {
+            // we remove the `id` field from the initial data as Firestore will generate it.
+            const { id, ...challengeData } = challenge;
+            const docRef = doc(challengesCollection); // Create a new doc with auto-generated ID
+            batch.set(docRef, { ...challengeData, createdAt: serverTimestamp() });
+          });
+          await batch.commit();
+          // Refetch after seeding
+          const newChallengeSnapshot = await getDocs(challengesCollection);
+          const challengesList = newChallengeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+          setChallenges(challengesList);
+           toast({
+              title: 'Database Seeded',
+              description: 'Initial challenges have been loaded into Firestore.',
+           });
+        } else {
+          const challengesList = challengeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+          setChallenges(challengesList);
+        }
+
       } catch (error) {
-        console.error("Error fetching challenges: ", error);
+        console.error("Error fetching or seeding challenges: ", error);
         toast({
           variant: 'destructive',
-          title: 'Error fetching challenges',
-          description: 'Could not load challenges from the database.'
+          title: 'Error managing challenges',
+          description: 'Could not load or seed challenges in the database.'
         });
       } finally {
         setIsLoading(false);
@@ -124,7 +146,7 @@ export default function ManageChallengesPage() {
       setEditingChallenge(challenge);
       form.reset({
         ...challenge,
-        tags: challenge.tags.join(', '),
+        tags: Array.isArray(challenge.tags) ? challenge.tags.join(', ') : '',
       });
       setIsFormVisible(true);
   }
@@ -484,3 +506,5 @@ export default function ManageChallengesPage() {
     </div>
   );
 }
+
+    
