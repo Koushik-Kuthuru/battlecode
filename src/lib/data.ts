@@ -3,6 +3,7 @@ export type Challenge = {
   title: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   language: 'C' | 'C++' | 'Java' | 'Python' | 'JavaScript';
+  points: number;
   description: string;
   tags: string[];
   examples: {
@@ -23,6 +24,7 @@ export const challenges: Challenge[] = [
     title: 'Two Sum',
     difficulty: 'Easy',
     language: 'Python',
+    points: 10,
     description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.',
     tags: ['Array', 'Hash Table'],
     examples: [
@@ -58,6 +60,7 @@ export const challenges: Challenge[] = [
     title: 'Reverse Linked List',
     difficulty: 'Easy',
     language: 'Java',
+    points: 10,
     description: 'Given the head of a singly linked list, reverse the list, and return the reversed list.',
     tags: ['Linked List', 'Recursion'],
     examples: [
@@ -105,6 +108,7 @@ class Solution {
     title: 'FizzBuzz',
     difficulty: 'Easy',
     language: 'C++',
+    points: 10,
     description: 'Write a program that outputs the string representation of numbers from 1 to n. But for multiples of three it should output “Fizz” instead of the number and for the multiples of five output “Buzz”. For numbers which are multiples of both three and five output “FizzBuzz”.',
     tags: ['Math', 'String'],
     examples: [
@@ -147,6 +151,7 @@ public:
     title: 'Container With Most Water',
     difficulty: 'Medium',
     language: 'JavaScript',
+    points: 25,
     description: 'You are given an integer array height of length n. There are n vertical lines drawn such as the two endpoints of the ith line are (i, 0) and (i, height[i]). Find two lines that together with the x-axis form a container, such that the container contains the most water.',
     tags: ['Array', 'Two Pointers'],
     examples: [
@@ -190,6 +195,7 @@ var maxArea = function(height) {
     title: 'Longest Substring Without Repeating Characters',
     difficulty: 'Medium',
     language: 'Python',
+    points: 25,
     description: 'Given a string s, find the length of the longest substring without repeating characters.',
     tags: ['Hash Table', 'String', 'Sliding Window'],
     examples: [
@@ -232,6 +238,7 @@ var maxArea = function(height) {
     title: 'Validate Binary Search Tree',
     difficulty: 'Medium',
     language: 'Java',
+    points: 25,
     description: 'Given the root of a binary tree, determine if it is a valid binary search tree (BST).',
     tags: ['Tree', 'DFS', 'BST'],
     examples: [
@@ -296,6 +303,7 @@ class Solution {
     title: 'Median of Two Sorted Arrays',
     difficulty: 'Hard',
     language: 'C',
+    points: 50,
     description: 'Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).',
     tags: ['Array', 'Binary Search', 'Divide and Conquer'],
     examples: [
@@ -352,6 +360,7 @@ class Solution {
     title: 'Trapping Rain Water',
     difficulty: 'Hard',
     language: 'Python',
+    points: 50,
     description: 'Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.',
     tags: ['Array', 'Two Pointers', 'Stack'],
     examples: [
@@ -395,6 +404,7 @@ class Solution {
     title: 'Regular Expression Matching',
     difficulty: 'Hard',
     language: 'C++',
+    points: 50,
     description: 'Given an input string (s) and a pattern (p), implement regular expression matching with support for \'.\' and \'*\' where \'.\' matches any single character and \'*\' matches zero or more of the preceding element.',
     tags: ['String', 'Dynamic Programming', 'Recursion'],
     examples: [
@@ -449,6 +459,7 @@ public:
     title: 'Merge k Sorted Lists',
     difficulty: 'Hard',
     language: 'Java',
+    points: 50,
     description: 'You are given an array of k linked-lists lists, each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it.',
     tags: ['Linked List', 'Divide and Conquer', 'Heap'],
     examples: [

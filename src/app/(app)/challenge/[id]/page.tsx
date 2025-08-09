@@ -185,8 +185,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     const totalCount = testCasesToUse.length;
     const passRate = totalCount > 0 ? passedCount / totalCount : 0;
     
-    const difficultyPoints = { Easy: 10, Medium: 25, Hard: 50 }[challenge.difficulty];
-    const score = Math.round(difficultyPoints * passRate);
+    const score = Math.round(challenge.points * passRate);
     
     setSubmissionResult({ results, score });
     setActiveTab('results');

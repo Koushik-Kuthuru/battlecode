@@ -3,7 +3,7 @@ import type { Challenge } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, CheckCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle, Award } from 'lucide-react';
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -25,9 +25,15 @@ export function ChallengeCard({ challenge, isCompleted }: ChallengeCardProps) {
                 {isCompleted && <CheckCircle className="h-5 w-5 text-green-500" />}
                 {challenge.title}
             </CardTitle>
-          <Badge variant="outline" className={difficultyColors[challenge.difficulty]}>
-            {challenge.difficulty}
-          </Badge>
+          <div className="flex flex-col items-end gap-2">
+            <Badge variant="outline" className={difficultyColors[challenge.difficulty]}>
+              {challenge.difficulty}
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Award className="h-4 w-4" />
+              <span>{challenge.points} Points</span>
+            </Badge>
+          </div>
         </div>
         <CardDescription className="line-clamp-2">{challenge.description}</CardDescription>
       </CardHeader>
