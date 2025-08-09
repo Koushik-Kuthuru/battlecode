@@ -77,10 +77,16 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       setChallenge(foundChallenge);
       
       const savedCode = localStorage.getItem(`code_${currentUser.email}_${params.id}`);
-      setCode(savedCode || foundChallenge.solution);
-      
+      // Only show solution if challenge is completed, otherwise start with empty code
       const completedChallenges = JSON.parse(localStorage.getItem(`completedChallenges_${currentUser.email}`) || '{}');
-      setIsCompleted(completedChallenges[params.id] || false);
+      const challengeIsCompleted = completedChallenges[params.id] || false;
+      setIsCompleted(challengeIsCompleted);
+      
+      if (challengeIsCompleted) {
+         setCode(savedCode || foundChallenge.solution);
+      } else {
+        setCode(savedCode || '');
+      }
 
       setLanguage(foundChallenge.language);
       setSubmissionResult(null); // Reset results when challenge changes
@@ -346,7 +352,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   }
 
   const DescriptionPanel = () => (
-    <div className="relative flex flex-col h-full bg-card p-4 md:p-6">
+    <div className="relative flex flex-col h-full bg-card p-4 md:p-6" onCopy={(e) => e.preventDefault()}>
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full pr-4">
           <div className="flex items-start justify-between mb-4">
@@ -499,3 +505,5 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
 }
+
+    
