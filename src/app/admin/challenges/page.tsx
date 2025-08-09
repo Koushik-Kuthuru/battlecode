@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, useFieldArray, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { challenges as existingChallenges, type Challenge } from '@/lib/data';
-import { PlusCircle, Trash2, Edit } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
@@ -41,12 +41,19 @@ const challengeSchema = z.object({
 });
 
 type ChallengeFormValues = z.infer<typeof challengeSchema>;
+type SortType = 'title' | 'difficulty';
+
+const DIFFICULTY_ORDER: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3 };
+
 
 export default function ManageChallengesPage() {
   const { toast } = useToast();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const [languageFilter, setLanguageFilter] = useState('All');
+  const [sortType, setSortType] = useState<SortType>('title');
+
 
   useEffect(() => {
     const storedChallenges = JSON.parse(localStorage.getItem('challenges') || 'null');
@@ -118,14 +125,12 @@ export default function ManageChallengesPage() {
     };
 
     if (editingChallenge) {
-        // Update existing challenge
         updatedChallenges = challenges.map(c => c.id === editingChallenge.id ? challengeData : c);
         toast({
             title: 'Challenge Updated!',
             description: `Successfully updated "${challengeData.title}".`,
         });
     } else {
-        // Add new challenge
         updatedChallenges = [...challenges, challengeData];
         toast({
             title: 'Challenge Added!',
@@ -138,6 +143,20 @@ export default function ManageChallengesPage() {
     
     handleCancel();
   };
+
+  const sortedAndFilteredChallenges = useMemo(() => {
+    return [...challenges]
+      .filter(challenge => languageFilter === 'All' || challenge.language === languageFilter)
+      .sort((a, b) => {
+        if (sortType === 'title') {
+          return a.title.localeCompare(b.title);
+        }
+        if (sortType === 'difficulty') {
+          return DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+        }
+        return 0;
+      });
+  }, [challenges, languageFilter, sortType]);
   
   return (
     <div className="container mx-auto py-8">
@@ -381,14 +400,39 @@ export default function ManageChallengesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Existing Challenges</CardTitle>
+            <div className="mt-4 flex items-center gap-4">
+                <Select value={languageFilter} onValueChange={setLanguageFilter}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filter by language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="All">All Languages</SelectItem>
+                        <SelectItem value="C">C</SelectItem>
+                        <SelectItem value="C++">C++</SelectItem>
+                        <SelectItem value="Java">Java</SelectItem>
+                        <SelectItem value="Python">Python</SelectItem>
+                        <SelectItem value="JavaScript">JavaScript</SelectItem>
+                    </SelectContent>
+                </Select>
+                <div className="flex items-center gap-2">
+                    <Button variant={sortType === 'title' ? 'secondary' : 'ghost'} onClick={() => setSortType('title')}>
+                        <ArrowDownAZ className="mr-2 h-4 w-4" />
+                        Sort by Title
+                    </Button>
+                    <Button variant={sortType === 'difficulty' ? 'secondary' : 'ghost'} onClick={() => setSortType('difficulty')}>
+                        <ArrowDownUp className="mr-2 h-4 w-4" />
+                        Sort by Difficulty
+                    </Button>
+                </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {challenges.map(challenge => (
+              {sortedAndFilteredChallenges.map(challenge => (
                 <div key={challenge.id} className="flex justify-between items-center p-4 border rounded-lg">
                   <div>
                     <h3 className="font-semibold">{challenge.title}</h3>
-                    <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} points</p>
+                    <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} points - {challenge.language}</p>
                   </div>
                    <Button variant="outline" size="sm" onClick={() => handleEditClick(challenge)}>
                        <Edit className="mr-2 h-4 w-4" />
