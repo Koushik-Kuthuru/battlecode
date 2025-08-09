@@ -111,6 +111,22 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
             <CardTitle className="text-2xl">{challenge.title}</CardTitle>
             <CardDescription>{challenge.description}</CardDescription>
           </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {challenge.examples.map((example, index) => (
+                <div key={index}>
+                  <p className="font-semibold">Example {index + 1}:</p>
+                  <div className="mt-2 rounded-md bg-muted/50 p-3 text-sm">
+                    <p><strong>Input:</strong> {example.input}</p>
+                    <p><strong>Output:</strong> {example.output}</p>
+                    {example.explanation && (
+                      <p><strong>Explanation:</strong> {example.explanation}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
         {(isGenerating || generatedTests.length > 0) && (
             <Card>
