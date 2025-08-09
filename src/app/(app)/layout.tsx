@@ -10,7 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 
@@ -18,6 +18,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<{name: string, email: string} | null>(null);
+  const [userStats, setUserStats] = useState<{ rank: number; points: number } | null>(null);
   const { setTheme, theme } = useTheme();
 
   useEffect(() => {
@@ -25,8 +26,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
     if (!user) {
         router.push('/login');
+    } else {
+        setCurrentUser(user);
+
+        const storedLeaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
+        const sortedUsers = Object.entries(storedLeaderboard)
+          .sort(([, a]: any, [, b]: any) => b.points - a.points)
+          .map(([email, userData]: [string, any], index) => ({
+                email,
+                rank: index + 1,
+                points: userData.points,
+          }));
+        
+        const currentUserStats = sortedUsers.find(u => u.email === user.email);
+        if(currentUserStats) {
+            setUserStats({ rank: currentUserStats.rank, points: currentUserStats.points });
+        }
     }
-    setCurrentUser(user);
   }, [pathname, router]);
 
   const handleLogout = () => {
@@ -117,21 +133,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <aside className="w-80 flex-shrink-0 border-l hidden lg:block">
               <ScrollArea className="h-full p-6">
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Leaderboard
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                       <Trophy className="h-5 w-5 text-primary" />
+                       Your Rank
                     </CardTitle>
-                    <Trophy className="h-4 w-4 text-muted-foreground" />
+                    <CardDescription>Your current position and points on the leaderboard.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Top performers this week.
-                      </p>
-                      <Link href="/leaderboard">
-                        <Button className="w-full">
-                          View Leaderboard <ArrowRight className="ml-2 h-4 w-4"/>
-                        </Button>
-                      </Link>
+                      {userStats ? (
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Rank</span>
+                                <span className="font-bold text-2xl">#{userStats.rank}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Points</span>
+                                <span className="font-bold text-2xl">{userStats.points.toLocaleString()}</span>
+                            </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Start competing to see your rank!</p>
+                      )}
+                      <Button asChild className="w-full mt-6">
+                          <Link href="/leaderboard">
+                            View Full Leaderboard <ArrowRight className="ml-2 h-4 w-4"/>
+                          </Link>
+                      </Button>
                   </CardContent>
                 </Card>
               </ScrollArea>
@@ -140,5 +168,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-    
