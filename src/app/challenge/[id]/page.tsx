@@ -157,7 +157,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
 
   if (!challenge || !currentUser) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div>Loading...</div>
       </div>
     );
@@ -254,7 +254,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     const allPassed = passedCount === totalCount;
     
     return (
-        <Card>
+        <Card className="h-full flex flex-col">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     {allPassed ? (
@@ -268,7 +268,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                     {`You passed ${passedCount} of ${totalCount} test cases.`}
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col overflow-hidden">
                 <div className="mb-4 flex items-center gap-4 rounded-lg bg-muted/50 p-4">
                     <Award className="h-8 w-8 text-primary"/>
                     <div>
@@ -276,15 +276,16 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                         <p className="text-sm text-muted-foreground">Keep up the great work!</p>
                     </div>
                 </div>
-                <Tabs defaultValue="case-0">
+                <Tabs defaultValue="case-0" className="flex-1 flex flex-col overflow-hidden">
                     <TabsList>
                         {submissionResult.results.map((_, index) => (
                             <TabsTrigger key={index} value={`case-${index}`}>Case {index + 1}</TabsTrigger>
                         ))}
                     </TabsList>
-                    <ScrollArea className="h-48 mt-2">
+                    <div className="flex-1 overflow-auto mt-2">
+                    <ScrollArea className="h-full">
                     {submissionResult.results.map((result, index) => (
-                        <TabsContent key={index} value={`case-${index}`}>
+                        <TabsContent key={index} value={`case-${index}`} className="mt-0">
                            <div className="space-y-2 font-mono text-sm">
                                 <div>
                                     <p className="font-semibold">Input:</p>
@@ -302,6 +303,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                         </TabsContent>
                     ))}
                     </ScrollArea>
+                    </div>
                 </Tabs>
             </CardContent>
         </Card>
@@ -311,7 +313,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   const GeneratedTestsView = () => {
     if (isGenerating || generatedTests.length > 0) {
         return (
-            <Card>
+            <Card className="h-full">
                 <CardHeader>
                     <CardTitle>Generated Test Cases</CardTitle>
                     <CardDescription>
@@ -343,7 +345,16 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   }
 
   const DescriptionPanel = () => (
-    <div className={`relative flex flex-col h-full bg-card md:border-r transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0 overflow-hidden hidden md:block" : "w-full p-6"}`}>
+    <div className={`relative flex flex-col h-full bg-card md:border-r transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0 overflow-hidden" : "w-full md:p-6 p-4"}`}>
+       <Button 
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 hidden md:inline-flex absolute top-4 right-4 z-10"
+      >
+          {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+          <span className="sr-only">Toggle Sidebar</span>
+      </Button>
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full pr-4">
           <div className="flex items-start justify-between mb-4">
@@ -361,12 +372,12 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
 
           <Separator className="my-6" />
 
-          <Tabs value={desktopActiveTab} onValueChange={setDesktopActiveTab} className="hidden md:block">
+          <Tabs value={desktopActiveTab} onValueChange={setDesktopActiveTab} className="hidden md:flex flex-col h-full">
               <TabsList className="mb-4">
                   <TabsTrigger value="description">Description</TabsTrigger>
                   <TabsTrigger value="results" disabled={!submissionResult && generatedTests.length === 0}>Results</TabsTrigger>
               </TabsList>
-              <TabsContent value="description">
+              <TabsContent value="description" className="flex-1 overflow-auto">
                  <article className="prose prose-sm dark:prose-invert max-w-none">
                       <p>{challenge.description}</p>
                       
@@ -382,8 +393,10 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                       ))}
                  </article>
               </TabsContent>
-              <TabsContent value="results">
-                  {submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}
+              <TabsContent value="results" className="flex-1 overflow-auto">
+                  <div className="h-full">
+                    {submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}
+                  </div>
               </TabsContent>
           </Tabs>
           
@@ -404,9 +417,6 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                     ))}
                   </article>
               )}
-              {mobileView === 'results' && (
-                 submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />
-              )}
           </div>
         </ScrollArea>
       </div>
@@ -414,17 +424,8 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   );
 
   const EditorPanel = () => (
-    <div className="flex flex-col h-full overflow-hidden flex-1">
+    <div className="flex flex-col h-full overflow-hidden flex-1 bg-card">
          <div className="p-4 flex justify-between items-center border-b bg-card">
-              <Button 
-                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hidden md:inline-flex"
-              >
-                  {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-                  <span className="sr-only">Toggle Sidebar</span>
-              </Button>
                <Select value={language} onValueChange={setLanguage}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Language" />
@@ -438,7 +439,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                   </SelectContent>
               </Select>
           </div>
-          <div className="flex-1 relative min-h-[300px] md:min-h-0">
+          <div className="flex-1 relative">
               <CodeEditor value={code} onChange={handleCodeChange} language={language} />
           </div>
           <div className="p-4 bg-card border-t flex items-center justify-between gap-4">
@@ -466,7 +467,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   );
   
   return (
-    <div className="flex flex-1 flex-col md:grid md:grid-cols-[minmax(0,1fr),minmax(0,2fr)] overflow-hidden">
+    <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
       {/* Mobile View with Tabs */}
       <div className="md:hidden flex flex-col h-full">
         <div className="flex-shrink-0 border-b">
@@ -485,19 +486,17 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
           </Tabs>
         </div>
         <div className="flex-1 overflow-auto">
-          {mobileView === 'description' && <DescriptionPanel />}
-          {mobileView === 'code' && <EditorPanel />}
-          {mobileView === 'results' && (submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />)}
+          {mobileView === 'description' && <div className="h-full"><DescriptionPanel /></div>}
+          {mobileView === 'code' && <div className="h-full"><EditorPanel /></div>}
+          {mobileView === 'results' && <div className="p-4 h-full">{submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}</div>}
         </div>
       </div>
 
       {/* Desktop View */}
-      <div className={cn('hidden md:grid', isSidebarCollapsed ? 'md:grid-cols-[auto,1fr]' : 'md:grid-cols-[minmax(0,1fr),minmax(0,2fr)]', 'overflow-hidden transition-all duration-300')}>
+       <div className={cn('hidden md:grid h-full w-full', isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'grid-cols-[minmax(400px,1fr),2fr]', 'overflow-hidden transition-all duration-300')}>
         <DescriptionPanel />
         <EditorPanel />
       </div>
     </div>
   );
 }
-
-    
