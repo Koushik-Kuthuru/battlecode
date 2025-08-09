@@ -133,12 +133,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 bg-slate-900 text-white">
-           <h1 className="text-lg font-bold">Welcome 👋</h1>
+           <h1 className="text-xl font-bold">Welcome 👋</h1>
            <div className="flex items-center gap-4">
               <Sheet>
                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <Menu />
+                    <Button variant="ghost" size="icon" className="h-10 w-10">
+                        <Menu className="h-6 w-6" />
                     </Button>
                  </SheetTrigger>
                  <SheetContent side="right" className="bg-slate-900 text-white w-64 p-4">
