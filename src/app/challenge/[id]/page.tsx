@@ -25,6 +25,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 
 type TestResult = {
@@ -57,6 +58,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
   const { toast } = useToast();
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [showPenaltyDialog, setShowPenaltyDialog] = useState(false);
 
 
   const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
@@ -153,18 +155,13 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
           const newSwitchCount = tabSwitchCount + 1;
           setTabSwitchCount(newSwitchCount);
           localStorage.setItem(`tabSwitches_${currentUser.email}_${challenge.id}`, newSwitchCount.toString());
-
-          toast({
-            variant: 'destructive',
-            title: 'Tab switch detected!',
-            description: `A 10% penalty will be applied. Total penalty: ${newSwitchCount * 10}%`,
-          });
+          setShowPenaltyDialog(true);
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [challenge, currentUser, toast, isCompleted, tabSwitchCount]);
+  }, [challenge, currentUser, isCompleted, tabSwitchCount]);
 
   useEffect(() => {
     if (submissionResult || generatedTests.length > 0) {
@@ -374,12 +371,6 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
           <div className="flex items-start justify-between mb-4">
             <h1 className="text-3xl font-bold">{challenge.title}</h1>
              <div className="flex items-center gap-4">
-                 {tabSwitchCount > 0 && (
-                    <Badge variant="destructive" className="flex items-center gap-2">
-                        <EyeOff className="h-4 w-4" />
-                        {tabSwitchCount} Tab Switch{tabSwitchCount > 1 ? 'es' : ''} ({tabSwitchCount * 10}% Penalty)
-                    </Badge>
-                 )}
                 <Badge variant="outline" className={
                   challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
                   challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
@@ -490,6 +481,26 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   
   return (
     <div className="flex flex-1 flex-col md:flex-row overflow-hidden h-full">
+      <AlertDialog open={showPenaltyDialog} onOpenChange={setShowPenaltyDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <EyeOff className="h-6 w-6 text-destructive" />
+              Tab Switch Detected
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Switching tabs during a challenge is discouraged. A 10% penalty per switch will be applied to your submission score.
+              <br />
+              <br />
+              You have switched tabs <strong>{tabSwitchCount} time{tabSwitchCount > 1 ? 's' : ''}</strong>, resulting in a <strong>{tabSwitchCount * 10}% penalty</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowPenaltyDialog(false)}>Okay</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Mobile View with Tabs */}
       <div className="md:hidden flex flex-col h-full">
         <div className="flex-shrink-0 border-b">
@@ -529,5 +540,3 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
 }
-
-    
