@@ -10,39 +10,57 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { app } from '@/lib/firebase';
 
+type CurrentUser = {
+  uid: string;
+  name: string;
+  email: string;
+  imageUrl?: string;
+}
 
 export default function ChallengeLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<{name: string, email: string} | null>(null);
-  const [profileImageUrl, setProfileImageUrl] = useState('');
   const { setTheme, theme } = useTheme();
-  const [isClient, setIsClient] = useState(false);
+  
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (isClient) {
-      const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      if (!user) {
+    const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setCurrentUser({
+            uid: user.uid,
+            name: userData.name,
+            email: userData.email,
+            imageUrl: userData.imageUrl,
+          });
+        } else {
           router.push('/login');
+        }
       } else {
-          setCurrentUser(user);
-          const userProfile = JSON.parse(localStorage.getItem(`userProfile_${user.email}`) || '{}');
-          setProfileImageUrl(userProfile.imageUrl || '');
+        router.push('/login');
       }
-    }
-  }, [router, isClient]);
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
+  }, [auth, db, router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    await signOut(auth);
     router.push('/login');
   }
   
-  if (!isClient || !currentUser) {
+  if (isLoading || !currentUser) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             Loading...
@@ -81,7 +99,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
                 <Link href="/profile">
                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={profileImageUrl} alt={currentUser.name} />
+                        <AvatarImage src={currentUser.imageUrl} alt={currentUser.name} />
                         <AvatarFallback>
                           <User />
                         </AvatarFallback>

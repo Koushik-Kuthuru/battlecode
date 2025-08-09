@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,6 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Medal, User } from 'lucide-react';
+import { getFirestore, collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { app } from '@/lib/firebase';
 
 type LeaderboardEntry = {
   rank: number;
@@ -29,25 +32,37 @@ const getBadge = (rank: number) => {
 
 export default function LeaderboardPage() {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const db = getFirestore(app);
 
   useEffect(() => {
-    // We need to ensure localStorage is accessed only on the client side.
-    if (typeof window !== 'undefined') {
-        const storedLeaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
-        const sortedUsers = Object.entries(storedLeaderboard)
-          .sort(([, a]: any, [, b]: any) => b.points - a.points)
-          .map(([email, userData]: [string, any], index) => {
-             const userProfile = JSON.parse(localStorage.getItem(`userProfile_${email}`) || '{}');
-             return {
-                ...userData,
-                email,
-                rank: index + 1,
-                imageUrl: userProfile.imageUrl,
-             }
-          });
+    const fetchLeaderboard = async () => {
+      setIsLoading(true);
+      try {
+        const usersCollection = collection(db, 'users');
+        const q = query(usersCollection, orderBy('points', 'desc'));
+        const querySnapshot = await getDocs(q);
+
+        const sortedUsers: LeaderboardEntry[] = querySnapshot.docs.map((doc, index) => {
+          const data = doc.data();
+          return {
+            rank: index + 1,
+            name: data.name,
+            points: data.points || 0,
+            email: data.email,
+            imageUrl: data.imageUrl,
+          };
+        });
         setLeaderboardData(sortedUsers);
-    }
-  }, []);
+      } catch (error) {
+        console.error("Error fetching leaderboard: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchLeaderboard();
+  }, [db]);
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
@@ -57,7 +72,11 @@ export default function LeaderboardPage() {
           <CardDescription>See who is at the top of the SMEC Battle Code arena.</CardDescription>
         </CardHeader>
         <CardContent>
-          {leaderboardData.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center text-muted-foreground py-16">
+              Loading leaderboard...
+            </div>
+          ) : leaderboardData.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>

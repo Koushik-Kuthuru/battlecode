@@ -9,8 +9,16 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { getFirestore, doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { app } from '@/lib/firebase';
 
-const ITEMS_PER_PAGE = 6;
+
+type CurrentUser = {
+  uid: string;
+  name: string;
+  email: string;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -22,30 +30,64 @@ export default function DashboardPage() {
   const loaderRef = useRef(null);
   const [completedChallenges, setCompletedChallenges] = useState<Record<string, boolean>>({});
   const [inProgressChallenges, setInProgressChallenges] = useState<Record<string, boolean>>({});
-  const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    if (!user) {
-      router.push('/login');
-    } else {
-      setCurrentUser(user);
-      const savedCompletions = JSON.parse(localStorage.getItem(`completedChallenges_${user.email}`) || '{}');
-      setCompletedChallenges(savedCompletions);
-      
-      const savedInProgress = JSON.parse(localStorage.getItem(`inProgressChallenges_${user.email}`) || '{}');
-      setInProgressChallenges(savedInProgress);
-    }
-  }, [router]);
+    const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          setCurrentUser({
+            uid: user.uid,
+            name: userData.name,
+            email: user.email!,
+          });
+
+          // Fetch user-specific challenge data (completed, in-progress)
+          const completedChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/completed`));
+          setCompletedChallenges(completedChallengesSnap.exists() ? completedChallengesSnap.data() : {});
+          
+          const inProgressChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/inProgress`));
+          setInProgressChallenges(inProgressChallengesSnap.exists() ? inProgressChallengesSnap.data() : {});
+
+        } else {
+          router.push('/login');
+        }
+      } else {
+        router.push('/login');
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [auth, db, router]);
   
   useEffect(() => {
-    const fetchChallenges = () => {
+    const fetchChallenges = async () => {
       setIsLoading(true);
       try {
-        const storedChallenges = localStorage.getItem('challenges');
-        const challengesList = storedChallenges ? JSON.parse(storedChallenges) : initialChallenges;
-        setChallenges(challengesList);
+        const challengesCollection = collection(db, 'challenges');
+        const challengesSnapshot = await getDocs(challengesCollection);
+
+        if (challengesSnapshot.empty) {
+            // Seed initial challenges if collection is empty
+            await Promise.all(initialChallenges.map(challenge => {
+                const challengeRef = doc(db, 'challenges', challenge.id);
+                return setDoc(challengeRef, challenge);
+            }));
+             setChallenges(initialChallenges);
+        } else {
+            const challengesList = challengesSnapshot.docs.map(doc => doc.data() as Challenge);
+            setChallenges(challengesList);
+        }
+
       } catch (error) {
         console.error("Error fetching challenges: ", error);
         toast({
@@ -53,12 +95,16 @@ export default function DashboardPage() {
           title: 'Error fetching challenges',
           description: 'Could not load challenges. Please try again later.'
         });
+        setChallenges(initialChallenges); // Fallback
       } finally {
         setIsLoading(false);
       }
     };
-    fetchChallenges();
-  }, [toast]);
+
+    if (currentUser) {
+        fetchChallenges();
+    }
+  }, [currentUser, db, toast]);
 
   const loadMoreChallenges = () => {
     const nextPage = page + 1;
@@ -80,7 +126,7 @@ export default function DashboardPage() {
   }, [challenges]);
 
   useEffect(() => {
-    if (!hasMore) return;
+    if (!hasMore || isLoading) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -100,9 +146,9 @@ export default function DashboardPage() {
         observer.unobserve(currentLoader);
       }
     };
-  }, [hasMore, page, displayedChallenges]);
+  }, [hasMore, page, displayedChallenges, isLoading]);
 
-  if (!currentUser || isLoading) {
+  if (isLoading || !currentUser) {
       return (
           <div className="flex h-screen items-center justify-center">
               <div>Loading...</div>
@@ -161,10 +207,10 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {!hasMore && displayedChallenges.length === 0 && (
+        {!isLoading && !hasMore && challenges.length === 0 && (
           <div className="mt-16 flex flex-col items-center justify-center text-center">
               <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
-              <p className="text-muted-foreground">Try adjusting your filters.</p>
+              <p className="text-muted-foreground">It seems there are no challenges available right now.</p>
           </div>
         )}
     </div>

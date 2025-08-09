@@ -10,52 +10,87 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
+import { getFirestore, doc, getDoc, collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
+import { app } from '@/lib/firebase';
 
+type CurrentUser = {
+  uid: string;
+  name: string;
+  email: string;
+  imageUrl?: string;
+}
+
+type UserStats = {
+  rank: number;
+  points: number;
+}
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<{name: string, email: string} | null>(null);
-  const [userStats, setUserStats] = useState<{ rank: number; points: number } | null>(null);
   const { setTheme, theme } = useTheme();
-  const [isClient, setIsClient] = useState(false);
+
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
 
-  useEffect(() => {
-    if (isClient) {
-      const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      if (!user) {
-          router.push('/login');
-      } else {
-          setCurrentUser(user);
-          const storedLeaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
-          const sortedUsers = Object.entries(storedLeaderboard)
-            .sort(([, a]: any, [, b]: any) => b.points - a.points)
-            .map(([email, userData]: [string, any], index) => ({
-                  email,
-                  rank: index + 1,
-                  points: userData.points,
-            }));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setCurrentUser({
+            uid: user.uid,
+            name: userData.name,
+            email: userData.email,
+            imageUrl: userData.imageUrl,
+          });
+
+          // Fetch leaderboard to calculate rank
+          const usersCollection = collection(db, 'users');
+          const q = query(usersCollection, orderBy('points', 'desc'));
+          const querySnapshot = await getDocs(q);
           
-          const currentUserStats = sortedUsers.find(u => u.email === user.email);
-          if(currentUserStats) {
-              setUserStats({ rank: currentUserStats.rank, points: currentUserStats.points });
-          } else {
-             setUserStats({ rank: 0, points: 0 });
-          }
-      }
-    }
-  }, [pathname, router, isClient]);
+          let rank = 0;
+          querySnapshot.docs.forEach((doc, index) => {
+            if (doc.id === user.uid) {
+              rank = index + 1;
+            }
+          });
+          setUserStats({ rank, points: userData.points || 0 });
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    setCurrentUser(null);
+        } else {
+           // This case might happen if a user is created in Auth but not in Firestore
+           // Or if the admin logic needs adjustment. For now, we log out.
+           await signOut(auth);
+           router.push('/login');
+        }
+      } else {
+        const adminUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (adminUser?.isAdmin && pathname.startsWith('/admin')) {
+          // Allow admin to stay on admin pages
+        } else {
+          router.push('/login');
+        }
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [auth, db, router, pathname]);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    localStorage.removeItem('currentUser'); // For admin logout
     router.push('/login');
   }
 
@@ -67,16 +102,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: '/points', label: 'Points System', icon: Award },
   ];
   
-  if (!isClient || !currentUser) {
+  if (isLoading || !currentUser) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             Loading...
         </div>
     )
   }
-
-  const userProfileImage = JSON.parse(localStorage.getItem(`userProfile_${currentUser.email}`) || '{}').imageUrl;
-
+  
   return (
     <div className="flex h-screen w-full overflow-hidden flex-col md:flex-row">
         {/* Desktop Sidebar */}
@@ -124,7 +157,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                  <div className="border-t border-slate-700 pt-4">
                      <Link href="/profile" className="flex items-center gap-3">
                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={userProfileImage} alt={currentUser.name} />
+                            <AvatarImage src={currentUser.imageUrl} alt={currentUser.name} />
                             <AvatarFallback>
                               <User />
                             </AvatarFallback>

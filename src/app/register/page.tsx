@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -9,65 +10,84 @@ import { AuthLayout } from '@/components/auth-layout';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, collection, doc, setDoc, getDocs, query, where } from 'firebase/firestore';
+import { app } from '@/lib/firebase';
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    setIsLoading(true);
     // Basic validation
-    if (fullName && email && password && studentId && studentId.length === 10) {
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      if (users[email]) {
-        toast({
-          variant: 'destructive',
-          title: 'Registration Failed',
-          description: 'An account with this email already exists.',
+    if (!fullName || !email || !password || !studentId || studentId.length !== 10) {
+       toast({
+            variant: 'destructive',
+            title: 'Registration Failed',
+            description: studentId.length !== 10 ? 'Student ID must be exactly 10 characters.' : 'Please fill in all fields.',
         });
+        setIsLoading(false);
         return;
+    }
+    
+    try {
+      // Check if student ID already exists
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("studentId", "==", studentId.toUpperCase()));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+          toast({
+              variant: 'destructive',
+              title: 'Registration Failed',
+              description: 'An account with this Student ID already exists.',
+          });
+          setIsLoading(false);
+          return;
       }
-       if (Object.values(users).some((user: any) => user.studentId === studentId)) {
-        toast({
-          variant: 'destructive',
-          title: 'Registration Failed',
-          description: 'An account with this Student ID already exists.',
-        });
-        return;
-      }
-      
-      // Store user data
-      users[email] = { name: fullName, studentId, password };
-      localStorage.setItem('users', JSON.stringify(users));
 
-      // Also create a scorecard for the user
-      const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
-      leaderboard[email] = { name: fullName, points: 0 };
-      localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+      // Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      // "Log in" the new user
-      localStorage.setItem('currentUser', JSON.stringify({ email, name: fullName }));
-      
+      // Store additional user info in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name: fullName,
+        email: email,
+        studentId: studentId.toUpperCase(),
+        points: 0,
+      });
+
       router.push('/dashboard');
       toast({
         title: 'Registration Successful!',
         description: `Welcome to SMEC Battle Code, ${fullName}!`,
       });
-    } else if (studentId.length !== 10) {
+
+    } catch (error: any) {
+        let description = 'An unexpected error occurred.';
+        if (error.code === 'auth/email-already-in-use') {
+            description = 'An account with this email already exists.';
+        } else if (error.code === 'auth/weak-password') {
+            description = 'Password should be at least 6 characters.';
+        } else if (error.code === 'auth/invalid-email') {
+            description = 'Please enter a valid email address.';
+        }
+        console.error("Registration error:", error);
         toast({
             variant: 'destructive',
             title: 'Registration Failed',
-            description: 'Student ID must be exactly 10 characters.',
+            description,
         });
-    } else {
-        toast({
-            variant: 'destructive',
-            title: 'Registration Failed',
-            description: 'Please fill in all fields.',
-        });
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -101,8 +121,8 @@ export default function RegisterPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
-            <Button type="submit" className="w-full" onClick={handleRegister}>
-              Create account
+            <Button type="submit" className="w-full" onClick={handleRegister} disabled={isLoading}>
+              {isLoading ? 'Creating account...' : 'Create account'}
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">

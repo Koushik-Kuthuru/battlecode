@@ -26,7 +26,15 @@ import { Separator } from '@/components/ui/separator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection, getDocs, writeBatch } from 'firebase/firestore';
+import { app } from '@/lib/firebase';
 
+type CurrentUser = {
+  uid: string;
+  name: string;
+  email: string;
+}
 
 type TestResult = {
     input: string;
@@ -60,10 +68,13 @@ export default function ChallengePage() {
   const [desktopActiveTab, setDesktopActiveTab] = useState('description');
   const [mobileView, setMobileView] = useState<MobileView>('description');
   const [isCompleted, setIsCompleted] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [showPenaltyDialog, setShowPenaltyDialog] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
   const handleCodeChange = useCallback((value: string) => {
     setCode(value);
@@ -79,59 +90,55 @@ export default function ChallengePage() {
   }, [challengeId, challenges]);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-  
-  useEffect(() => {
-    if (isClient) {
-      const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      if (!user) {
-        router.push('/login');
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser({ uid: user.uid, name: user.displayName || 'User', email: user.email! });
       } else {
-        setCurrentUser(user);
+        router.push('/login');
       }
-    }
-  }, [router, isClient]);
+    });
+    return () => unsubscribe();
+  }, [auth, router]);
 
   useEffect(() => {
     if (!challengeId || !currentUser) return;
     
-    const fetchChallenges = () => {
+    const fetchChallengeData = async () => {
+      setIsLoading(true);
       try {
-        const storedChallenges = localStorage.getItem('challenges');
-        const allChallenges = storedChallenges ? JSON.parse(storedChallenges) : initialChallenges;
+        // Fetch all challenges
+        const challengesCollection = collection(db, 'challenges');
+        const challengesSnapshot = await getDocs(challengesCollection);
+        const allChallenges = challengesSnapshot.docs.map(doc => doc.data() as Challenge);
         setChallenges(allChallenges);
+        
         const foundChallenge = allChallenges.find((c: Challenge) => c.id === challengeId);
 
         if (foundChallenge) {
            setChallenge(foundChallenge);
+           
+           const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challengeId);
+           const challengeStateSnap = await getDoc(challengeStateRef);
 
-            // Mark the challenge as in-progress as soon as it's opened
-            const inProgressChallenges = JSON.parse(localStorage.getItem(`inProgressChallenges_${currentUser.email}`) || '{}');
-            inProgressChallenges[challengeId] = true;
-            localStorage.setItem(`inProgressChallenges_${currentUser.email}`, JSON.stringify(inProgressChallenges));
-            
-            const savedCode = localStorage.getItem(`code_${currentUser.email}_${challengeId}`);
-            // Only show solution if challenge is completed, otherwise start with empty code
-            const completedChallenges = JSON.parse(localStorage.getItem(`completedChallenges_${currentUser.email}`) || '{}');
-            const challengeIsCompleted = completedChallenges[challengeId] || false;
-            setIsCompleted(challengeIsCompleted);
-            
-            if (challengeIsCompleted) {
-               setCode(savedCode || foundChallenge.solution);
-            } else {
-              const initialCode = savedCode || '';
-              setCode(initialCode);
-            }
+           if (challengeStateSnap.exists()) {
+             const data = challengeStateSnap.data();
+             setCode(data.code || '');
+             setIsCompleted(data.completed || false);
+             setTabSwitchCount(data.tabSwitches || 0);
 
-            // Load tab switch count
-            const savedSwitches = parseInt(localStorage.getItem(`tabSwitches_${currentUser.email}_${foundChallenge.id}`) || '0', 10);
-            setTabSwitchCount(savedSwitches);
+             if(data.completed) {
+                setCode(data.code || foundChallenge.solution);
+             }
+
+           } else {
+             // Mark as in-progress
+             await setDoc(challengeStateRef, { inProgress: true }, { merge: true });
+           }
 
             setLanguage(foundChallenge.language);
-            setSubmissionResult(null); // Reset results when challenge changes
-            setGeneratedTests([]); // Reset generated tests
-            setDesktopActiveTab('description'); // Reset tab to description
+            setSubmissionResult(null); 
+            setGeneratedTests([]); 
+            setDesktopActiveTab('description');
             setMobileView('description');
 
         } else {
@@ -141,11 +148,13 @@ export default function ChallengePage() {
           console.error("Error fetching challenge:", error);
           toast({ variant: 'destructive', title: 'Error', description: 'Failed to load challenge.' });
           notFound();
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchChallenges();
-  }, [challengeId, currentUser, toast]);
+    fetchChallengeData();
+  }, [challengeId, currentUser, db, toast]);
 
 
   useEffect(() => {
@@ -181,14 +190,16 @@ export default function ChallengePage() {
       if (document.hidden && challenge && currentUser && !isCompleted) {
           const newSwitchCount = tabSwitchCount + 1;
           setTabSwitchCount(newSwitchCount);
-          localStorage.setItem(`tabSwitches_${currentUser.email}_${challenge.id}`, newSwitchCount.toString());
+          // Save tab switch count to Firestore
+           const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
+           await setDoc(challengeStateRef, { tabSwitches: newSwitchCount }, { merge: true });
           setShowPenaltyDialog(true);
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [challenge, currentUser, isCompleted, tabSwitchCount]);
+  }, [challenge, currentUser, isCompleted, tabSwitchCount, db]);
 
   useEffect(() => {
     if (submissionResult || generatedTests.length > 0) {
@@ -196,19 +207,21 @@ export default function ChallengePage() {
     }
   }, [submissionResult, generatedTests]);
 
-  const handleSaveCode = () => {
-    if (!currentUser) return;
-    localStorage.setItem(`code_${currentUser.email}_${challengeId}`, code);
+  const handleSaveCode = async () => {
+    if (!currentUser || !challenge) return;
+    const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
+    await setDoc(challengeStateRef, { code }, { merge: true });
     toast({
         title: 'Code Saved!',
-        description: 'Your progress has been saved locally.',
+        description: 'Your progress has been saved.',
     });
   }
 
-  const handleResetCode = () => {
+  const handleResetCode = async () => {
     if (!currentUser || !challenge) return;
-    setCode(''); // Reset to empty or to challenge.starterCode if you have it
-    localStorage.removeItem(`code_${currentUser.email}_${challengeId}`);
+    setCode(''); 
+    const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
+    await updateDoc(challengeStateRef, { code: '' });
     toast({
         title: 'Code Reset!',
         description: 'Your code for this challenge has been cleared.',
@@ -229,7 +242,7 @@ export default function ChallengePage() {
     if (!challenge || !currentUser) return;
     
     if (runType === 'submit') {
-      handleSaveCode();
+      await handleSaveCode();
     }
 
     if (runType === 'run') setIsRunning(true);
@@ -271,23 +284,19 @@ export default function ChallengePage() {
     if (runType === 'run') setIsRunning(false);
     if (runType === 'submit') {
       setIsSubmitting(false);
+      
+      const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challenge.id);
 
       if (passRate === 1) {
-          setIsCompleted(true);
-          // Mark as completed for the current user
-          const completedChallenges = JSON.parse(localStorage.getItem(`completedChallenges_${currentUser.email}`) || '{}');
-          if (!completedChallenges[challengeId]) {
-            completedChallenges[challengeId] = true;
-            localStorage.setItem(`completedChallenges_${currentUser.email}`, JSON.stringify(completedChallenges));
-
-            // Update leaderboard
-            const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
-            if (leaderboard[currentUser.email]) {
-              leaderboard[currentUser.email].points += finalScore;
-            } else {
-              leaderboard[currentUser.email] = { name: currentUser.name, points: finalScore };
-            }
-            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+          if (!isCompleted) { // Only award points and mark as complete if not already completed
+            setIsCompleted(true);
+            
+            // Use a transaction to update user points and challenge status atomically
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            await updateDoc(userDocRef, {
+                points: increment(finalScore)
+            });
+            await setDoc(challengeStateRef, { completed: true, score: finalScore }, { merge: true });
           }
       }
 
@@ -299,7 +308,7 @@ export default function ChallengePage() {
     }
   };
 
-  if (!isClient || !challenge || !currentUser) {
+  if (isLoading || !currentUser || !challenge) {
     return (
       <div className="flex h-full items-center justify-center">
         <div>Loading...</div>
@@ -500,7 +509,7 @@ export default function ChallengePage() {
               </Select>
           </div>
           <div className="flex-1 relative">
-              <CodeEditor value={code} onChange={handleCodeChange} language={language} />
+              <CodeEditor value={code} onChange={handleCodeChange} language={language.toLowerCase()} />
           </div>
           <div className="p-4 bg-card border-t flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
