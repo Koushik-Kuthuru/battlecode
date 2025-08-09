@@ -17,17 +17,24 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const [currentUser, setCurrentUser] = useState<{name: string, email: string} | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState('');
   const { setTheme, theme } = useTheme();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    if (!user) {
-        router.push('/login');
-    } else {
-        setCurrentUser(user);
-        const userProfile = JSON.parse(localStorage.getItem(`userProfile_${user.email}`) || '{}');
-        setProfileImageUrl(userProfile.imageUrl || '');
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+      if (!user) {
+          router.push('/login');
+      } else {
+          setCurrentUser(user);
+          const userProfile = JSON.parse(localStorage.getItem(`userProfile_${user.email}`) || '{}');
+          setProfileImageUrl(userProfile.imageUrl || '');
+      }
     }
-  }, [router]);
+  }, [router, isClient]);
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
@@ -35,7 +42,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     router.push('/login');
   }
   
-  if (!currentUser) {
+  if (!isClient || !currentUser) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             Loading...

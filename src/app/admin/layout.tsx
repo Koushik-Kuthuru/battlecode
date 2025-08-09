@@ -21,16 +21,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<{name: string, email: string, isAdmin?: boolean} | null>(null);
   const { setTheme, theme } = useTheme();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Must be in useEffect to access localStorage on client
-    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    if (!user || !user.isAdmin) {
-        router.push('/login');
-    } else {
-        setCurrentUser(user);
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+        const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (!user || !user.isAdmin) {
+            router.push('/login');
+        } else {
+            setCurrentUser(user);
+        }
     }
-  }, [pathname, router]);
+  }, [pathname, router, isClient]);
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
@@ -44,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/users', label: 'Manage Users', icon: Users },
   ];
   
-  if (!currentUser) {
+  if (!isClient || !currentUser) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             Loading...

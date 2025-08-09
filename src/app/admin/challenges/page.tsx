@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -39,60 +40,70 @@ export default function ManageChallengesPage() {
   const [languageFilter, setLanguageFilter] = useState('All');
   const [sortType, setSortType] = useState<SortType>('title');
   const [formData, setFormData] = useState<FormData>(defaultFormData);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    try {
-      const storedChallenges = localStorage.getItem('challenges');
-      if (storedChallenges) {
-        setChallenges(JSON.parse(storedChallenges));
-      } else {
-        // If no challenges in localStorage, seed from data.ts
-        localStorage.setItem('challenges', JSON.stringify(initialChallenges));
-        setChallenges(initialChallenges);
-        toast({
-          title: 'Challenges Seeded',
-          description: 'Initial challenges have been loaded.',
-        });
-      }
-    } catch (error) {
-       console.error("Error loading challenges from localStorage: ", error);
-       toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Could not load challenges.'
-       });
-    } finally {
-        setIsLoading(false);
-    }
-  }, [toast]);
-  
-  const handleInputChange = (field: keyof Omit<FormData, 'examples' | 'testCases'>, value: string | number) => {
-    setFormData(prev => ({...prev, [field]: value}));
-  }
+    setIsClient(true);
+  }, []);
 
-  const handleArrayChange = (arrayName: 'examples' | 'testCases', index: number, field: string, value: string) => {
+  useEffect(() => {
+    if (isClient) {
+      try {
+        const storedChallenges = localStorage.getItem('challenges');
+        if (storedChallenges) {
+          setChallenges(JSON.parse(storedChallenges));
+        } else {
+          localStorage.setItem('challenges', JSON.stringify(initialChallenges));
+          setChallenges(initialChallenges);
+          toast({
+            title: 'Challenges Seeded',
+            description: 'Initial challenges have been loaded.',
+          });
+        }
+      } catch (error) {
+         console.error("Error loading challenges from localStorage: ", error);
+         toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Could not load challenges.'
+         });
+      } finally {
+          setIsLoading(false);
+      }
+    }
+  }, [isClient, toast]);
+  
+  const handleInputChange = useCallback((field: keyof Omit<FormData, 'examples' | 'testCases'>, value: string | number) => {
+    setFormData(prev => ({...prev, [field]: value}));
+  }, []);
+
+  const handleSolutionChange = useCallback((value: string | undefined) => {
+    setFormData(prev => ({ ...prev, solution: value || '' }));
+  }, []);
+
+  const handleArrayChange = useCallback((arrayName: 'examples' | 'testCases', index: number, field: string, value: string) => {
     setFormData(prev => {
         const newArray = [...prev[arrayName]];
         // @ts-ignore
         newArray[index] = {...newArray[index], [field]: value};
         return {...prev, [arrayName]: newArray};
     });
-  }
+  }, []);
 
-  const addArrayItem = (arrayName: 'examples' | 'testCases') => {
+  const addArrayItem = useCallback((arrayName: 'examples' | 'testCases') => {
     setFormData(prev => ({
         ...prev,
         [arrayName]: [...prev[arrayName], arrayName === 'examples' ? { input: '', output: '', explanation: '' } : { input: '', output: '' }]
     }));
-  }
+  }, []);
 
-  const removeArrayItem = (arrayName: 'examples' | 'testCases', index: number) => {
+  const removeArrayItem = useCallback((arrayName: 'examples' | 'testCases', index: number) => {
       setFormData(prev => ({
         ...prev,
         // @ts-ignore
         [arrayName]: prev[arrayName].filter((_, i) => i !== index)
       }));
-  }
+  }, []);
 
   const handleAddNewClick = () => {
     setEditingChallengeId(null);
@@ -130,7 +141,6 @@ export default function ManageChallengesPage() {
       let updatedChallenges: Challenge[];
       if (editingChallengeId) {
           updatedChallenges = challenges.map(c => c.id === editingChallengeId ? { ...challengeDataToSave, id: editingChallengeId } : c)
-          setChallenges(updatedChallenges);
           toast({
               title: 'Challenge Updated!',
               description: `Successfully updated "${challengeDataToSave.title}".`,
@@ -138,12 +148,12 @@ export default function ManageChallengesPage() {
       } else {
           const newChallenge = { ...challengeDataToSave, id: new Date().toISOString() };
           updatedChallenges = [...challenges, newChallenge];
-          setChallenges(updatedChallenges);
           toast({
               title: 'Challenge Added!',
               description: `Successfully added "${challengeDataToSave.title}".`,
           });
       }
+      setChallenges(updatedChallenges);
       localStorage.setItem('challenges', JSON.stringify(updatedChallenges));
     } catch (error) {
         console.error("Error saving challenge: ", error);
@@ -171,6 +181,10 @@ export default function ManageChallengesPage() {
       });
   }, [challenges, languageFilter, sortType]);
   
+  if (!isClient) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
   if (isFormVisible) {
      return (
         <Card>
@@ -285,7 +299,7 @@ export default function ManageChallengesPage() {
                    <div className="h-64 rounded-md border">
                      <CodeEditor
                        value={formData.solution}
-                       onChange={(value) => handleInputChange('solution', value || '')}
+                       onChange={handleSolutionChange}
                        language={formData.language.toLowerCase()}
                      />
                    </div>

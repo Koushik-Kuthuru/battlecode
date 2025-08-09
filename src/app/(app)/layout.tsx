@@ -21,32 +21,37 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<{name: string, email: string} | null>(null);
   const [userStats, setUserStats] = useState<{ rank: number; points: number } | null>(null);
   const { setTheme, theme } = useTheme();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Must be in useEffect to access localStorage on client
-    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    if (!user) {
-        router.push('/login');
-    } else {
-        setCurrentUser(user);
+    setIsClient(true);
+  }, []);
 
-        const storedLeaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
-        const sortedUsers = Object.entries(storedLeaderboard)
-          .sort(([, a]: any, [, b]: any) => b.points - a.points)
-          .map(([email, userData]: [string, any], index) => ({
-                email,
-                rank: index + 1,
-                points: userData.points,
-          }));
-        
-        const currentUserStats = sortedUsers.find(u => u.email === user.email);
-        if(currentUserStats) {
-            setUserStats({ rank: currentUserStats.rank, points: currentUserStats.points });
-        } else {
-           setUserStats({ rank: 0, points: 0 });
-        }
+  useEffect(() => {
+    if (isClient) {
+      const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+      if (!user) {
+          router.push('/login');
+      } else {
+          setCurrentUser(user);
+          const storedLeaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
+          const sortedUsers = Object.entries(storedLeaderboard)
+            .sort(([, a]: any, [, b]: any) => b.points - a.points)
+            .map(([email, userData]: [string, any], index) => ({
+                  email,
+                  rank: index + 1,
+                  points: userData.points,
+            }));
+          
+          const currentUserStats = sortedUsers.find(u => u.email === user.email);
+          if(currentUserStats) {
+              setUserStats({ rank: currentUserStats.rank, points: currentUserStats.points });
+          } else {
+             setUserStats({ rank: 0, points: 0 });
+          }
+      }
     }
-  }, [pathname, router]);
+  }, [pathname, router, isClient]);
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
@@ -62,13 +67,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: '/points', label: 'Points System', icon: Award },
   ];
   
-  if (!currentUser) {
+  if (!isClient || !currentUser) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             Loading...
         </div>
     )
   }
+
+  const userProfileImage = JSON.parse(localStorage.getItem(`userProfile_${currentUser.email}`) || '{}').imageUrl;
 
   return (
     <div className="flex h-screen w-full overflow-hidden flex-col md:flex-row">
@@ -117,7 +124,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                  <div className="border-t border-slate-700 pt-4">
                      <Link href="/profile" className="flex items-center gap-3">
                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={JSON.parse(localStorage.getItem(`userProfile_${currentUser.email}`) || '{}').imageUrl} alt={currentUser.name} />
+                            <AvatarImage src={userProfileImage} alt={currentUser.name} />
                             <AvatarFallback>
                               <User />
                             </AvatarFallback>

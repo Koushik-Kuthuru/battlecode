@@ -71,17 +71,19 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    if (challenges.length === 0) return;
-    const initialChallenges = challenges.slice(0, ITEMS_PER_PAGE);
-    setDisplayedChallenges(initialChallenges);
-    setPage(1);
-    setHasMore(initialChallenges.length < challenges.length);
+    if (challenges.length > 0) {
+        const initialLoad = challenges.slice(0, ITEMS_PER_PAGE);
+        setDisplayedChallenges(initialLoad);
+        setPage(1);
+        setHasMore(initialLoad.length < challenges.length);
+    }
   }, [challenges]);
 
   useEffect(() => {
+    if (!hasMore) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore) {
+        if (entries[0].isIntersecting) {
           loadMoreChallenges();
         }
       },
@@ -168,5 +170,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
