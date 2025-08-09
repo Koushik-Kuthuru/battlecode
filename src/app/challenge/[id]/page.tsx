@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { use } from 'react';
 
 
 type TestResult = {
@@ -165,16 +166,6 @@ export default function ChallengePage() {
           description: 'Developer tools are disabled during assessments.',
         });
       }
-      
-      // Block copy, paste, cut, but not inside the editor
-       if (e.ctrlKey && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
-         e.preventDefault();
-         toast({
-            variant: 'destructive',
-            title: 'Action Prohibited',
-            description: 'Copy/Paste/Cut is disabled to ensure a fair assessment.',
-         });
-      }
     };
 
     document.addEventListener('contextmenu', handleContextmenu);
@@ -216,12 +207,12 @@ export default function ChallengePage() {
   }
 
   const handleResetCode = () => {
-    if (!currentUser) return;
-    setCode('');
+    if (!currentUser || !challenge) return;
+    setCode(''); // Reset to empty or to challenge.starterCode if you have it
     localStorage.removeItem(`code_${currentUser.email}_${challengeId}`);
     toast({
         title: 'Code Reset!',
-        description: 'Your code has been cleared.',
+        description: 'Your code for this challenge has been cleared.',
     });
   }
 
