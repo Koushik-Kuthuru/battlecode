@@ -115,12 +115,14 @@ export default function ChallengePage() {
       try {
         const challengesCollection = collection(db, 'challenges');
         const challengesSnapshot = await getDocs(challengesCollection);
-        const allChallenges = challengesSnapshot.docs.map(doc => doc.data() as Challenge);
+        const allChallenges = challengesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
         setChallenges(allChallenges);
         
-        const foundChallenge = allChallenges.find((c: Challenge) => c.id === challengeId);
-
-        if (foundChallenge) {
+        const challengeDocRef = doc(db, 'challenges', challengeId);
+        const challengeDocSnap = await getDoc(challengeDocRef);
+        
+        if (challengeDocSnap.exists()) {
+           const foundChallenge = { id: challengeDocSnap.id, ...challengeDocSnap.data() } as Challenge;
            setChallenge(foundChallenge);
            
            const challengeStateRef = doc(db, `users/${currentUser.uid}/challengeState`, challengeId);

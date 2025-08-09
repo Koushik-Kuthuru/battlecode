@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { challenges as initialChallenges, type Challenge } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
 type SortType = 'title' | 'difficulty';
@@ -54,16 +54,22 @@ export default function ManageChallengesPage() {
       if (challengesSnapshot.empty) {
         // Seed initial challenges if the collection is empty
         await Promise.all(initialChallenges.map(challenge => {
-            const challengeRef = doc(db, 'challenges', challenge.id);
-            return setDoc(challengeRef, challenge);
+            const { id, ...challengeData } = challenge; // Exclude old ID
+            const challengesRef = collection(db, 'challenges');
+            return addDoc(challengesRef, challengeData);
         }));
-        setChallenges(initialChallenges);
+        
+        // Refetch after seeding
+        const newSnapshot = await getDocs(challengesCollection);
+        const challengesList = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+        setChallenges(challengesList);
+
         toast({
           title: 'Challenges Seeded',
           description: 'Initial challenges have been loaded into Firestore.',
         });
       } else {
-        const challengesList = challengesSnapshot.docs.map(doc => doc.data() as Challenge);
+        const challengesList = challengesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
         setChallenges(challengesList);
       }
     } catch (error) {
@@ -141,15 +147,19 @@ export default function ManageChallengesPage() {
         toast({ variant: 'destructive', title: 'Error', description: 'Title is required.' });
         return;
     }
-    const challengeDataToSave: Challenge = {
-        id: editingChallengeId || new Date().toISOString(), // Use existing ID or create new
+    const challengeDataToSave = {
         ...formData,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
     };
 
     try {
-      const challengeRef = doc(db, 'challenges', challengeDataToSave.id);
-      await setDoc(challengeRef, challengeDataToSave, { merge: true });
+      if(editingChallengeId) {
+        const challengeRef = doc(db, 'challenges', editingChallengeId);
+        await setDoc(challengeRef, challengeDataToSave, { merge: true });
+      } else {
+        const challengesRef = collection(db, 'challenges');
+        await addDoc(challengesRef, challengeDataToSave);
+      }
       
       toast({
           title: `Challenge ${editingChallengeId ? 'Updated' : 'Added'}!`,
@@ -386,3 +396,5 @@ export default function ManageChallengesPage() {
     </div>
   );
 }
+
+    
