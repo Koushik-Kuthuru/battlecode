@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -200,9 +200,9 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     );
   }
 
-  const handleCodeChange = (value: string | undefined) => {
+  const handleCodeChange = useCallback((value: string | undefined) => {
     setCode(value || '');
-  };
+  }, []);
 
   const handleSaveCode = () => {
     if (!currentUser) return;
