@@ -47,6 +47,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
+  const [isCompleted, setIsCompleted] = useState(false);
   const { toast } = useToast();
 
   const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
@@ -61,6 +62,9 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
       
       const savedCode = localStorage.getItem(`code_${params.id}`);
       setCode(savedCode || foundChallenge.solution);
+      
+      const completedChallenges = JSON.parse(localStorage.getItem('completedChallenges') || '{}');
+      setIsCompleted(completedChallenges[params.id] || false);
 
       setLanguage(foundChallenge.language);
       setSubmissionResult(null); // Reset results when challenge changes
@@ -192,6 +196,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
       setIsSubmitting(false);
 
       if (passRate === 1) {
+          setIsCompleted(true);
           const completedChallenges = JSON.parse(localStorage.getItem('completedChallenges') || '{}');
           completedChallenges[params.id] = true;
           localStorage.setItem('completedChallenges', JSON.stringify(completedChallenges));
@@ -385,7 +390,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
                     <Button variant="outline" onClick={handleSaveCode} disabled={!code}>
                       <Save className="mr-2 h-4 w-4" /> Save
                     </Button>
-                    {nextChallengeId && (
+                    {nextChallengeId && isCompleted && (
                       <Button variant="outline" onClick={() => router.push(`/challenge/${nextChallengeId}`)}>
                           Next Challenge <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
