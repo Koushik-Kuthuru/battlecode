@@ -17,7 +17,18 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   const handleLogin = () => {
-    // In a real app, you'd have proper validation and a backend call.
+    // Handle admin login
+    if (studentId.toLowerCase() === 'admin0822' && password === 'admin0822') {
+      localStorage.setItem('currentUser', JSON.stringify({ email: 'admin@smec.ac.in', name: 'Admin', isAdmin: true }));
+      router.push('/admin/dashboard');
+      toast({
+        title: 'Admin Login Successful',
+        description: 'Welcome back, Admin!',
+      });
+      return;
+    }
+
+    // Handle student login
     if (studentId && password) {
       const users = JSON.parse(localStorage.getItem('users') || '{}');
       
@@ -63,7 +74,7 @@ export default function LoginPage() {
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="student-id">Student ID</Label>
-              <Input id="student-id" type="text" placeholder="YOUR_ID" required value={studentId} onChange={handleStudentIdChange} />
+              <Input id="student-id" type="text" placeholder="YOUR_ID" required value={studentId} onChange={(e) => setStudentId(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
