@@ -308,7 +308,7 @@ export default function ManageChallengesPage() {
                      <CodeEditor
                        value={formData.solution}
                        onChange={(value) => handleInputChange('solution', value || '')}
-                       language={formData.language}
+                       language={formData.language.toLowerCase()}
                      />
                    </div>
                 </div>
