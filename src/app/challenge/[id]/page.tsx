@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -381,7 +382,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
       
       {/* Right Panel */}
       <div className="flex flex-col h-full overflow-hidden">
-           <div className="p-4 flex justify-between items-center border-b">
+           <div className="p-4 flex justify-between items-center border-b bg-card">
                 <Button 
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
                     variant="ghost"
@@ -407,7 +408,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
             <div className="flex-1 relative">
                 <CodeEditor value={code} onChange={handleCodeChange} language={language} />
             </div>
-            <div className="p-4 bg-background border-t flex items-center justify-between gap-4">
+            <div className="p-4 bg-card border-t flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <Button variant="outline" onClick={handleSaveCode} disabled={!code}>
                     <Save className="mr-2 h-4 w-4" /> Save
