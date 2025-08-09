@@ -90,6 +90,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
 
       setLanguage(foundChallenge.language);
       setSubmissionResult(null); // Reset results when challenge changes
+      setGeneratedTests([]); // Reset generated tests
       setDesktopActiveTab('description'); // Reset tab to description
       setMobileView('description');
     } else if(!foundChallenge) {
@@ -205,6 +206,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     if (runType === 'submit') setIsSubmitting(true);
     
     setSubmissionResult(null);
+    setGeneratedTests([]);
 
     // Simulate running test cases
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -476,7 +478,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   );
   
   return (
-    <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
+    <div className="flex flex-1 flex-col md:flex-row overflow-hidden h-full">
       {/* Mobile View with Tabs */}
       <div className="md:hidden flex flex-col h-full">
         <div className="flex-shrink-0 border-b">
