@@ -137,8 +137,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
            <div className="flex items-center gap-4">
               <Sheet>
                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-10 w-10">
-                        <Menu className="h-6 w-6" />
+                    <Button variant="ghost" size="icon" className="h-12 w-12">
+                        <Menu className="h-7 w-7" />
                     </Button>
                  </SheetTrigger>
                  <SheetContent side="right" className="bg-slate-900 text-white w-64 p-4">
