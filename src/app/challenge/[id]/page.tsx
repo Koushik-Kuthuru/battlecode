@@ -71,6 +71,10 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       : null;
     return { nextChallengeId };
   }, [challengeId, challenges]);
+
+  const handleCodeChange = useCallback((value: string | undefined) => {
+    setCode(value || '');
+  }, []);
   
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
@@ -200,10 +204,6 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       </div>
     );
   }
-
-  const handleCodeChange = useCallback((value: string | undefined) => {
-    setCode(value || '');
-  }, []);
 
   const handleSaveCode = () => {
     if (!currentUser) return;
@@ -582,3 +582,5 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
 }
+
+    
