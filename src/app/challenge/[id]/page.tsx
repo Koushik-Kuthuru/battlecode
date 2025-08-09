@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -18,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateTestCases } from '@/ai/flows/generate-test-cases';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, CheckCircle2, XCircle, Award, ArrowRight, Save, Code as CodeIcon, FileText, BarChart2 } from 'lucide-react';
+import { Terminal, CheckCircle2, XCircle, Award, ArrowRight, Save, Code as CodeIcon, FileText, BarChart2, EyeOff } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,6 +47,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   const [submissionResult, setSubmissionResult] = useState<{
     results: TestResult[];
     score: number;
+    penalty: number;
   } | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,6 +56,8 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
   const { toast } = useToast();
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+
 
   const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
   const nextChallengeId = currentChallengeIndex !== -1 && currentChallengeIndex < challenges.length - 1 
@@ -93,6 +95,10 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       } else {
         setCode(savedCode || '');
       }
+
+      // Load tab switch count
+      const savedSwitches = parseInt(localStorage.getItem(`tabSwitches_${currentUser.email}_${params.id}`) || '0', 10);
+      setTabSwitchCount(savedSwitches);
 
       setLanguage(foundChallenge.language);
       setSubmissionResult(null); // Reset results when challenge changes
@@ -143,36 +149,22 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   
   useEffect(() => {
     const handleVisibilityChange = async () => {
-      if (document.hidden && challenge && code && !submissionResult) {
-        toast({
-          title: 'Tab switch detected!',
-          description: 'Generating test cases based on your current code.',
-        });
-        setIsGenerating(true);
-        try {
-          const result = await generateTestCases({
-            code,
-            programmingLanguage: language,
-            problemDescription: challenge.description,
-          });
-          setGeneratedTests(result.testCases);
-          setDesktopActiveTab('results');
-          setMobileView('results');
-        } catch (error) {
-           toast({
+      if (document.hidden && challenge && currentUser && !isCompleted) {
+          const newSwitchCount = tabSwitchCount + 1;
+          setTabSwitchCount(newSwitchCount);
+          localStorage.setItem(`tabSwitches_${currentUser.email}_${challenge.id}`, newSwitchCount.toString());
+
+          toast({
             variant: 'destructive',
-            title: 'Error',
-            description: 'Could not generate test cases.',
+            title: 'Tab switch detected!',
+            description: `A 10% penalty will be applied. Total penalty: ${newSwitchCount * 10}%`,
           });
-        } finally {
-          setIsGenerating(false);
-        }
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [code, language, challenge, toast, submissionResult]);
+  }, [challenge, currentUser, toast, isCompleted, tabSwitchCount]);
 
   useEffect(() => {
     if (submissionResult || generatedTests.length > 0) {
@@ -235,9 +227,12 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     const totalCount = testCasesToUse.length;
     const passRate = totalCount > 0 ? passedCount / totalCount : 0;
     
-    const score = Math.round(challenge.points * passRate);
+    const baseScore = Math.round(challenge.points * passRate);
+    const penaltyPercentage = tabSwitchCount * 0.10;
+    const penalty = Math.round(baseScore * penaltyPercentage);
+    const finalScore = Math.max(0, baseScore - penalty);
     
-    setSubmissionResult({ results, score });
+    setSubmissionResult({ results, score: finalScore, penalty });
     setDesktopActiveTab('results');
     setMobileView('results');
     
@@ -256,9 +251,9 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
             // Update leaderboard
             const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
             if (leaderboard[currentUser.email]) {
-              leaderboard[currentUser.email].points += score;
+              leaderboard[currentUser.email].points += finalScore;
             } else {
-              leaderboard[currentUser.email] = { name: currentUser.name, points: score };
+              leaderboard[currentUser.email] = { name: currentUser.name, points: finalScore };
             }
             localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
           }
@@ -266,7 +261,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
 
       toast({
           title: passRate === 1 ? 'Accepted!' : 'Some tests failed on submission',
-          description: `You passed ${passedCount} out of ${totalCount} test cases. You earned ${score} points.`,
+          description: `You passed ${passedCount}/${totalCount} cases. You earned ${finalScore} points after a ${penalty} point penalty.`,
           variant: passRate === 1 ? 'default' : 'destructive',
       });
     }
@@ -299,7 +294,9 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                     <Award className="h-8 w-8 text-primary"/>
                     <div>
                         <p className="font-bold text-lg">{submissionResult.score} Points Awarded</p>
-                        <p className="text-sm text-muted-foreground">Keep up the great work!</p>
+                        <p className="text-sm text-muted-foreground">
+                            {submissionResult.penalty > 0 ? `(${submissionResult.penalty} point penalty for tab switching)` : 'Keep up the great work!'}
+                        </p>
                     </div>
                 </div>
                 <Tabs defaultValue="case-0" className="flex-1 flex flex-col overflow-hidden">
@@ -376,11 +373,19 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
         <ScrollArea className="h-full pr-4">
           <div className="flex items-start justify-between mb-4">
             <h1 className="text-3xl font-bold">{challenge.title}</h1>
-            <Badge variant="outline" className={
-              challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
-              challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
-              'border-red-500 text-red-500'
-            }>{challenge.difficulty}</Badge>
+             <div className="flex items-center gap-4">
+                 {tabSwitchCount > 0 && (
+                    <Badge variant="destructive" className="flex items-center gap-2">
+                        <EyeOff className="h-4 w-4" />
+                        {tabSwitchCount} Tab Switch{tabSwitchCount > 1 ? 'es' : ''} ({tabSwitchCount * 10}% Penalty)
+                    </Badge>
+                 )}
+                <Badge variant="outline" className={
+                  challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
+                  challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
+                  'border-red-500 text-red-500'
+                }>{challenge.difficulty}</Badge>
+            </div>
           </div>
           
           <div className="flex flex-wrap gap-2 mb-4">
@@ -524,3 +529,5 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
 }
+
+    
