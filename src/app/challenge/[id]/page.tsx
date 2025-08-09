@@ -62,6 +62,9 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [showPenaltyDialog, setShowPenaltyDialog] = useState(false);
 
+  const handleCodeChange = useCallback((value: string | undefined) => {
+    setCode(value || '');
+  }, []);
 
   const { nextChallengeId } = useMemo(() => {
     if (!challengeId) return { nextChallengeId: null };
@@ -71,10 +74,6 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       : null;
     return { nextChallengeId };
   }, [challengeId, challenges]);
-
-  const handleCodeChange = useCallback((value: string | undefined) => {
-    setCode(value || '');
-  }, []);
   
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
@@ -137,7 +136,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     };
 
     fetchChallenges();
-  }, [challengeId, currentUser, toast, router]);
+  }, [challengeId, currentUser, toast]);
 
 
   useEffect(() => {
@@ -196,14 +195,6 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       setMobileView('results');
     }
   }, [submissionResult, generatedTests]);
-
-  if (!challenge || !currentUser) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div>Loading...</div>
-      </div>
-    );
-  }
 
   const handleSaveCode = () => {
     if (!currentUser) return;
@@ -296,6 +287,14 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       });
     }
   };
+
+  if (!challenge || !currentUser) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   const SubmissionResultView = () => {
     if(!submissionResult) return null;
@@ -582,5 +581,3 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
 }
-
-    
