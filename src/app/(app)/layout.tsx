@@ -3,13 +3,14 @@
 
 import { SmecBattleCodeLogo } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import { Award, BarChart, Home, Info, LogOut, Moon, Settings, Sun, User } from 'lucide-react';
+import { Award, BarChart, Home, Info, LogOut, Moon, Settings, Sun, User, Trophy, ArrowRight } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
