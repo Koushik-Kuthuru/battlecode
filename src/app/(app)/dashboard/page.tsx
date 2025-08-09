@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const [inProgressChallenges, setInProgressChallenges] = useState<Record<string, boolean>>({});
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isChallengesLoading, setIsChallengesLoading] = useState(true);
   
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -71,7 +72,7 @@ export default function DashboardPage() {
   
   useEffect(() => {
     const fetchChallenges = async () => {
-      setIsLoading(true);
+      setIsChallengesLoading(true);
       try {
         const challengesCollection = collection(db, 'challenges');
         const challengesSnapshot = await getDocs(challengesCollection);
@@ -97,7 +98,7 @@ export default function DashboardPage() {
         });
         setChallenges(initialChallenges); // Fallback
       } finally {
-        setIsLoading(false);
+        setIsChallengesLoading(false);
       }
     };
 
@@ -126,7 +127,7 @@ export default function DashboardPage() {
   }, [challenges]);
 
   useEffect(() => {
-    if (!hasMore || isLoading) return;
+    if (!hasMore || isLoading || isChallengesLoading) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -146,7 +147,7 @@ export default function DashboardPage() {
         observer.unobserve(currentLoader);
       }
     };
-  }, [hasMore, page, displayedChallenges, isLoading]);
+  }, [hasMore, page, displayedChallenges, isLoading, isChallengesLoading]);
 
   if (isLoading || !currentUser) {
       return (
@@ -182,21 +183,35 @@ export default function DashboardPage() {
 
         <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {displayedChallenges.map((challenge) => (
-            <ChallengeCard 
-              key={challenge.id} 
-              challenge={challenge} 
-              isCompleted={!!completedChallenges[challenge.id]}
-              isInProgress={!!inProgressChallenges[challenge.id]} 
-            />
-          ))}
-        </div>
+        {isChallengesLoading ? (
+             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+               {[...Array(6)].map((_, i) => (
+                 <div key={`skeleton-initial-${i}`} className="flex flex-col space-y-3">
+                   <Skeleton className="h-[125px] w-full rounded-xl" />
+                   <div className="space-y-2">
+                     <Skeleton className="h-4 w-4/5" />
+                     <Skeleton className="h-4 w-3/5" />
+                   </div>
+                 </div>
+               ))}
+             </div>
+        ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {displayedChallenges.map((challenge) => (
+                <ChallengeCard 
+                  key={challenge.id} 
+                  challenge={challenge} 
+                  isCompleted={!!completedChallenges[challenge.id]}
+                  isInProgress={!!inProgressChallenges[challenge.id]} 
+                />
+              ))}
+            </div>
+        )}
         
-        {hasMore && (
+        {hasMore && !isChallengesLoading && (
           <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(3)].map((_, i) => (
-              <div key={`skeleton-${i}`} className="flex flex-col space-y-3">
+              <div key={`skeleton-loader-${i}`} className="flex flex-col space-y-3">
                 <Skeleton className="h-[125px] w-full rounded-xl" />
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-4/5" />
@@ -207,7 +222,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {!isLoading && !hasMore && challenges.length === 0 && (
+        {!isChallengesLoading && challenges.length === 0 && (
           <div className="mt-16 flex flex-col items-center justify-center text-center">
               <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
               <p className="text-muted-foreground">It seems there are no challenges available right now.</p>
