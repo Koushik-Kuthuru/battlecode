@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BattleCodeLogo } from '@/components/icons';
+import { SmecBattlecodeLogo } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { User, LogOut, Settings, Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -44,8 +44,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur md:px-6">
       <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-        <BattleCodeLogo className="h-6 w-6 text-primary" />
-        <span className="text-lg">BattleCode</span>
+        <SmecBattlecodeLogo className="h-6 w-6 text-primary" />
+        <span className="text-lg">SMECBATTLECODE</span>
       </Link>
       <nav className="flex-1">
         <ul className="flex items-center gap-6 text-sm font-medium">

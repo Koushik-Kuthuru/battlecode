@@ -54,7 +54,7 @@ export default function RegisterPage() {
       router.push('/dashboard');
       toast({
         title: 'Registration Successful!',
-        description: `Welcome to BattleCode, ${fullName}!`,
+        description: `Welcome to SMECBATTLECODE, ${fullName}!`,
       });
     } else if (studentId.length !== 10) {
         toast({
@@ -81,7 +81,7 @@ export default function RegisterPage() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create an Account</CardTitle>
-          <CardDescription>Join BattleCode and start your coding journey.</CardDescription>
+          <CardDescription>Join SMECBATTLECODE and start your coding journey.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">

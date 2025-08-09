@@ -54,7 +54,7 @@ export default function LeaderboardPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl font-bold tracking-tight">Leaderboard</CardTitle>
-          <CardDescription>See who is at the top of the BattleCode arena.</CardDescription>
+          <CardDescription>See who is at the top of the SMECBATTLECODE arena.</CardDescription>
         </CardHeader>
         <CardContent>
           {leaderboardData.length > 0 ? (
