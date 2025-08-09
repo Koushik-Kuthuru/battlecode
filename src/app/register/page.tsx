@@ -20,7 +20,7 @@ export default function RegisterPage() {
 
   const handleRegister = () => {
     // Basic validation
-    if (fullName && email && password && studentId && studentId.length === 7) {
+    if (fullName && email && password && studentId && studentId.length === 10) {
       const users = JSON.parse(localStorage.getItem('users') || '{}');
       if (users[email]) {
         toast({
@@ -56,11 +56,11 @@ export default function RegisterPage() {
         title: 'Registration Successful!',
         description: `Welcome to BattleCode, ${fullName}!`,
       });
-    } else if (studentId.length !== 7) {
+    } else if (studentId.length !== 10) {
         toast({
             variant: 'destructive',
             title: 'Registration Failed',
-            description: 'Student ID must be exactly 7 characters.',
+            description: 'Student ID must be exactly 10 characters.',
         });
     } else {
         toast({
@@ -72,7 +72,7 @@ export default function RegisterPage() {
   };
 
   const handleStudentIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStudentId(e.target.value.toUpperCase().slice(0, 7));
+    setStudentId(e.target.value.toUpperCase().slice(0, 10));
   };
 
 
@@ -95,7 +95,7 @@ export default function RegisterPage() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="student-id">Student ID</Label>
-              <Input id="student-id" placeholder="Your_Student_ID" required value={studentId} onChange={handleStudentIdChange} maxLength={7} />
+              <Input id="student-id" placeholder="Your_Student_ID" required value={studentId} onChange={handleStudentIdChange} maxLength={10} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>

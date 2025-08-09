@@ -48,7 +48,7 @@ export default function LoginPage() {
   };
   
   const handleStudentIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStudentId(e.target.value.toUpperCase().slice(0, 7));
+    setStudentId(e.target.value.toUpperCase().slice(0, 10));
   };
 
 
