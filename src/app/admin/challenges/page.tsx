@@ -283,7 +283,7 @@ export default function ManageChallengesPage() {
                        </div>
                        <div className="mt-4 space-y-2">
                            <Label>Explanation (Optional)</Label>
-                           <Textarea value={formData.examples[index].explanation} onChange={(e) => handleArrayChange('examples', index, 'explanation', e.target.value)} />
+                           <Textarea value={formData.examples[index].explanation || ''} onChange={(e) => handleArrayChange('examples', index, 'explanation', e.target.value)} />
                        </div>
                        <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => removeArrayItem('examples', index)}>
                          <Trash2 className="h-4 w-4" />
@@ -392,7 +392,7 @@ export default function ManageChallengesPage() {
                   <div key={challenge.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg gap-4">
                     <div>
                       <h3 className="font-semibold">{challenge.title}</h3>
-                      <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} - {challenge.language}</p>
+                      <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} Points - {challenge.language}</p>
                     </div>
                      <Button variant="outline" size="sm" onClick={() => handleEditClick(challenge)}>
                          <Edit className="mr-2 h-4 w-4" />
@@ -411,5 +411,3 @@ export default function ManageChallengesPage() {
     </div>
   );
 }
-
-    
