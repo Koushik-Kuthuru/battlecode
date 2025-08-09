@@ -135,10 +135,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="md:hidden flex items-center justify-between p-4 bg-slate-900 text-white">
            <h1 className="text-lg font-bold">Welcome 👋</h1>
            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <Flame className="w-5 h-5 text-orange-400" />
-                <span className="font-bold">{userStats?.points || 0}</span>
-              </div>
               <Sheet>
                  <SheetTrigger asChild>
                     <Button variant="ghost" size="icon">
