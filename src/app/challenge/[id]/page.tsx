@@ -99,7 +99,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       }
 
       // Load tab switch count
-      const savedSwitches = parseInt(localStorage.getItem(`tabSwitches_${currentUser.email}_${params.id}`) || '0', 10);
+      const savedSwitches = parseInt(localStorage.getItem(`tabSwitches_${currentUser.email}_${challenge.id}`) || '0', 10);
       setTabSwitchCount(savedSwitches);
 
       setLanguage(foundChallenge.language);
@@ -385,6 +385,10 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                   challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
                   'border-red-500 text-red-500'
                 }>{challenge.difficulty}</Badge>
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Award className="h-4 w-4" />
+                  <span>{challenge.points} Points</span>
+                </Badge>
             </div>
           </div>
           
