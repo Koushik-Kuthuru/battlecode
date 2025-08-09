@@ -9,31 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { type Challenge } from '@/lib/data';
+import { challenges as initialChallenges, type Challenge } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, setDoc, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
-
-// This is a placeholder for the initial challenges to seed the DB.
-const initialChallenges: Challenge[] = [
-  {
-    id: '1',
-    title: 'Two Sum',
-    difficulty: 'Easy',
-    language: 'Python',
-    points: 10,
-    description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.',
-    tags: ['Array', 'Hash Table'],
-    examples: [
-      { input: 'nums = [2, 7, 11, 15], target = 9', output: '[0, 1]', explanation: 'Because nums[0] + nums[1] == 9, we return [0, 1].' },
-      { input: 'nums = [3, 2, 4], target = 6', output: '[1, 2]' }
-    ],
-    testCases: [ { input: 'nums = [2, 7, 11, 15], target = 9', output: '[0, 1]' } ],
-    solution: 'class Solution:\n    def twoSum(self, nums: list[int], target: int) -> list[int]:\n        pass'
-  },
-];
-
 
 type SortType = 'title' | 'difficulty';
 
@@ -64,42 +42,29 @@ export default function ManageChallengesPage() {
   const [formData, setFormData] = useState<FormData>(defaultFormData);
 
   useEffect(() => {
-    const fetchChallenges = async () => {
-      try {
-        const challengesCollection = collection(db, 'challenges');
-        const challengeSnapshot = await getDocs(challengesCollection);
-        
-        if (challengeSnapshot.empty) {
-          const batch = writeBatch(db);
-          initialChallenges.forEach((challenge) => {
-            const { id, ...challengeData } = challenge;
-            const docRef = doc(db, "challenges", id); // Use explicit ID for seeding
-            batch.set(docRef, { ...challengeData, createdAt: serverTimestamp() });
-          });
-          await batch.commit();
-          const newChallengeSnapshot = await getDocs(challengesCollection);
-          const challengesList = newChallengeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
-          setChallenges(challengesList);
-           toast({
-              title: 'Database Seeded',
-              description: 'Initial challenges have been loaded into Firestore.',
-           });
-        } else {
-          const challengesList = challengeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
-          setChallenges(challengesList);
-        }
-      } catch (error) {
-        console.error("Error fetching or seeding challenges: ", error);
+    try {
+      const storedChallenges = localStorage.getItem('challenges');
+      if (storedChallenges) {
+        setChallenges(JSON.parse(storedChallenges));
+      } else {
+        // If no challenges in localStorage, seed from data.ts
+        localStorage.setItem('challenges', JSON.stringify(initialChallenges));
+        setChallenges(initialChallenges);
         toast({
-          variant: 'destructive',
-          title: 'Error managing challenges',
-          description: 'Could not load or seed challenges in the database.'
+          title: 'Challenges Seeded',
+          description: 'Initial challenges have been loaded.',
         });
-      } finally {
-        setIsLoading(false);
       }
-    };
-    fetchChallenges();
+    } catch (error) {
+       console.error("Error loading challenges from localStorage: ", error);
+       toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not load challenges.'
+       });
+    } finally {
+        setIsLoading(false);
+    }
   }, [toast]);
   
   const handleInputChange = (field: keyof Omit<FormData, 'examples' | 'testCases'>, value: string | number) => {
@@ -151,7 +116,7 @@ export default function ManageChallengesPage() {
     setFormData(defaultFormData);
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title) {
         toast({ variant: 'destructive', title: 'Error', description: 'Title is required.' });
@@ -162,36 +127,33 @@ export default function ManageChallengesPage() {
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
     };
 
-    setIsLoading(true);
     try {
+      let updatedChallenges: Challenge[];
       if (editingChallengeId) {
-          const challengeRef = doc(db, 'challenges', editingChallengeId);
-          await setDoc(challengeRef, challengeDataToSave, { merge: true });
-          setChallenges(challenges.map(c => c.id === editingChallengeId ? { ...challengeDataToSave, id: editingChallengeId } : c));
+          updatedChallenges = challenges.map(c => c.id === editingChallengeId ? { ...challengeDataToSave, id: editingChallengeId } : c)
+          setChallenges(updatedChallenges);
           toast({
               title: 'Challenge Updated!',
               description: `Successfully updated "${challengeDataToSave.title}".`,
           });
       } else {
-          const docRef = await addDoc(collection(db, 'challenges'), {
-            ...challengeDataToSave,
-            createdAt: serverTimestamp()
-          });
-          setChallenges(prev => [...prev, { ...challengeDataToSave, id: docRef.id }]);
+          const newChallenge = { ...challengeDataToSave, id: new Date().toISOString() };
+          updatedChallenges = [...challenges, newChallenge];
+          setChallenges(updatedChallenges);
           toast({
               title: 'Challenge Added!',
               description: `Successfully added "${challengeDataToSave.title}".`,
           });
       }
+      localStorage.setItem('challenges', JSON.stringify(updatedChallenges));
     } catch (error) {
         console.error("Error saving challenge: ", error);
         toast({
           variant: 'destructive',
           title: 'Error Saving Challenge',
-          description: 'Could not save the challenge to the database.'
+          description: 'Could not save the challenge to local storage.'
         });
     } finally {
-      setIsLoading(false);
       handleCancel();
     }
   };
@@ -204,7 +166,7 @@ export default function ManageChallengesPage() {
           return a.title.localeCompare(b.title);
         }
         if (sortType === 'difficulty') {
-          return DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+          return (DIFFICULTY_ORDER[a.difficulty] || 0) - (DIFFICULTY_ORDER[b.difficulty] || 0);
         }
         return 0;
       });
@@ -331,8 +293,8 @@ export default function ManageChallengesPage() {
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                    <Button type="submit" disabled={isLoading}>{isLoading ? 'Saving...' : editingChallengeId ? 'Update Challenge' : 'Create Challenge'}</Button>
-                    <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
+                    <Button type="submit">{editingChallengeId ? 'Update Challenge' : 'Create Challenge'}</Button>
+                    <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
                 </div>
               </form>
           </CardContent>
@@ -411,3 +373,5 @@ export default function ManageChallengesPage() {
     </div>
   );
 }
+
+    

@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, use } from 'react';
-import { type Challenge } from '@/lib/data';
+import { useState, useEffect, useMemo } from 'react';
+import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CodeEditor } from '@/components/code-editor';
@@ -26,8 +26,6 @@ import { Separator } from '@/components/ui/separator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 
 
 type TestResult = {
@@ -40,11 +38,10 @@ type TestResult = {
 type RunType = 'run' | 'submit';
 type MobileView = 'description' | 'code' | 'results';
 
-export default function ChallengePage({ params: paramsProp }: { params: { id:string } }) {
+export default function ChallengePage({ params }: { params: { id:string } }) {
   const router = useRouter();
-  const params = use(paramsProp);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [challenges, setChallenges] = useState<Challenge[]>([]); // Keep this to find next challenge
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('');
   const [generatedTests, setGeneratedTests] = useState<string[]>([]);
@@ -86,13 +83,14 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
   useEffect(() => {
     if (!params.id || !currentUser) return;
     
-    const fetchChallenge = async () => {
+    const fetchChallenges = () => {
       try {
-        const challengeRef = doc(db, 'challenges', params.id);
-        const challengeSnap = await getDoc(challengeRef);
+        const storedChallenges = localStorage.getItem('challenges');
+        const allChallenges = storedChallenges ? JSON.parse(storedChallenges) : initialChallenges;
+        setChallenges(allChallenges);
+        const foundChallenge = allChallenges.find((c: Challenge) => c.id === params.id);
 
-        if (challengeSnap.exists()) {
-          const foundChallenge = { id: challengeSnap.id, ...challengeSnap.data() } as Challenge;
+        if (foundChallenge) {
            setChallenge(foundChallenge);
 
             // Mark the challenge as in-progress as soon as it's opened
@@ -133,8 +131,8 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
       }
     };
 
-    fetchChallenge();
-  }, [params.id, currentUser, toast]);
+    fetchChallenges();
+  }, [params.id, currentUser, toast, router]);
 
 
   useEffect(() => {
@@ -583,3 +581,5 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
     </div>
   );
 }
+
+    

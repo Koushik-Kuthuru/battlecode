@@ -1,16 +1,13 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { ChallengeCard } from '@/components/challenge-card';
-import { type Challenge } from '@/lib/data';
+import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 const ITEMS_PER_PAGE = 6;
@@ -43,19 +40,18 @@ export default function DashboardPage() {
   }, [router]);
   
   useEffect(() => {
-    const fetchChallenges = async () => {
+    const fetchChallenges = () => {
       setIsLoading(true);
       try {
-        const challengesCollection = collection(db, 'challenges');
-        const challengeSnapshot = await getDocs(challengesCollection);
-        const challengesList = challengeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+        const storedChallenges = localStorage.getItem('challenges');
+        const challengesList = storedChallenges ? JSON.parse(storedChallenges) : initialChallenges;
         setChallenges(challengesList);
       } catch (error) {
         console.error("Error fetching challenges: ", error);
         toast({
           variant: 'destructive',
           title: 'Error fetching challenges',
-          description: 'Could not load challenges from the database. Please try again later.'
+          description: 'Could not load challenges. Please try again later.'
         });
       } finally {
         setIsLoading(false);
@@ -172,3 +168,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
