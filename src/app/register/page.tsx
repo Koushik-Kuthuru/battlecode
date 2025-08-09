@@ -10,7 +10,7 @@ import { AuthLayout } from '@/components/auth-layout';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDocs, query, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
@@ -56,6 +56,9 @@ export default function RegisterPage() {
       // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      
+      // Send verification email
+      await sendEmailVerification(user);
 
       // Update Firebase Auth profile
       await updateProfile(user, { displayName: fullName });
@@ -66,14 +69,14 @@ export default function RegisterPage() {
         email: email,
         studentId: studentId.toUpperCase(),
         points: 0,
-        // Do NOT store password here
       });
-
-      router.push('/dashboard');
+      
+      router.push('/login');
       toast({
         title: 'Registration Successful!',
-        description: `Welcome to SMEC Battle Code, ${fullName}!`,
+        description: `Welcome, ${fullName}! A verification email has been sent to ${email}. Please verify your email before logging in.`,
       });
+
 
     } catch (error: any) {
         let description = 'An unexpected error occurred.';

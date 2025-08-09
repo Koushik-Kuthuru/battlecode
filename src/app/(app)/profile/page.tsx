@@ -10,11 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { User, Upload } from 'lucide-react';
-import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { User, Upload, Mail, KeyRound } from 'lucide-react';
+import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, type User as FirebaseUser } from 'firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 import { app } from '@/lib/firebase';
+import { Separator } from '@/components/ui/separator';
 
 type CurrentUser = {
   uid: string;
@@ -40,8 +41,11 @@ export default function ProfilePage() {
     imageUrl: '',
   });
   const [newImage, setNewImage] = useState<File | null>(null);
+  const [newEmail, setNewEmail] = useState('');
+  const [passwordForEmail, setPasswordForEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const auth = getAuth(app);
@@ -56,11 +60,13 @@ export default function ProfilePage() {
 
             if (userDoc.exists()) {
                 const userData = userDoc.data();
+                const userEmail = user.email || userData.email;
                 setCurrentUser({
                     uid: user.uid,
                     name: userData.name,
-                    email: userData.email,
+                    email: userEmail,
                 });
+                setNewEmail(userEmail);
                 setProfile({
                     branch: userData.branch || '',
                     year: userData.year || '',
@@ -118,7 +124,6 @@ export default function ProfilePage() {
             imageUrl: finalImageUrl,
         });
 
-        // Update local state to reflect saved image URL
         setProfile(prev => ({...prev, imageUrl: finalImageUrl}));
         
         toast({
@@ -138,6 +143,47 @@ export default function ProfilePage() {
     }
   };
 
+  const handleChangeEmail = async () => {
+      if(!currentUser || !newEmail || !passwordForEmail) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Please fill in all fields.' });
+          return;
+      }
+      setIsChangingEmail(true);
+
+      try {
+          const user = auth.currentUser;
+          if(!user) throw new Error("User not found");
+
+          const credential = EmailAuthProvider.credential(user.email!, passwordForEmail);
+          await reauthenticateWithCredential(user, credential);
+          
+          await updateEmail(user, newEmail);
+          
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          await updateDoc(userDocRef, { email: newEmail });
+
+          setCurrentUser(prev => prev ? {...prev, email: newEmail} : null);
+          setPasswordForEmail('');
+
+          toast({
+              title: 'Email Changed',
+              description: `Your email has been updated. A verification link was sent to ${newEmail}.`,
+          });
+      } catch (error: any) {
+          console.error("Error changing email: ", error);
+          let description = 'Could not change your email.';
+          if (error.code === 'auth/wrong-password') {
+            description = 'Incorrect password. Please try again.';
+          } else if (error.code === 'auth/email-already-in-use') {
+            description = 'This email address is already in use by another account.';
+          }
+          toast({ variant: 'destructive', title: 'Error', description });
+      } finally {
+          setIsChangingEmail(false);
+      }
+  }
+
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -146,14 +192,14 @@ export default function ProfilePage() {
     );
   }
   
-  if (!currentUser) return null; // Should be redirected by useEffect
+  if (!currentUser) return null;
 
   return (
     <div className="container mx-auto max-w-2xl py-8">
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">Profile</CardTitle>
-          <CardDescription>Manage your personal information.</CardDescription>
+          <CardDescription>Manage your personal and account information.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center gap-6">
@@ -235,8 +281,34 @@ export default function ProfilePage() {
           </div>
           
           <Button onClick={handleSave} className="w-full md:w-auto" disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? 'Saving...' : 'Save Profile Changes'}
           </Button>
+
+          <Separator />
+          
+           <div>
+              <h3 className="text-lg font-medium mb-4">Account Settings</h3>
+               <div className="space-y-4 rounded-lg border p-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-email">
+                        <Mail className="inline-block mr-2 h-4 w-4" />
+                        Change Email Address
+                    </Label>
+                    <Input id="new-email" type="email" placeholder="new.email@example.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
+                  </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="password-for-email">
+                        <KeyRound className="inline-block mr-2 h-4 w-4" />
+                        Enter Current Password to Confirm
+                    </Label>
+                    <Input id="password-for-email" type="password" value={passwordForEmail} onChange={(e) => setPasswordForEmail(e.target.value)} />
+                  </div>
+                  <Button onClick={handleChangeEmail} disabled={isChangingEmail || newEmail === currentUser.email}>
+                    {isChangingEmail ? 'Updating Email...' : 'Update Email'}
+                  </Button>
+              </div>
+           </div>
+
         </CardContent>
       </Card>
     </div>
