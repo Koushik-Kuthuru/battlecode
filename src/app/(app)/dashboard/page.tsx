@@ -1,21 +1,21 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { ChallengeCard } from '@/components/challenge-card';
 import { challenges, type Challenge } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Trophy } from 'lucide-react';
+import Link from 'next/link';
 
-const languages = ['All', 'C', 'C++', 'Java', 'Python', 'JavaScript'];
-const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
 const ITEMS_PER_PAGE = 6;
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [difficulty, setDifficulty] = useState('All');
-  const [language, setLanguage] = useState('All');
   const [displayedChallenges, setDisplayedChallenges] = useState<Challenge[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -34,29 +34,23 @@ export default function DashboardPage() {
       setCompletedChallenges(savedCompletions);
     }
   }, [router]);
-
-  const filteredChallenges = challenges.filter((c) => {
-    const difficultyMatch = difficulty === 'All' || c.difficulty === difficulty;
-    const languageMatch = language === 'All' || c.language === language;
-    return difficultyMatch && languageMatch;
-  });
   
   const loadMoreChallenges = () => {
-    const next_page = page + 1;
-    const newChallenges = filteredChallenges.slice(0, next_page * ITEMS_PER_PAGE);
+    const nextPage = page + 1;
+    const newChallenges = challenges.slice(0, nextPage * ITEMS_PER_PAGE);
     setDisplayedChallenges(newChallenges);
-    setPage(next_page);
-    if(newChallenges.length >= filteredChallenges.length) {
+    setPage(nextPage);
+    if(newChallenges.length >= challenges.length) {
       setHasMore(false);
     }
   }
 
   useEffect(() => {
-    const initialChallenges = filteredChallenges.slice(0, ITEMS_PER_PAGE);
+    const initialChallenges = challenges.slice(0, ITEMS_PER_PAGE);
     setDisplayedChallenges(initialChallenges);
     setPage(1);
-    setHasMore(initialChallenges.length < filteredChallenges.length);
-  }, [difficulty, language]);
+    setHasMore(initialChallenges.length < challenges.length);
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -78,7 +72,7 @@ export default function DashboardPage() {
         observer.unobserve(currentLoader);
       }
     };
-  }, [hasMore, page, filteredChallenges]);
+  }, [hasMore, page]);
 
   if (!currentUser) {
       return (
@@ -89,63 +83,56 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 md:px-6">
-      <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-        <div className="flex-1 text-center md:text-left">
-          <h1 className="text-3xl font-bold tracking-tight">Challenges</h1>
-          <p className="text-muted-foreground">Sharpen your skills with our curated challenges.</p>
+    <div className="flex-1 space-y-8 p-8">
+        <div className="flex items-center justify-between space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser.name} 👋</h2>
         </div>
-        <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <Tabs value={difficulty} onValueChange={setDifficulty}>
-            <TabsList>
-              {difficulties.map((d) => (
-                <TabsTrigger key={d} value={d}>
-                  {d}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              {languages.map((l) => (
-                <SelectItem key={l} value={l}>
-                  {l}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {displayedChallenges.map((challenge) => (
-          <ChallengeCard key={challenge.id} challenge={challenge} isCompleted={!!completedChallenges[challenge.id]} />
-        ))}
-      </div>
-      
-      {hasMore && (
-        <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex flex-col space-y-3">
-              <Skeleton className="h-[125px] w-full rounded-xl" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-4/5" />
-                <Skeleton className="h-4 w-3/5" />
-              </div>
+        
+        <Card className="bg-slate-900 text-white border-0">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div className="flex items-center gap-6">
+                <div className="w-48 h-32 bg-gray-700 rounded-md flex-shrink-0">
+                    <img src="https://placehold.co/192x128" alt="Podcast" className="w-full h-full object-cover rounded-md" data-ai-hint="podcast cover" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold">WHAT GOOGLE LOOKS FOR IN FUTURE ENGINEERS</h3>
+                    <p className="text-muted-foreground text-white/80">Podcast with Leader Building Teams at Google</p>
+                </div>
             </div>
+             <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">Register Now</Button>
+          </CardContent>
+        </Card>
+
+        <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {displayedChallenges.map((challenge) => (
+            <ChallengeCard key={challenge.id} challenge={challenge} isCompleted={!!completedChallenges[challenge.id]} />
           ))}
         </div>
-      )}
+        
+        {hasMore && (
+          <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex flex-col space-y-3">
+                <Skeleton className="h-[125px] w-full rounded-xl" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-4/5" />
+                  <Skeleton className="h-4 w-3/5" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-      {!hasMore && displayedChallenges.length === 0 && (
-        <div className="mt-16 flex flex-col items-center justify-center text-center">
-            <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
-            <p className="text-muted-foreground">Try adjusting your filters.</p>
-        </div>
-      )}
+        {!hasMore && displayedChallenges.length === 0 && (
+          <div className="mt-16 flex flex-col items-center justify-center text-center">
+              <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
+              <p className="text-muted-foreground">Try adjusting your filters.</p>
+          </div>
+        )}
     </div>
   );
 }
+
+    
