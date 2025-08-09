@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -51,29 +52,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full">
-        <aside className="w-64 flex-shrink-0 bg-slate-900 text-white flex flex-col p-4">
-           <Link href="/dashboard" className="flex items-center gap-2 font-semibold px-2 mb-8">
-              <SmecBattleCodeLogo className="h-8 w-8" />
-              <span className="text-xl">SMEC Battle Code</span>
-            </Link>
-            <nav className="flex-1 flex flex-col gap-2">
-                 {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-slate-800',
-                        pathname === link.href ? 'bg-slate-700' : 'text-slate-300'
-                      )}
-                    >
-                      <link.icon className="h-4 w-4" />
-                      {link.label}
-                    </Link>
-                  ))}
-            </nav>
+    <div className="flex h-screen w-full overflow-hidden">
+        <aside className="w-64 flex-shrink-0 bg-slate-900 text-white flex flex-col">
+           <div className="p-4">
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold px-2 mb-8">
+                <SmecBattleCodeLogo className="h-8 w-8" />
+                <span className="text-xl">SMEC Battle Code</span>
+              </Link>
+           </div>
+            <ScrollArea className="flex-1 px-4">
+                <nav className="flex flex-col gap-2">
+                     {navLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className={cn(
+                            'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-slate-800',
+                            pathname === link.href ? 'bg-slate-700' : 'text-slate-300'
+                          )}
+                        >
+                          <link.icon className="h-4 w-4" />
+                          {link.label}
+                        </Link>
+                      ))}
+                </nav>
+            </ScrollArea>
             
-            <div className="mt-auto flex flex-col gap-4">
+            <div className="mt-auto flex flex-col gap-4 p-4">
                  <div className="flex items-center justify-between">
                      <Button variant="ghost" size="icon" onClick={handleLogout} className="text-slate-300 hover:bg-slate-800 hover:text-white">
                         <LogOut className="h-5 w-5" />
@@ -105,27 +110,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                  </div>
             </div>
         </aside>
-        <div className="flex flex-1">
-            <main className="flex-1 bg-muted/40">{children}</main>
-            <aside className="w-80 flex-shrink-0 border-l p-6 hidden lg:block">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Leaderboard
-                  </CardTitle>
-                  <Trophy className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Top performers this week.
-                    </p>
-                    <Link href="/leaderboard">
-                      <Button className="w-full">
-                        View Leaderboard <ArrowRight className="ml-2 h-4 w-4"/>
-                      </Button>
-                    </Link>
-                </CardContent>
-              </Card>
+        <div className="flex flex-1 overflow-hidden">
+            <ScrollArea className="flex-1">
+                <main className="bg-muted/40 p-8">{children}</main>
+            </ScrollArea>
+            <aside className="w-80 flex-shrink-0 border-l hidden lg:block">
+              <ScrollArea className="h-full p-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Leaderboard
+                    </CardTitle>
+                    <Trophy className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Top performers this week.
+                      </p>
+                      <Link href="/leaderboard">
+                        <Button className="w-full">
+                          View Leaderboard <ArrowRight className="ml-2 h-4 w-4"/>
+                        </Button>
+                      </Link>
+                  </CardContent>
+                </Card>
+              </ScrollArea>
             </aside>
         </div>
     </div>
