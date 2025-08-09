@@ -10,6 +10,11 @@ export type Challenge = {
     output: string;
     explanation?: string;
   }[];
+  testCases: {
+    input: string;
+    output: string;
+  }[];
+  solution: string;
 };
 
 export const challenges: Challenge[] = [
@@ -29,12 +34,24 @@ export const challenges: Challenge[] = [
       {
         input: 'nums = [3, 2, 4], target = 6',
         output: '[1, 2]'
-      },
-      {
-        input: 'nums = [3, 3], target = 6',
-        output: '[0, 1]'
       }
-    ]
+    ],
+    testCases: [
+        { input: 'nums = [2, 7, 11, 15], target = 9', output: '[0, 1]' },
+        { input: 'nums = [3, 2, 4], target = 6', output: '[1, 2]' },
+        { input: 'nums = [3, 3], target = 6', output: '[0, 1]' },
+        { input: 'nums = [-1, -3, 5, 9], target = 4', output: '[0, 2]' },
+        { input: 'nums = [0, 4, 3, 0], target = 0', output: '[0, 3]' },
+    ],
+    solution: `class Solution:
+    def twoSum(self, nums: list[int], target: int) -> list[int]:
+        num_map = {}
+        for i, num in enumerate(nums):
+            complement = target - num
+            if complement in num_map:
+                return [num_map[complement], i]
+            num_map[num] = i
+`
   },
   {
     id: '2',
@@ -51,12 +68,37 @@ export const challenges: Challenge[] = [
       {
         input: 'head = [1,2]',
         output: '[2,1]'
-      },
-      {
-        input: 'head = []',
-        output: '[]'
       }
-    ]
+    ],
+    testCases: [
+        { input: '[1,2,3,4,5]', output: '[5,4,3,2,1]' },
+        { input: '[1,2]', output: '[2,1]' },
+        { input: '[]', output: '[]' },
+        { input: '[1]', output: '[1]' },
+    ],
+    solution: `/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        ListNode prev = null;
+        ListNode current = head;
+        while (current != null) {
+            ListNode nextTemp = current.next;
+            current.next = prev;
+            prev = current;
+            current = nextTemp;
+        }
+        return prev;
+    }
+}`
   },
   {
     id: '3',
@@ -73,12 +115,32 @@ export const challenges: Challenge[] = [
       {
         input: 'n = 5',
         output: '["1","2","Fizz","4","Buzz"]'
-      },
-      {
-        input: 'n = 15',
-        output: '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]'
       }
-    ]
+    ],
+    testCases: [
+        { input: '1', output: '["1"]' },
+        { input: '3', output: '["1","2","Fizz"]' },
+        { input: '5', output: '["1","2","Fizz","4","Buzz"]' },
+        { input: '15', output: '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]' },
+    ],
+    solution: `class Solution {
+public:
+    vector<string> fizzBuzz(int n) {
+        vector<string> answer;
+        for (int i = 1; i <= n; ++i) {
+            if (i % 3 == 0 && i % 5 == 0) {
+                answer.push_back("FizzBuzz");
+            } else if (i % 3 == 0) {
+                answer.push_back("Fizz");
+            } else if (i % 5 == 0) {
+                answer.push_back("Buzz");
+            } else {
+                answer.push_back(to_string(i));
+            }
+        }
+        return answer;
+    }
+};`
   },
   {
     id: '4',
@@ -90,14 +152,38 @@ export const challenges: Challenge[] = [
     examples: [
       {
         input: 'height = [1,8,6,2,5,4,8,3,7]',
-        output: '49',
-        explanation: 'The above vertical lines are represented by array [1,8,6,2,5,4,8,3,7]. In this case, the max area of water the container can contain is 49.'
+        output: '49'
       },
       {
         input: 'height = [1,1]',
         output: '1'
       }
-    ]
+    ],
+    testCases: [
+        { input: '[1,8,6,2,5,4,8,3,7]', output: '49' },
+        { input: '[1,1]', output: '1' },
+        { input: '[4,3,2,1,4]', output: '16' },
+        { input: '[1,2,1]', output: '2' },
+    ],
+    solution: `/**
+ * @param {number[]} height
+ * @return {number}
+ */
+var maxArea = function(height) {
+    let max = 0;
+    let left = 0;
+    let right = height.length - 1;
+    while (left < right) {
+        const area = Math.min(height[left], height[right]) * (right - left);
+        max = Math.max(max, area);
+        if (height[left] < height[right]) {
+            left++;
+        } else {
+            right--;
+        }
+    }
+    return max;
+};`
   },
   {
     id: '5',
@@ -109,20 +195,37 @@ export const challenges: Challenge[] = [
     examples: [
       {
         input: 's = "abcabcbb"',
-        output: '3',
-        explanation: 'The answer is "abc", with the length of 3.'
+        output: '3'
       },
       {
         input: 's = "bbbbb"',
-        output: '1',
-        explanation: 'The answer is "b", with the length of 1.'
+        output: '1'
       },
       {
         input: 's = "pwwkew"',
-        output: '3',
-        explanation: 'The answer is "wke", with the length of 3. Notice that the answer must be a substring, "pwke" is a subsequence and not a substring.'
+        output: '3'
       }
-    ]
+    ],
+    testCases: [
+        { input: '"abcabcbb"', output: '3' },
+        { input: '"bbbbb"', output: '1' },
+        { input: '"pwwkew"', output: '3' },
+        { input: '""', output: '0' },
+        { input: '" "', output: '1' },
+        { input: '"dvdf"', output: '3' },
+    ],
+    solution: `class Solution:
+    def lengthOfLongestSubstring(self, s: str) -> int:
+        char_set = set()
+        left = 0
+        max_length = 0
+        for right in range(len(s)):
+            while s[right] in char_set:
+                char_set.remove(s[left])
+                left += 1
+            char_set.add(s[right])
+            max_length = max(max_length, right - left + 1)
+        return max_length`
   },
   {
     id: '6',
@@ -138,10 +241,55 @@ export const challenges: Challenge[] = [
       },
       {
         input: 'root = [5,1,4,null,null,3,6]',
-        output: 'false',
-        explanation: 'The root node\'s value is 5 but its right child\'s value is 4.'
+        output: 'false'
       }
-    ]
+    ],
+    testCases: [
+        { input: '[2,1,3]', output: 'true' },
+        { input: '[5,1,4,null,null,3,6]', output: 'false' },
+        { input: '[1,1]', output: 'false' },
+        { input: '[5,4,6,null,null,3,7]', output: 'false' },
+    ],
+    solution: `/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public boolean isValidBST(TreeNode root) {
+        return isValid(root, null, null);
+    }
+
+    private boolean isValid(TreeNode node, Integer lower, Integer upper) {
+        if (node == null) {
+            return true;
+        }
+        int val = node.val;
+        if (lower != null && val <= lower) {
+            return false;
+        }
+        if (upper != null && val >= upper) {
+            return false;
+        }
+        if (!isValid(node.right, val, upper)) {
+            return false;
+        }
+        if (!isValid(node.left, lower, val)) {
+            return false;
+        }
+        return true;
+    }
+}`
   },
   {
     id: '7',
@@ -153,15 +301,51 @@ export const challenges: Challenge[] = [
     examples: [
       {
         input: 'nums1 = [1,3], nums2 = [2]',
-        output: '2.00000',
-        explanation: 'merged array = [1,2,3] and median is 2.'
+        output: '2.0'
       },
       {
         input: 'nums1 = [1,2], nums2 = [3,4]',
-        output: '2.50000',
-        explanation: 'merged array = [1,2,3,4] and median is (2 + 3) / 2 = 2.5.'
+        output: '2.5'
       }
-    ]
+    ],
+    testCases: [
+        { input: 'nums1 = [1,3], nums2 = [2]', output: '2.0' },
+        { input: 'nums1 = [1,2], nums2 = [3,4]', output: '2.5' },
+        { input: 'nums1 = [0,0], nums2 = [0,0]', output: '0.0' },
+        { input: 'nums1 = [], nums2 = [1]', output: '1.0' },
+    ],
+    solution: `double findMedianSortedArrays(int* nums1, int nums1Size, int* nums2, int nums2Size) {
+    if (nums1Size > nums2Size) {
+        return findMedianSortedArrays(nums2, nums2Size, nums1, nums1Size);
+    }
+    int x = nums1Size;
+    int y = nums2Size;
+    int low = 0;
+    int high = x;
+    while (low <= high) {
+        int partitionX = (low + high) / 2;
+        int partitionY = (x + y + 1) / 2 - partitionX;
+        
+        int maxX = (partitionX == 0) ? -2147483648 : nums1[partitionX - 1];
+        int minX = (partitionX == x) ? 2147483647 : nums1[partitionX];
+        
+        int maxY = (partitionY == 0) ? -2147483648 : nums2[partitionY - 1];
+        int minY = (partitionY == y) ? 2147483647 : nums2[partitionY];
+        
+        if (maxX <= minY && maxY <= minX) {
+            if ((x + y) % 2 == 0) {
+                return (double)(fmax(maxX, maxY) + fmin(minX, minY)) / 2;
+            } else {
+                return (double)fmax(maxX, maxY);
+            }
+        } else if (maxX > minY) {
+            high = partitionX - 1;
+        } else {
+            low = partitionX + 1;
+        }
+    }
+    return 0.0;
+}`
   },
   {
     id: '8',
@@ -173,14 +357,38 @@ export const challenges: Challenge[] = [
     examples: [
       {
         input: 'height = [0,1,0,2,1,0,1,3,2,1,2,1]',
-        output: '6',
-        explanation: 'The above elevation map is represented by array [0,1,0,2,1,0,1,3,2,1,2,1]. In this case, 6 units of rain water are being trapped.'
+        output: '6'
       },
       {
         input: 'height = [4,2,0,3,2,5]',
         output: '9'
       }
-    ]
+    ],
+    testCases: [
+        { input: '[0,1,0,2,1,0,1,3,2,1,2,1]', output: '6' },
+        { input: '[4,2,0,3,2,5]', output: '9' },
+        { input: '[4,2,3]', output: '1' },
+        { input: '[5,4,1,2]', output: '1' },
+    ],
+    solution: `class Solution:
+    def trap(self, height: list[int]) -> int:
+        if not height:
+            return 0
+        
+        left, right = 0, len(height) - 1
+        left_max, right_max = height[left], height[right]
+        water = 0
+        
+        while left < right:
+            if left_max < right_max:
+                left += 1
+                left_max = max(left_max, height[left])
+                water += left_max - height[left]
+            else:
+                right -= 1
+                right_max = max(right_max, height[right])
+                water += right_max - height[right]
+        return water`
   },
   {
     id: '9',
@@ -192,20 +400,49 @@ export const challenges: Challenge[] = [
     examples: [
       {
         input: 's = "aa", p = "a"',
-        output: 'false',
-        explanation: '"a" does not match the entire string "aa".'
+        output: 'false'
       },
       {
         input: 's = "aa", p = "a*"',
-        output: 'true',
-        explanation: '\'*\' means zero or more of the preceding element, \'a\'. Therefore, by repeating \'a\' once, it becomes "aa".'
+        output: 'true'
       },
       {
         input: 's = "ab", p = ".*"',
-        output: 'true',
-        explanation: '".*" means "zero or more of any character".'
+        output: 'true'
       }
-    ]
+    ],
+    testCases: [
+        { input: 's = "aa", p = "a"', output: 'false' },
+        { input: 's = "aa", p = "a*"', output: 'true' },
+        { input: 's = "ab", p = ".*"', output: 'true' },
+        { input: 's = "mississippi", p = "mis*is*p*."', output: 'false' },
+    ],
+    solution: `class Solution {
+public:
+    bool isMatch(string s, string p) {
+        int m = s.length(), n = p.length();
+        vector<vector<bool>> dp(m + 1, vector<bool>(n + 1, false));
+        dp[0][0] = true;
+        for (int j = 1; j <= n; j++) {
+            if (p[j - 1] == '*') {
+                dp[0][j] = dp[0][j - 2];
+            }
+        }
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (p[j - 1] == '.' || p[j - 1] == s[i - 1]) {
+                    dp[i][j] = dp[i - 1][j - 1];
+                } else if (p[j - 1] == '*') {
+                    dp[i][j] = dp[i][j - 2];
+                    if (p[j - 2] == '.' || p[j - 2] == s[i - 1]) {
+                        dp[i][j] = dp[i][j] || dp[i - 1][j];
+                    }
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};`
   },
   {
     id: '10',
@@ -222,12 +459,46 @@ export const challenges: Challenge[] = [
       {
         input: 'lists = []',
         output: '[]'
-      },
-      {
-        input: 'lists = [[]]',
-        output: '[]'
       }
-    ]
+    ],
+    testCases: [
+        { input: '[[1,4,5],[1,3,4],[2,6]]', output: '[1,1,2,3,4,4,5,6]' },
+        { input: '[]', output: '[]' },
+        { input: '[[]]', output: '[]' },
+    ],
+    solution: `/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        if (lists == null || lists.length == 0) {
+            return null;
+        }
+        PriorityQueue<ListNode> queue = new PriorityQueue<>(lists.length, (a, b) -> a.val - b.val);
+        ListNode dummy = new ListNode(0);
+        ListNode tail = dummy;
+        for (ListNode node : lists) {
+            if (node != null) {
+                queue.add(node);
+            }
+        }
+        while (!queue.isEmpty()) {
+            tail.next = queue.poll();
+            tail = tail.next;
+            if (tail.next != null) {
+                queue.add(tail.next);
+            }
+        }
+        return dummy.next;
+    }
+}`
   },
 ];
 
