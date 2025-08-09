@@ -12,9 +12,9 @@ interface ChallengeCardProps {
 
 export function ChallengeCard({ challenge, isCompleted }: ChallengeCardProps) {
   const difficultyColors = {
-    Easy: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800',
-    Medium: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800',
-    Hard: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
+    Easy: 'bg-green-500',
+    Medium: 'bg-yellow-500',
+    Hard: 'bg-red-500',
   };
 
   return (
@@ -25,10 +25,8 @@ export function ChallengeCard({ challenge, isCompleted }: ChallengeCardProps) {
                 {isCompleted && <CheckCircle className="h-5 w-5 text-green-500" />}
                 {challenge.title}
             </CardTitle>
-          <div className="flex flex-col items-end gap-2">
-            <Badge variant="outline" className={difficultyColors[challenge.difficulty]}>
-              {challenge.difficulty}
-            </Badge>
+          <div className="flex items-center gap-2">
+            <div className={`h-3 w-3 rounded-full ${difficultyColors[challenge.difficulty]}`} />
             <Badge variant="secondary" className="flex items-center gap-1">
               <Award className="h-4 w-4" />
               <span>{challenge.points} Points</span>
