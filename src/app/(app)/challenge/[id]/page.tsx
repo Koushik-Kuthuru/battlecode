@@ -331,7 +331,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   
   return (
     <div className="flex h-screen flex-col">
-      <div className={`flex flex-1 grid ${isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'grid-cols-[minmax(300px,1fr),2fr]'} overflow-hidden transition-all duration-300`}>
+      <div className={`flex flex-1 grid ${isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'grid-cols-[minmax(450px,1fr),2fr]'} overflow-hidden transition-all duration-300`}>
         {/* Left Panel */}
         <div className={`relative flex flex-col h-full bg-card border-r transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0 overflow-hidden" : "w-full p-6"}`}>
           <div className="flex-1 overflow-hidden">
