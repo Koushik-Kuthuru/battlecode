@@ -150,17 +150,9 @@ export default function ChallengePage() {
 
   useEffect(() => {
     const handleContextmenu = (e: MouseEvent) => {
-      // Allow context menu in the editor, but prevent it elsewhere if desired
-      if ((e.target as HTMLElement).closest('.monaco-editor')) {
-        return;
-      }
       e.preventDefault();
     };
     const handleKeydown = (e: KeyboardEvent) => {
-      // Block developer tools, but not inside the editor
-      if ((e.target as HTMLElement).closest('.monaco-editor')) {
-        return;
-      }
       if (
         e.key === 'F12' ||
         (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
