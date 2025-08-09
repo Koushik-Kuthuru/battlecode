@@ -5,9 +5,10 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { User, KeyRound } from 'lucide-react';
+import { User, KeyRound, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 type UserData = {
     email: string;
@@ -31,6 +32,7 @@ const BRANCH_MAP: Record<string, string> = {
 export default function ManageUsersPage() {
     const [users, setUsers] = useState<UserData[]>([]);
     const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const storedUsers = JSON.parse(localStorage.getItem('users') || '{}');
@@ -61,16 +63,33 @@ export default function ManageUsersPage() {
         setVisiblePasswords(prev => ({ ...prev, [email]: !prev[email] }));
     }
 
+    const filteredUsers = users.filter(user => 
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="container mx-auto py-8">
             <h1 className="text-3xl font-bold mb-6">Manage Users</h1>
+            
+            <div className="mb-6 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                    type="text"
+                    placeholder="Search by name or student ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                />
+            </div>
+
             <Card>
                 <CardHeader>
                     <CardTitle>All Users</CardTitle>
                     <CardDescription>A list of all registered users on the platform.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {users.length > 0 ? (
+                    {filteredUsers.length > 0 ? (
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -82,7 +101,7 @@ export default function ManageUsersPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.map(user => (
+                                {filteredUsers.map(user => (
                                     <TableRow key={user.email}>
                                         <TableCell>
                                             <div className="flex items-center gap-4">
@@ -118,7 +137,7 @@ export default function ManageUsersPage() {
                         </Table>
                     ) : (
                         <div className="text-center py-16 text-muted-foreground">
-                            <p>No users have registered yet.</p>
+                            <p>{searchTerm ? 'No users found matching your search.' : 'No users have registered yet.'}</p>
                         </div>
                     )}
                 </CardContent>
