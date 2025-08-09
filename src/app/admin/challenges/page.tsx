@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { challenges as existingChallenges, type Challenge } from '@/lib/data';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Edit } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
@@ -45,11 +45,10 @@ type ChallengeFormValues = z.infer<typeof challengeSchema>;
 export default function ManageChallengesPage() {
   const { toast } = useToast();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
 
   useEffect(() => {
-    // In a real app, you'd fetch this from a database.
-    // For now, we'll use the local data and store updates in localStorage.
     const storedChallenges = JSON.parse(localStorage.getItem('challenges') || 'null');
     setChallenges(storedChallenges || existingChallenges);
   }, []);
@@ -79,45 +78,90 @@ export default function ManageChallengesPage() {
     name: 'testCases',
   });
 
-  const handleAddChallenge = (values: ChallengeFormValues) => {
-    const newChallenge: Challenge = {
-      ...values,
-      id: (challenges.length + 1).toString(),
-      tags: values.tags.split(',').map(tag => tag.trim()),
+  const handleAddNewClick = () => {
+    setEditingChallenge(null);
+    form.reset({
+        title: '',
+        difficulty: 'Easy',
+        language: 'Python',
+        points: 10,
+        description: '',
+        tags: '',
+        solution: '',
+        examples: [{ input: '', output: '', explanation: '' }],
+        testCases: [{ input: '', output: '' }],
+    });
+    setIsFormVisible(true);
+  };
+  
+  const handleEditClick = (challenge: Challenge) => {
+      setEditingChallenge(challenge);
+      form.reset({
+        ...challenge,
+        tags: challenge.tags.join(', '),
+      });
+      setIsFormVisible(true);
+  }
+
+  const handleCancel = () => {
+    setIsFormVisible(false);
+    setEditingChallenge(null);
+    form.reset();
+  }
+
+  const onSubmit = (values: ChallengeFormValues) => {
+    let updatedChallenges: Challenge[];
+    const challengeData: Challenge = {
+        ...values,
+        id: editingChallenge ? editingChallenge.id : (challenges.length + 1).toString(),
+        tags: values.tags.split(',').map(tag => tag.trim()),
     };
 
-    const updatedChallenges = [...challenges, newChallenge];
+    if (editingChallenge) {
+        // Update existing challenge
+        updatedChallenges = challenges.map(c => c.id === editingChallenge.id ? challengeData : c);
+        toast({
+            title: 'Challenge Updated!',
+            description: `Successfully updated "${challengeData.title}".`,
+        });
+    } else {
+        // Add new challenge
+        updatedChallenges = [...challenges, challengeData];
+        toast({
+            title: 'Challenge Added!',
+            description: `Successfully added "${challengeData.title}".`,
+        });
+    }
+
     setChallenges(updatedChallenges);
-    localStorage.setItem('challenges', JSON.stringify(updatedChallenges)); // Persist for demo
+    localStorage.setItem('challenges', JSON.stringify(updatedChallenges));
     
-    toast({
-      title: 'Challenge Added!',
-      description: `Successfully added "${newChallenge.title}".`,
-    });
-    
-    form.reset();
-    setIsAdding(false);
+    handleCancel();
   };
   
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Manage Challenges</h1>
-        <Button onClick={() => setIsAdding(!isAdding)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {isAdding ? 'Cancel' : 'Add New Challenge'}
-        </Button>
+        {!isFormVisible && (
+          <Button onClick={handleAddNewClick}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New Challenge
+          </Button>
+        )}
       </div>
 
-      {isAdding ? (
+      {isFormVisible ? (
         <Card>
           <CardHeader>
-            <CardTitle>Create New Challenge</CardTitle>
-            <CardDescription>Fill out the form below to add a new challenge.</CardDescription>
+            <CardTitle>{editingChallenge ? 'Edit Challenge' : 'Create New Challenge'}</CardTitle>
+            <CardDescription>
+                {editingChallenge ? 'Modify the details of the existing challenge.' : 'Fill out the form below to add a new challenge.'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <FormProvider {...form}>
-              <form onSubmit={form.handleSubmit(handleAddChallenge)} className="space-y-8">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <FormField
                   control={form.control}
                   name="title"
@@ -218,7 +262,6 @@ export default function ManageChallengesPage() {
                   )}
                 />
 
-                {/* Dynamic Examples */}
                 <div className="space-y-4">
                   <Label>Examples</Label>
                   {exampleFields.map((field, index) => (
@@ -268,7 +311,6 @@ export default function ManageChallengesPage() {
                   </Button>
                 </div>
                 
-                {/* Dynamic Test Cases */}
                 <div className="space-y-4">
                    <Label>Test Cases</Label>
                    {testCaseFields.map((field, index) => (
@@ -327,7 +369,10 @@ export default function ManageChallengesPage() {
                   )}
                 />
 
-                <Button type="submit">Create Challenge</Button>
+                <div className="flex gap-4">
+                    <Button type="submit">{editingChallenge ? 'Update Challenge' : 'Create Challenge'}</Button>
+                    <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
+                </div>
               </form>
             </FormProvider>
           </CardContent>
@@ -345,7 +390,10 @@ export default function ManageChallengesPage() {
                     <h3 className="font-semibold">{challenge.title}</h3>
                     <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} points</p>
                   </div>
-                   <Button variant="outline" size="sm">Edit</Button>
+                   <Button variant="outline" size="sm" onClick={() => handleEditClick(challenge)}>
+                       <Edit className="mr-2 h-4 w-4" />
+                       Edit
+                   </Button>
                 </div>
               ))}
             </div>
