@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, use } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ type RunType = 'run' | 'submit';
 type MobileView = 'description' | 'code' | 'results';
 
 export default function ChallengePage() {
-  const params = use(useParams());
+  const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -65,10 +65,6 @@ export default function ChallengePage() {
   const [showPenaltyDialog, setShowPenaltyDialog] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   const handleCodeChange = useCallback((value: string | undefined) => {
     setCode(value || '');
   }, []);
@@ -81,6 +77,10 @@ export default function ChallengePage() {
       : null;
     return { nextChallengeId };
   }, [challengeId, challenges]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   useEffect(() => {
     if (isClient) {
