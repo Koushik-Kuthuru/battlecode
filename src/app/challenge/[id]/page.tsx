@@ -65,8 +65,8 @@ export default function ChallengePage() {
   const [showPenaltyDialog, setShowPenaltyDialog] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  const handleCodeChange = useCallback((value: string | undefined) => {
-    setCode(value || '');
+  const handleCodeChange = useCallback((value: string) => {
+    setCode(value);
   }, []);
 
   const { nextChallengeId } = useMemo(() => {

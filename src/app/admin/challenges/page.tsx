@@ -77,8 +77,8 @@ export default function ManageChallengesPage() {
     setFormData(prev => ({...prev, [field]: value}));
   }, []);
 
-  const handleSolutionChange = useCallback((value: string | undefined) => {
-    setFormData(prev => ({ ...prev, solution: value || '' }));
+  const handleSolutionChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, solution: value }));
   }, []);
 
   const handleArrayChange = useCallback((arrayName: 'examples' | 'testCases', index: number, field: string, value: string) => {
