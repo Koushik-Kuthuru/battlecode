@@ -6,12 +6,14 @@ import { challenges, type Challenge } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
 
 const languages = ['All', 'C', 'C++', 'Java', 'Python', 'JavaScript'];
 const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
 const ITEMS_PER_PAGE = 6;
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [difficulty, setDifficulty] = useState('All');
   const [language, setLanguage] = useState('All');
   const [displayedChallenges, setDisplayedChallenges] = useState<Challenge[]>([]);
@@ -19,14 +21,19 @@ export default function DashboardPage() {
   const [hasMore, setHasMore] = useState(true);
   const loaderRef = useRef(null);
   const [completedChallenges, setCompletedChallenges] = useState<Record<string, boolean>>({});
+  const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
 
   useEffect(() => {
     // We need to ensure localStorage is accessed only on the client side.
-    if (typeof window !== 'undefined') {
-        const savedCompletions = JSON.parse(localStorage.getItem('completedChallenges') || '{}');
-        setCompletedChallenges(savedCompletions);
+    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (!user) {
+      router.push('/login');
+    } else {
+      setCurrentUser(user);
+      const savedCompletions = JSON.parse(localStorage.getItem(`completedChallenges_${user.email}`) || '{}');
+      setCompletedChallenges(savedCompletions);
     }
-  }, []);
+  }, [router]);
 
   const filteredChallenges = challenges.filter((c) => {
     const difficultyMatch = difficulty === 'All' || c.difficulty === difficulty;
@@ -73,6 +80,13 @@ export default function DashboardPage() {
     };
   }, [hasMore, page, filteredChallenges]);
 
+  if (!currentUser) {
+      return (
+          <div className="flex h-screen items-center justify-center">
+              <div>Loading...</div>
+          </div>
+      )
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">

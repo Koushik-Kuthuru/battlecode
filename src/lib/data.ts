@@ -518,16 +518,3 @@ export type LeaderboardUser = {
   name: string;
   points: number;
 };
-
-export const leaderboardData: LeaderboardUser[] = [
-  { rank: 1, name: 'CodeMaster_01', points: 9850 },
-  { rank: 2, name: 'AlgoQueen', points: 9500 },
-  { rank: 3, name: 'JavaJuggernaut', points: 9210 },
-  { rank: 4, name: 'Pythonista_Pro', points: 8900 },
-  { rank: 5, name: 'RecursiveRider', points: 8750 },
-  { rank: 6, name: 'SyntaxSorcerer', points: 8500 },
-  { rank: 7, name: 'DebugDynamo', points: 8230 },
-  { rank: 8, name: 'BitBard', points: 8100 },
-  { rank: 9, name: 'LogicLeaper', points: 7990 },
-  { rank: 10, name: 'ScriptSavvy', points: 7800 },
-];

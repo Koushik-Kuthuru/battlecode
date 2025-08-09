@@ -48,31 +48,42 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
   const [isCompleted, setIsCompleted] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{email: string, name: string} | null>(null);
   const { toast } = useToast();
 
   const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
   const nextChallengeId = currentChallengeIndex !== -1 && currentChallengeIndex < challenges.length - 1 
     ? challenges[currentChallengeIndex + 1].id 
     : null;
+  
+  useEffect(() => {
+    // Ensure this runs client-side only
+    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (!user) {
+      router.push('/login');
+    } else {
+      setCurrentUser(user);
+    }
+  }, [router]);
 
   useEffect(() => {
     const foundChallenge = challenges.find((c) => c.id === params.id) || null;
-    if (foundChallenge) {
+    if (foundChallenge && currentUser) {
       setChallenge(foundChallenge);
       
-      const savedCode = localStorage.getItem(`code_${params.id}`);
+      const savedCode = localStorage.getItem(`code_${currentUser.email}_${params.id}`);
       setCode(savedCode || foundChallenge.solution);
       
-      const completedChallenges = JSON.parse(localStorage.getItem('completedChallenges') || '{}');
+      const completedChallenges = JSON.parse(localStorage.getItem(`completedChallenges_${currentUser.email}`) || '{}');
       setIsCompleted(completedChallenges[params.id] || false);
 
       setLanguage(foundChallenge.language);
       setSubmissionResult(null); // Reset results when challenge changes
       setActiveTab('description'); // Reset tab to description
-    } else {
+    } else if(!foundChallenge) {
       notFound();
     }
-  }, [params.id]);
+  }, [params.id, currentUser]);
 
   useEffect(() => {
     const handleContextmenu = (e: MouseEvent) => e.preventDefault();
@@ -132,7 +143,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [code, language, challenge, toast, submissionResult]);
 
-  if (!challenge) {
+  if (!challenge || !currentUser) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div>Loading...</div>
@@ -145,7 +156,8 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   };
 
   const handleSaveCode = () => {
-    localStorage.setItem(`code_${params.id}`, code);
+    if (!currentUser) return;
+    localStorage.setItem(`code_${currentUser.email}_${params.id}`, code);
     toast({
         title: 'Code Saved!',
         description: 'Your progress has been saved locally.',
@@ -153,7 +165,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   }
   
   const handleCodeExecution = async (runType: RunType) => {
-    if (!challenge) return;
+    if (!challenge || !currentUser) return;
     
     if (runType === 'submit') {
       handleSaveCode();
@@ -196,9 +208,21 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
 
       if (passRate === 1) {
           setIsCompleted(true);
-          const completedChallenges = JSON.parse(localStorage.getItem('completedChallenges') || '{}');
-          completedChallenges[params.id] = true;
-          localStorage.setItem('completedChallenges', JSON.stringify(completedChallenges));
+          // Mark as completed for the current user
+          const completedChallenges = JSON.parse(localStorage.getItem(`completedChallenges_${currentUser.email}`) || '{}');
+          if (!completedChallenges[params.id]) {
+            completedChallenges[params.id] = true;
+            localStorage.setItem(`completedChallenges_${currentUser.email}`, JSON.stringify(completedChallenges));
+
+            // Update leaderboard
+            const leaderboard = JSON.parse(localStorage.getItem('leaderboard') || '{}');
+            if (leaderboard[currentUser.email]) {
+              leaderboard[currentUser.email].points += score;
+            } else {
+              leaderboard[currentUser.email] = { name: currentUser.name, points: score };
+            }
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+          }
       }
 
       toast({
