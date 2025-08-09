@@ -189,6 +189,15 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
         description: 'Your progress has been saved locally.',
     });
   }
+
+  const getPenaltyPoints = (difficulty: 'Easy' | 'Medium' | 'Hard'): number => {
+    switch (difficulty) {
+        case 'Easy': return 2;
+        case 'Medium': return 3;
+        case 'Hard': return 6;
+        default: return 0;
+    }
+  };
   
   const handleCodeExecution = async (runType: RunType) => {
     if (!challenge || !currentUser) return;
@@ -225,8 +234,8 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     const passRate = totalCount > 0 ? passedCount / totalCount : 0;
     
     const baseScore = Math.round(challenge.points * passRate);
-    const penaltyPercentage = tabSwitchCount * 0.10;
-    const penalty = Math.round(baseScore * penaltyPercentage);
+    const penaltyPerSwitch = getPenaltyPoints(challenge.difficulty);
+    const penalty = tabSwitchCount * penaltyPerSwitch;
     const finalScore = Math.max(0, baseScore - penalty);
     
     setSubmissionResult({ results, score: finalScore, penalty });
@@ -479,6 +488,9 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
   
+  const penaltyPoints = challenge ? getPenaltyPoints(challenge.difficulty) : 0;
+  const totalPenalty = tabSwitchCount * penaltyPoints;
+
   return (
     <div className="flex flex-1 flex-col md:flex-row overflow-hidden h-full">
       <AlertDialog open={showPenaltyDialog} onOpenChange={setShowPenaltyDialog}>
@@ -489,10 +501,12 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
               Tab Switch Detected
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Switching tabs during a challenge is discouraged. A 10% penalty per switch will be applied to your submission score.
+              Switching tabs during a challenge is discouraged. A penalty per switch will be applied to your submission score.
               <br />
               <br />
-              You have switched tabs <strong>{tabSwitchCount} time{tabSwitchCount > 1 ? 's' : ''}</strong>, resulting in a <strong>{tabSwitchCount * 10}% penalty</strong>.
+              This is a <strong>{challenge.difficulty}</strong> challenge. You lose <strong>{penaltyPoints} points</strong> per switch.
+              <br/>
+              You have switched tabs <strong>{tabSwitchCount} time{tabSwitchCount > 1 ? 's' : ''}</strong>, for a total penalty of <strong>{totalPenalty} points</strong>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
