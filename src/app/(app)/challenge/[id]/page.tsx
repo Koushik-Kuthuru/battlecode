@@ -46,6 +46,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState('description');
   const { toast } = useToast();
 
   const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
@@ -63,6 +64,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
 
       setLanguage(foundChallenge.language);
       setSubmissionResult(null); // Reset results when challenge changes
+      setActiveTab('description'); // Reset tab to description
     } else {
       notFound();
     }
@@ -109,6 +111,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
             problemDescription: challenge.description,
           });
           setGeneratedTests(result.testCases);
+          setActiveTab('results');
         } catch (error) {
            toast({
             variant: 'destructive',
@@ -182,6 +185,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     const score = Math.round(difficultyPoints * passRate);
     
     setSubmissionResult({ results, score });
+    setActiveTab('results');
     
     if (runType === 'run') setIsRunning(false);
     if (runType === 'submit') {
@@ -319,7 +323,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
 
               <Separator className="my-6" />
 
-              <Tabs defaultValue="description">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="mb-4">
                       <TabsTrigger value="description">Description</TabsTrigger>
                       <TabsTrigger value="results" disabled={!submissionResult && generatedTests.length === 0}>Results</TabsTrigger>
