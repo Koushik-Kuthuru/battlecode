@@ -8,7 +8,7 @@ import { ThemeProvider } from 'next-themes';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'SMECBATTLECODE',
+  title: 'SMEC Battle Code',
   description: 'The ultimate coding challenge platform.',
 };
 
