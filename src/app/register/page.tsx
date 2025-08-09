@@ -10,7 +10,7 @@ import { AuthLayout } from '@/components/auth-layout';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDocs, query, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
@@ -57,12 +57,16 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Update Firebase Auth profile
+      await updateProfile(user, { displayName: fullName });
+
       // Store additional user info in Firestore
       await setDoc(doc(db, "users", user.uid), {
         name: fullName,
         email: email,
         studentId: studentId.toUpperCase(),
         points: 0,
+        // Do NOT store password here
       });
 
       router.push('/dashboard');
