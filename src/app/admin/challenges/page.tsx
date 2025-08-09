@@ -183,7 +183,7 @@ export default function ManageChallengesPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Difficulty</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger><SelectValue placeholder="Select difficulty" /></SelectTrigger>
                             </FormControl>
@@ -203,7 +203,7 @@ export default function ManageChallengesPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Default Language</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger><SelectValue placeholder="Select language" /></SelectTrigger>
                             </FormControl>
@@ -226,7 +226,7 @@ export default function ManageChallengesPage() {
                         <FormItem>
                           <FormLabel>Points</FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="e.g., 10" {...field} />
+                            <Input type="number" placeholder="e.g., 10" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -403,3 +403,5 @@ export default function ManageChallengesPage() {
     </div>
   );
 }
+
+    
