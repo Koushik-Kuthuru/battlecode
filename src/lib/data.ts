@@ -1,5 +1,6 @@
+
 export type Challenge = {
-  id: string;
+  id?: string;
   title: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   language: 'C' | 'C++' | 'Java' | 'Python' | 'JavaScript';
@@ -20,7 +21,6 @@ export type Challenge = {
 
 export const challenges: Challenge[] = [
   {
-    id: '1',
     title: 'Two Sum',
     difficulty: 'Easy',
     language: 'Python',
@@ -56,7 +56,6 @@ export const challenges: Challenge[] = [
 `
   },
   {
-    id: '2',
     title: 'Reverse Linked List',
     difficulty: 'Easy',
     language: 'Java',
@@ -104,7 +103,6 @@ class Solution {
 }`
   },
   {
-    id: '3',
     title: 'FizzBuzz',
     difficulty: 'Easy',
     language: 'C++',
@@ -147,7 +145,6 @@ public:
 };`
   },
   {
-    id: '4',
     title: 'Container With Most Water',
     difficulty: 'Medium',
     language: 'JavaScript',
@@ -191,7 +188,6 @@ var maxArea = function(height) {
 };`
   },
   {
-    id: '5',
     title: 'Longest Substring Without Repeating Characters',
     difficulty: 'Medium',
     language: 'Python',
@@ -234,7 +230,6 @@ var maxArea = function(height) {
         return max_length`
   },
   {
-    id: '6',
     title: 'Validate Binary Search Tree',
     difficulty: 'Medium',
     language: 'Java',
@@ -299,7 +294,6 @@ class Solution {
 }`
   },
   {
-    id: '7',
     title: 'Median of Two Sorted Arrays',
     difficulty: 'Hard',
     language: 'C',
@@ -356,7 +350,6 @@ class Solution {
 }`
   },
   {
-    id: '8',
     title: 'Trapping Rain Water',
     difficulty: 'Hard',
     language: 'Python',
@@ -400,7 +393,6 @@ class Solution {
         return water`
   },
   {
-    id: '9',
     title: 'Regular Expression Matching',
     difficulty: 'Hard',
     language: 'C++',
@@ -455,7 +447,6 @@ public:
 };`
   },
   {
-    id: '10',
     title: 'Merge k Sorted Lists',
     difficulty: 'Hard',
     language: 'Java',
