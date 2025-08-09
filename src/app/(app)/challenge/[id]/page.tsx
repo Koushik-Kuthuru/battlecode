@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { challenges, type Challenge } from '@/lib/data';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CodeEditor } from '@/components/code-editor';
 import {
@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateTestCases } from '@/ai/flows/generate-test-cases';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, CheckCircle2, XCircle, Award, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Terminal, CheckCircle2, XCircle, Award, ChevronsLeft, ChevronsRight, ArrowRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,7 +30,10 @@ type TestResult = {
     passed: boolean;
 };
 
+type RunType = 'run' | 'submit';
+
 export default function ChallengePage({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('');
@@ -40,9 +43,15 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     results: TestResult[];
     score: number;
   } | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { toast } = useToast();
+
+  const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
+  const nextChallengeId = currentChallengeIndex !== -1 && currentChallengeIndex < challenges.length - 1 
+    ? challenges[currentChallengeIndex + 1].id 
+    : null;
 
   useEffect(() => {
     const foundChallenge = challenges.find((c) => c.id === params.id) || null;
@@ -50,6 +59,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
       setChallenge(foundChallenge);
       setCode(foundChallenge.solution);
       setLanguage(foundChallenge.language);
+      setSubmissionResult(null); // Reset results when challenge changes
     } else {
       notFound();
     }
@@ -124,19 +134,25 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     setCode(value || '');
   };
   
-  const handleSubmit = async () => {
+  const handleCodeExecution = async (runType: RunType) => {
     if (!challenge) return;
-    setIsSubmitting(true);
+
+    if (runType === 'run') setIsRunning(true);
+    if (runType === 'submit') setIsSubmitting(true);
+    
     setSubmissionResult(null);
 
     // Simulate running test cases
     await new Promise(resolve => setTimeout(resolve, 1500));
 
+    // For "Run Code", we only use example cases. For "Submit", we use all test cases.
+    const testCasesToUse = runType === 'run' ? challenge.examples.map(ex => ({input: ex.input, output: ex.output})) : challenge.testCases;
+    
     // In a real app, you would execute the code and get the actual output.
     // For this prototype, we'll just pretend the user provided the correct solution.
     const isCorrectSolution = code.trim() === challenge.solution.trim();
 
-    const results: TestResult[] = challenge.testCases.map(testCase => {
+    const results: TestResult[] = testCasesToUse.map(testCase => {
         const passed = isCorrectSolution; // Simplified check
         return {
             input: testCase.input,
@@ -147,20 +163,24 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     });
 
     const passedCount = results.filter(r => r.passed).length;
-    const totalCount = challenge.testCases.length;
+    const totalCount = testCasesToUse.length;
     const passRate = totalCount > 0 ? passedCount / totalCount : 0;
     
     const difficultyPoints = { Easy: 10, Medium: 25, Hard: 50 }[challenge.difficulty];
     const score = Math.round(difficultyPoints * passRate);
     
     setSubmissionResult({ results, score });
-    setIsSubmitting(false);
+    
+    if (runType === 'run') setIsRunning(false);
+    if (runType === 'submit') setIsSubmitting(false);
 
-    toast({
-        title: passRate === 1 ? 'Accepted!' : 'Some tests failed',
-        description: `You passed ${passedCount} out of ${totalCount} test cases. You earned ${score} points.`,
-        variant: passRate === 1 ? 'default' : 'destructive',
-    });
+    if (runType === 'submit') {
+      toast({
+          title: passRate === 1 ? 'Accepted!' : 'Some tests failed on submission',
+          description: `You passed ${passedCount} out of ${totalCount} test cases. You earned ${score} points.`,
+          variant: passRate === 1 ? 'default' : 'destructive',
+      });
+    }
   };
 
   const SubmissionResultView = () => {
@@ -339,16 +359,23 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
             <div className="flex-1 relative">
                 <CodeEditor value={code} onChange={handleCodeChange} language={language} />
             </div>
-            <div className="p-4 bg-background border-t flex items-center justify-end gap-4">
-                {isSubmitting && <Progress value={undefined} className="w-1/2 h-1 animate-pulse" />}
-                <Button onClick={handleSubmit} disabled={isSubmitting || !code} className="min-w-[120px]">
-                    {isSubmitting ? (
-                    <>
-                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                        Submitting...
-                    </>
-                    ) : 'Submit'}
-                </Button>
+            <div className="p-4 bg-background border-t flex items-center justify-between gap-4">
+                <div>
+                  {nextChallengeId && (
+                    <Button variant="outline" onClick={() => router.push(`/challenge/${nextChallengeId}`)}>
+                        Next Challenge <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-4">
+                  {(isRunning || isSubmitting) && <Progress value={undefined} className="w-32 h-1 animate-pulse" />}
+                  <Button variant="outline" onClick={() => handleCodeExecution('run')} disabled={isRunning || isSubmitting || !code}>
+                      {isRunning ? 'Running...' : 'Run Code'}
+                  </Button>
+                  <Button onClick={() => handleCodeExecution('submit')} disabled={isRunning || isSubmitting || !code}>
+                      {isSubmitting ? 'Submitting...' : 'Submit'}
+                  </Button>
+                </div>
             </div>
         </div>
       </div>
