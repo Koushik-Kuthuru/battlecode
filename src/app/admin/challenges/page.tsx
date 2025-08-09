@@ -70,7 +70,7 @@ export default function ManageChallengesPage() {
           initialChallenges.forEach((challenge) => {
             // we remove the `id` field from the initial data as Firestore will generate it.
             const { id, ...challengeData } = challenge;
-            const docRef = doc(challengesCollection); // Create a new doc with auto-generated ID
+            const docRef = doc(collection(db, "challenges")); // Create a new doc with auto-generated ID
             batch.set(docRef, { ...challengeData, createdAt: serverTimestamp() });
           });
           await batch.commit();
@@ -167,7 +167,7 @@ export default function ManageChallengesPage() {
       if (editingChallenge) {
           const challengeRef = doc(db, 'challenges', editingChallenge.id);
           await setDoc(challengeRef, challengeData, { merge: true });
-          setChallenges(challenges.map(c => c.id === editingChallenge.id ? { ...challengeData, id: editingChallenge.id } : c));
+          setChallenges(challenges.map(c => c.id === editingChallenge.id ? { ...challengeData, id: editingChallenge.id } as Challenge : c));
           toast({
               title: 'Challenge Updated!',
               description: `Successfully updated "${challengeData.title}".`,
@@ -177,7 +177,7 @@ export default function ManageChallengesPage() {
             ...challengeData,
             createdAt: serverTimestamp()
           });
-          setChallenges([...challenges, { ...challengeData, id: docRef.id }]);
+          setChallenges([...challenges, { ...challengeData, id: docRef.id } as Challenge]);
           toast({
               title: 'Challenge Added!',
               description: `Successfully added "${challengeData.title}".`,
@@ -506,5 +506,3 @@ export default function ManageChallengesPage() {
     </div>
   );
 }
-
-    
