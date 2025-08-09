@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { ChangeEvent } from 'react';
 import { challenges, type Challenge } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -47,6 +46,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     const foundChallenge = challenges.find((c) => c.id === params.id) || null;
     if (foundChallenge) {
       setChallenge(foundChallenge);
+      setCode(foundChallenge.solution);
       setLanguage(foundChallenge.language);
     } else {
       notFound();
@@ -114,8 +114,8 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     return <div>Loading...</div>;
   }
 
-  const handleCodeChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setCode(e.target.value);
+  const handleCodeChange = (value: string | undefined) => {
+    setCode(value || '');
   };
   
   const handleSubmit = async () => {
