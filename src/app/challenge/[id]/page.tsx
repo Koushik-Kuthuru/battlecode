@@ -17,13 +17,15 @@ import { useToast } from '@/hooks/use-toast';
 import { generateTestCases } from '@/ai/flows/generate-test-cases';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, CheckCircle2, XCircle, Award, ArrowRight, PanelLeftOpen, PanelLeftClose, Save, Code as CodeIcon, FileText, BarChart2 } from 'lucide-react';
+import { Terminal, CheckCircle2, XCircle, Award, ArrowRight, Save, Code as CodeIcon, FileText, BarChart2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+
 
 type TestResult = {
     input: string;
@@ -48,7 +50,6 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   } | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [desktopActiveTab, setDesktopActiveTab] = useState('description');
   const [mobileView, setMobileView] = useState<MobileView>('description');
   const [isCompleted, setIsCompleted] = useState(false);
@@ -345,16 +346,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   }
 
   const DescriptionPanel = () => (
-    <div className={`relative flex flex-col h-full bg-card md:border-r transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0 overflow-hidden" : "w-full md:p-6 p-4"}`}>
-       <Button 
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 hidden md:inline-flex absolute top-4 right-4 z-10"
-      >
-          {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-          <span className="sr-only">Toggle Sidebar</span>
-      </Button>
+    <div className="relative flex flex-col h-full bg-card p-4 md:p-6">
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full pr-4">
           <div className="flex items-start justify-between mb-4">
@@ -493,10 +485,17 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
       </div>
 
       {/* Desktop View */}
-       <div className={cn('hidden md:grid h-full w-full', isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'grid-cols-[minmax(400px,1fr),2fr]', 'overflow-hidden transition-all duration-300')}>
-        <DescriptionPanel />
-        <EditorPanel />
-      </div>
+       <div className='hidden md:flex h-full w-full overflow-hidden'>
+         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+            <ResizablePanel defaultSize={50}>
+                <DescriptionPanel />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={50}>
+                <EditorPanel />
+            </ResizablePanel>
+         </ResizablePanelGroup>
+       </div>
     </div>
   );
 }
