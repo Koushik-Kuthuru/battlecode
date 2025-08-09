@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
@@ -20,24 +20,48 @@ const languageMap: Record<string, any> = {
   javascript: javascript({ jsx: true }),
   python: python(),
   java: java(),
-  c: cpp(), // CodeMirror uses cpp for C as well
+  c: cpp(),
   'c++': cpp(),
   cpp: cpp(),
 };
 
 export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
+  const editorRef = useRef<HTMLDivElement>(null);
   const langExtension = language ? languageMap[language.toLowerCase()] : javascript();
 
-  // The 'use client' directive above ensures this component only renders on the client
-  // so we can safely assume window is available and avoid hydration errors.
-  const isClient = typeof window !== 'undefined';
+  useEffect(() => {
+    const editorElement = editorRef.current;
+
+    const handleContextmenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'x')) {
+        e.preventDefault();
+      }
+    };
+    
+    if (editorElement) {
+        editorElement.addEventListener('contextmenu', handleContextmenu);
+        editorElement.addEventListener('keydown', handleKeydown);
+    }
+
+    return () => {
+        if (editorElement) {
+            editorElement.removeEventListener('contextmenu', handleContextmenu);
+            editorElement.removeEventListener('keydown', handleKeydown);
+        }
+    };
+  }, []);
   
+  const isClient = typeof window !== 'undefined';
   if (!isClient) {
     return <Skeleton className="h-full w-full" />;
   }
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0" ref={editorRef}>
       <CodeMirror
         value={value}
         height="100%"
