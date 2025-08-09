@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, CheckCircle, Award } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -27,7 +28,10 @@ export function ChallengeCard({ challenge, isCompleted }: ChallengeCardProps) {
             </CardTitle>
           <div className="flex items-center gap-2">
             <div className={`h-3 w-3 rounded-full ${difficultyColors[challenge.difficulty]}`} />
-            <Badge variant="secondary" className="flex items-center gap-1">
+            <Badge variant="secondary" className={cn(
+              "flex items-center gap-1",
+              isCompleted && "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-500/50"
+            )}>
               <Award className="h-4 w-4" />
               <span>{challenge.points} Points</span>
             </Badge>
