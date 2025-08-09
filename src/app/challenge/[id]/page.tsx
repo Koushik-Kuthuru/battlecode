@@ -40,6 +40,7 @@ type MobileView = 'description' | 'code' | 'results';
 
 export default function ChallengePage({ params }: { params: { id:string } }) {
   const router = useRouter();
+  const challengeId = params.id;
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [code, setCode] = useState('');
@@ -63,13 +64,13 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
 
 
   const { nextChallengeId } = useMemo(() => {
-    if (!params.id) return { nextChallengeId: null };
-    const currentChallengeIndex = challenges.findIndex((c) => c.id === params.id);
+    if (!challengeId) return { nextChallengeId: null };
+    const currentChallengeIndex = challenges.findIndex((c) => c.id === challengeId);
     const nextChallengeId = currentChallengeIndex !== -1 && currentChallengeIndex < challenges.length - 1 
       ? challenges[currentChallengeIndex + 1].id 
       : null;
     return { nextChallengeId };
-  }, [params.id, challenges]);
+  }, [challengeId, challenges]);
   
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
@@ -81,27 +82,27 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
   }, [router]);
 
   useEffect(() => {
-    if (!params.id || !currentUser) return;
+    if (!challengeId || !currentUser) return;
     
     const fetchChallenges = () => {
       try {
         const storedChallenges = localStorage.getItem('challenges');
         const allChallenges = storedChallenges ? JSON.parse(storedChallenges) : initialChallenges;
         setChallenges(allChallenges);
-        const foundChallenge = allChallenges.find((c: Challenge) => c.id === params.id);
+        const foundChallenge = allChallenges.find((c: Challenge) => c.id === challengeId);
 
         if (foundChallenge) {
            setChallenge(foundChallenge);
 
             // Mark the challenge as in-progress as soon as it's opened
             const inProgressChallenges = JSON.parse(localStorage.getItem(`inProgressChallenges_${currentUser.email}`) || '{}');
-            inProgressChallenges[params.id] = true;
+            inProgressChallenges[challengeId] = true;
             localStorage.setItem(`inProgressChallenges_${currentUser.email}`, JSON.stringify(inProgressChallenges));
             
-            const savedCode = localStorage.getItem(`code_${currentUser.email}_${params.id}`);
+            const savedCode = localStorage.getItem(`code_${currentUser.email}_${challengeId}`);
             // Only show solution if challenge is completed, otherwise start with empty code
             const completedChallenges = JSON.parse(localStorage.getItem(`completedChallenges_${currentUser.email}`) || '{}');
-            const challengeIsCompleted = completedChallenges[params.id] || false;
+            const challengeIsCompleted = completedChallenges[challengeId] || false;
             setIsCompleted(challengeIsCompleted);
             
             if (challengeIsCompleted) {
@@ -132,7 +133,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     };
 
     fetchChallenges();
-  }, [params.id, currentUser, toast, router]);
+  }, [challengeId, currentUser, toast, router]);
 
 
   useEffect(() => {
@@ -206,7 +207,7 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
 
   const handleSaveCode = () => {
     if (!currentUser) return;
-    localStorage.setItem(`code_${currentUser.email}_${params.id}`, code);
+    localStorage.setItem(`code_${currentUser.email}_${challengeId}`, code);
     toast({
         title: 'Code Saved!',
         description: 'Your progress has been saved locally.',
@@ -273,8 +274,8 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
           setIsCompleted(true);
           // Mark as completed for the current user
           const completedChallenges = JSON.parse(localStorage.getItem(`completedChallenges_${currentUser.email}`) || '{}');
-          if (!completedChallenges[params.id]) {
-            completedChallenges[params.id] = true;
+          if (!completedChallenges[challengeId]) {
+            completedChallenges[challengeId] = true;
             localStorage.setItem(`completedChallenges_${currentUser.email}`, JSON.stringify(completedChallenges));
 
             // Update leaderboard
