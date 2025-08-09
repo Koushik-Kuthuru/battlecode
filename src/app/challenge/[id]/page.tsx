@@ -330,106 +330,104 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   }
   
   return (
-    <div className="flex h-screen flex-col">
-      <div className={`flex flex-1 grid ${isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'grid-cols-[minmax(450px,1fr),2fr]'} overflow-hidden transition-all duration-300`}>
-        {/* Left Panel */}
-        <div className={`relative flex flex-col h-full bg-card border-r transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0 overflow-hidden" : "w-full p-6"}`}>
-          <div className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full pr-4">
-              <div className="flex items-start justify-between mb-4">
-                <h1 className="text-3xl font-bold">{challenge.title}</h1>
-                <Badge variant="outline" className={
-                  challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
-                  challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
-                  'border-red-500 text-red-500'
-                }>{challenge.difficulty}</Badge>
-              </div>
-              
-              <div className="flex flex-wrap gap-2 mb-4">
-                  {challenge.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
-              </div>
+    <div className={`flex flex-1 grid ${isSidebarCollapsed ? 'grid-cols-[auto,1fr]' : 'grid-cols-[minmax(450px,1fr),2fr]'} overflow-hidden transition-all duration-300`}>
+      {/* Left Panel */}
+      <div className={`relative flex flex-col h-full bg-card border-r transition-all duration-300 ${isSidebarCollapsed ? "w-0 p-0 overflow-hidden" : "w-full p-6"}`}>
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full pr-4">
+            <div className="flex items-start justify-between mb-4">
+              <h1 className="text-3xl font-bold">{challenge.title}</h1>
+              <Badge variant="outline" className={
+                challenge.difficulty === 'Easy' ? 'border-green-500 text-green-500' :
+                challenge.difficulty === 'Medium' ? 'border-yellow-500 text-yellow-500' :
+                'border-red-500 text-red-500'
+              }>{challenge.difficulty}</Badge>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 mb-4">
+                {challenge.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+            </div>
 
-              <Separator className="my-6" />
+            <Separator className="my-6" />
 
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="mb-4">
-                      <TabsTrigger value="description">Description</TabsTrigger>
-                      <TabsTrigger value="results" disabled={!submissionResult && generatedTests.length === 0}>Results</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="description">
-                     <article className="prose prose-sm dark:prose-invert max-w-none">
-                          <p>{challenge.description}</p>
-                          
-                          {challenge.examples.map((example, index) => (
-                              <div key={index} className="mt-4">
-                                  <p className="font-semibold">Example {index + 1}:</p>
-                                  <div className="mt-2 rounded-md bg-muted/50 p-3 font-mono text-sm">
-                                      <p><strong>Input:</strong> {example.input}</p>
-                                      <p><strong>Output:</strong> {example.output}</p>
-                                      {example.explanation && <p className="mt-2"><strong>Explanation:</strong> {example.explanation}</p>}
-                                  </div>
-                              </div>
-                          ))}
-                     </article>
-                  </TabsContent>
-                  <TabsContent value="results">
-                      {submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}
-                  </TabsContent>
-              </Tabs>
-            </ScrollArea>
-          </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="mb-4">
+                    <TabsTrigger value="description">Description</TabsTrigger>
+                    <TabsTrigger value="results" disabled={!submissionResult && generatedTests.length === 0}>Results</TabsTrigger>
+                </TabsList>
+                <TabsContent value="description">
+                   <article className="prose prose-sm dark:prose-invert max-w-none">
+                        <p>{challenge.description}</p>
+                        
+                        {challenge.examples.map((example, index) => (
+                            <div key={index} className="mt-4">
+                                <p className="font-semibold">Example {index + 1}:</p>
+                                <div className="mt-2 rounded-md bg-muted/50 p-3 font-mono text-sm">
+                                    <p><strong>Input:</strong> {example.input}</p>
+                                    <p><strong>Output:</strong> {example.output}</p>
+                                    {example.explanation && <p className="mt-2"><strong>Explanation:</strong> {example.explanation}</p>}
+                                </div>
+                            </div>
+                        ))}
+                   </article>
+                </TabsContent>
+                <TabsContent value="results">
+                    {submissionResult ? <SubmissionResultView /> : <GeneratedTestsView />}
+                </TabsContent>
+            </Tabs>
+          </ScrollArea>
         </div>
-        
-        {/* Right Panel */}
-        <div className="flex flex-col h-full overflow-hidden">
-             <div className="p-4 flex justify-between items-center border-b">
-                  <Button 
-                      onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                  >
-                      {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-                      <span className="sr-only">Toggle Sidebar</span>
+      </div>
+      
+      {/* Right Panel */}
+      <div className="flex flex-col h-full overflow-hidden">
+           <div className="p-4 flex justify-between items-center border-b">
+                <Button 
+                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                >
+                    {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+                    <span className="sr-only">Toggle Sidebar</span>
+                </Button>
+                 <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="C">C</SelectItem>
+                      <SelectItem value="C++">C++</SelectItem>
+                      <SelectItem value="Java">Java</SelectItem>
+                      <SelectItem value="Python">Python</SelectItem>
+                      <SelectItem value="JavaScript">JavaScript</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="flex-1 relative">
+                <CodeEditor value={code} onChange={handleCodeChange} language={language} />
+            </div>
+            <div className="p-4 bg-background border-t flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <Button variant="outline" onClick={handleSaveCode} disabled={!code}>
+                    <Save className="mr-2 h-4 w-4" /> Save
                   </Button>
-                   <Select value={language} onValueChange={setLanguage}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="C">C</SelectItem>
-                        <SelectItem value="C++">C++</SelectItem>
-                        <SelectItem value="Java">Java</SelectItem>
-                        <SelectItem value="Python">Python</SelectItem>
-                        <SelectItem value="JavaScript">JavaScript</SelectItem>
-                      </SelectContent>
-                  </Select>
-              </div>
-              <div className="flex-1 relative">
-                  <CodeEditor value={code} onChange={handleCodeChange} language={language} />
-              </div>
-              <div className="p-4 bg-background border-t flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <Button variant="outline" onClick={handleSaveCode} disabled={!code}>
-                      <Save className="mr-2 h-4 w-4" /> Save
+                  {nextChallengeId && isCompleted && (
+                    <Button variant="outline" onClick={() => router.push(`/challenge/${nextChallengeId}`)}>
+                        Next Challenge <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
-                    {nextChallengeId && isCompleted && (
-                      <Button variant="outline" onClick={() => router.push(`/challenge/${nextChallengeId}`)}>
-                          Next Challenge <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4">
-                    {(isRunning || isSubmitting) && <Progress value={undefined} className="w-32 h-1 animate-pulse" />}
-                    <Button variant="outline" onClick={() => handleCodeExecution('run')} disabled={isRunning || isSubmitting || !code}>
-                        {isRunning ? 'Running...' : 'Run Code'}
-                    </Button>
-                    <Button onClick={() => handleCodeExecution('submit')} disabled={isRunning || isSubmitting || !code}>
-                        {isSubmitting ? 'Submitting...' : 'Submit'}
-                    </Button>
-                  </div>
-              </div>
-        </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-4">
+                  {(isRunning || isSubmitting) && <Progress value={undefined} className="w-32 h-1 animate-pulse" />}
+                  <Button variant="outline" onClick={() => handleCodeExecution('run')} disabled={isRunning || isSubmitting || !code}>
+                      {isRunning ? 'Running...' : 'Run Code'}
+                  </Button>
+                  <Button onClick={() => handleCodeExecution('submit')} disabled={isRunning || isSubmitting || !code}>
+                      {isSubmitting ? 'Submitting...' : 'Submit'}
+                  </Button>
+                </div>
+            </div>
       </div>
     </div>
   );

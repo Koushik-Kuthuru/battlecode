@@ -33,7 +33,7 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
         language={editorLanguage}
         value={value}
         onChange={onChange}
-        theme={resolvedTheme === 'dark' ? 'vs-dark' : 'light'}
+        theme={'vs-dark'}
         options={{
           fontSize: 14,
           minimap: { enabled: false },
