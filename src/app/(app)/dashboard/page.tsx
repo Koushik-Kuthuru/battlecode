@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChallengeCard } from '@/components/challenge-card';
-import { challenges, type Challenge } from '@/lib/data';
+import { challenges as defaultChallenges, type Challenge } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,7 @@ const ITEMS_PER_PAGE = 6;
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [displayedChallenges, setDisplayedChallenges] = useState<Challenge[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -27,6 +28,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // We need to ensure localStorage is accessed only on the client side.
+    const storedChallenges = JSON.parse(localStorage.getItem('challenges') || 'null');
+    const allChallenges = storedChallenges || defaultChallenges;
+    setChallenges(allChallenges);
+
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
     if (!user) {
       router.push('/login');
@@ -51,11 +56,12 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
+    if (challenges.length === 0) return;
     const initialChallenges = challenges.slice(0, ITEMS_PER_PAGE);
     setDisplayedChallenges(initialChallenges);
     setPage(1);
     setHasMore(initialChallenges.length < challenges.length);
-  }, []);
+  }, [challenges]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -77,7 +83,7 @@ export default function DashboardPage() {
         observer.unobserve(currentLoader);
       }
     };
-  }, [hasMore, page]);
+  }, [hasMore, page, displayedChallenges]);
 
   if (!currentUser) {
       return (

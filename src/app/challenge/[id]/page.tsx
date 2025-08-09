@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, use } from 'react';
-import { challenges, type Challenge } from '@/lib/data';
+import { challenges as defaultChallenges, type Challenge } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CodeEditor } from '@/components/code-editor';
@@ -41,6 +41,7 @@ type MobileView = 'description' | 'code' | 'results';
 export default function ChallengePage({ params: paramsProp }: { params: { id:string } }) {
   const router = useRouter();
   const params = use(paramsProp);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('');
@@ -69,10 +70,13 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
       ? challenges[currentChallengeIndex + 1].id 
       : null;
     return { nextChallengeId };
-  }, [params.id]);
+  }, [params.id, challenges]);
   
   useEffect(() => {
     // Ensure this runs client-side only
+    const storedChallenges = JSON.parse(localStorage.getItem('challenges') || 'null');
+    setChallenges(storedChallenges || defaultChallenges);
+
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
     if (!user) {
       router.push('/login');
@@ -82,7 +86,7 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
   }, [router]);
 
   useEffect(() => {
-    if (!params.id) return;
+    if (!params.id || challenges.length === 0) return;
     const foundChallenge = challenges.find((c) => c.id === params.id) || null;
     if (foundChallenge && currentUser) {
       setChallenge(foundChallenge);
@@ -117,7 +121,7 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
     } else if(!foundChallenge) {
       notFound();
     }
-  }, [params.id, currentUser]);
+  }, [params.id, currentUser, challenges]);
 
   useEffect(() => {
     const handleContextmenu = (e: MouseEvent) => e.preventDefault();
@@ -137,7 +141,7 @@ export default function ChallengePage({ params: paramsProp }: { params: { id:str
       }
       
       // Block copy, paste, cut
-      if (e.ctrlKey && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
+       if (e.ctrlKey && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
          e.preventDefault();
          toast({
             variant: 'destructive',
