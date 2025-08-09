@@ -20,13 +20,21 @@ export default function RegisterPage() {
 
   const handleRegister = () => {
     // Basic validation
-    if (fullName && email && password && studentId) {
+    if (fullName && email && password && studentId && studentId.length === 7) {
       const users = JSON.parse(localStorage.getItem('users') || '{}');
       if (users[email]) {
         toast({
           variant: 'destructive',
           title: 'Registration Failed',
           description: 'An account with this email already exists.',
+        });
+        return;
+      }
+       if (Object.values(users).some((user: any) => user.studentId === studentId)) {
+        toast({
+          variant: 'destructive',
+          title: 'Registration Failed',
+          description: 'An account with this Student ID already exists.',
         });
         return;
       }
@@ -48,6 +56,12 @@ export default function RegisterPage() {
         title: 'Registration Successful!',
         description: `Welcome to BattleCode, ${fullName}!`,
       });
+    } else if (studentId.length !== 7) {
+        toast({
+            variant: 'destructive',
+            title: 'Registration Failed',
+            description: 'Student ID must be exactly 7 characters.',
+        });
     } else {
         toast({
             variant: 'destructive',
@@ -55,6 +69,10 @@ export default function RegisterPage() {
             description: 'Please fill in all fields.',
         });
     }
+  };
+
+  const handleStudentIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStudentId(e.target.value.toUpperCase().slice(0, 7));
   };
 
 
@@ -77,7 +95,7 @@ export default function RegisterPage() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="student-id">Student ID</Label>
-              <Input id="student-id" placeholder="Your_Student_ID" required value={studentId} onChange={(e) => setStudentId(e.target.value)} />
+              <Input id="student-id" placeholder="Your_Student_ID" required value={studentId} onChange={handleStudentIdChange} maxLength={7} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>

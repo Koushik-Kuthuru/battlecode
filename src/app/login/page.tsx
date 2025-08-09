@@ -11,27 +11,31 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
   const { toast } = useToast();
 
   const handleLogin = () => {
     // In a real app, you'd have proper validation and a backend call.
-    if (email && password) {
+    if (studentId && password) {
       const users = JSON.parse(localStorage.getItem('users') || '{}');
-      if(users[email] && users[email].password === password) {
-        localStorage.setItem('currentUser', JSON.stringify({ email, name: users[email].name }));
+      
+      const userEmail = Object.keys(users).find(email => users[email].studentId === studentId.toUpperCase());
+      const user = userEmail ? users[userEmail] : null;
+
+      if(user && user.password === password) {
+        localStorage.setItem('currentUser', JSON.stringify({ email: userEmail, name: user.name }));
         router.push('/dashboard');
         toast({
           title: 'Login Successful',
-          description: `Welcome back, ${users[email].name}!`,
+          description: `Welcome back, ${user.name}!`,
         });
       } else {
         toast({
           variant: 'destructive',
           title: 'Login Failed',
-          description: 'Invalid email or password.',
+          description: 'Invalid Student ID or password.',
         });
       }
     } else {
@@ -42,6 +46,11 @@ export default function LoginPage() {
       });
     }
   };
+  
+  const handleStudentIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStudentId(e.target.value.toUpperCase().slice(0, 7));
+  };
+
 
   return (
     <AuthLayout>
@@ -53,8 +62,8 @@ export default function LoginPage() {
         <CardContent>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Label htmlFor="student-id">Student ID</Label>
+              <Input id="student-id" type="text" placeholder="YOUR_ID" required value={studentId} onChange={handleStudentIdChange} />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
