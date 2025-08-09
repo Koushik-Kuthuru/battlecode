@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs, setDoc } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
 
@@ -196,7 +196,7 @@ export default function DashboardPage() {
         {hasMore && (
           <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex flex-col space-y-3">
+              <div key={`skeleton-${i}`} className="flex flex-col space-y-3">
                 <Skeleton className="h-[125px] w-full rounded-xl" />
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-4/5" />
