@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateTestCases } from '@/ai/flows/generate-test-cases';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, CheckCircle2, XCircle, Award, ArrowRight, Save, Code as CodeIcon, FileText, BarChart2, EyeOff } from 'lucide-react';
+import { Terminal, CheckCircle2, XCircle, Award, ArrowRight, Save, Code as CodeIcon, FileText, BarChart2, EyeOff, RotateCcw } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,7 +25,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 
 type TestResult = {
@@ -204,6 +204,17 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
         description: 'Your progress has been saved locally.',
     });
   }
+
+  const handleResetCode = () => {
+    if (!currentUser) return;
+    setCode('');
+    localStorage.removeItem(`code_${currentUser.email}_${challengeId}`);
+    toast({
+        title: 'Code Reset!',
+        description: 'Your code has been cleared.',
+    });
+  }
+
 
   const getPenaltyPoints = (difficulty: 'Easy' | 'Medium' | 'Hard'): number => {
     switch (difficulty) {
@@ -496,6 +507,25 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
                 <Button variant="outline" onClick={handleSaveCode} disabled={!code}>
                   <Save className="mr-2 h-4 w-4" /> Save
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive-outline">
+                      <RotateCcw className="mr-2 h-4 w-4" /> Reset
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete your current code for this challenge. You can't undo this action.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleResetCode}>Reset Code</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
                 {nextChallengeId && isCompleted && (
                   <Button variant="outline" onClick={() => router.push(`/challenge/${nextChallengeId}`)}>
                       Next Challenge <ArrowRight className="ml-2 h-4 w-4" />
@@ -581,3 +611,5 @@ export default function ChallengePage({ params }: { params: { id:string } }) {
     </div>
   );
 }
+
+    
