@@ -18,6 +18,15 @@ export default function DashboardPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const loaderRef = useRef(null);
+  const [completedChallenges, setCompletedChallenges] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    // We need to ensure localStorage is accessed only on the client side.
+    if (typeof window !== 'undefined') {
+        const savedCompletions = JSON.parse(localStorage.getItem('completedChallenges') || '{}');
+        setCompletedChallenges(savedCompletions);
+    }
+  }, []);
 
   const filteredChallenges = challenges.filter((c) => {
     const difficultyMatch = difficulty === 'All' || c.difficulty === difficulty;
@@ -99,7 +108,7 @@ export default function DashboardPage() {
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {displayedChallenges.map((challenge) => (
-          <ChallengeCard key={challenge.id} challenge={challenge} />
+          <ChallengeCard key={challenge.id} challenge={challenge} isCompleted={!!completedChallenges[challenge.id]} />
         ))}
       </div>
       

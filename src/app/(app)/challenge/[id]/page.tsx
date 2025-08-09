@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateTestCases } from '@/ai/flows/generate-test-cases';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, CheckCircle2, XCircle, Award, ChevronsLeft, ChevronsRight, ArrowRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Terminal, CheckCircle2, XCircle, Award, ArrowRight, PanelLeftOpen, PanelLeftClose, Save } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -57,7 +57,10 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     const foundChallenge = challenges.find((c) => c.id === params.id) || null;
     if (foundChallenge) {
       setChallenge(foundChallenge);
-      setCode(foundChallenge.solution);
+      
+      const savedCode = localStorage.getItem(`code_${params.id}`);
+      setCode(savedCode || foundChallenge.solution);
+
       setLanguage(foundChallenge.language);
       setSubmissionResult(null); // Reset results when challenge changes
     } else {
@@ -133,9 +136,21 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   const handleCodeChange = (value: string | undefined) => {
     setCode(value || '');
   };
+
+  const handleSaveCode = () => {
+    localStorage.setItem(`code_${params.id}`, code);
+    toast({
+        title: 'Code Saved!',
+        description: 'Your progress has been saved locally.',
+    });
+  }
   
   const handleCodeExecution = async (runType: RunType) => {
     if (!challenge) return;
+    
+    if (runType === 'submit') {
+      handleSaveCode();
+    }
 
     if (runType === 'run') setIsRunning(true);
     if (runType === 'submit') setIsSubmitting(true);
@@ -145,15 +160,12 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     // Simulate running test cases
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // For "Run Code", we only use example cases. For "Submit", we use all test cases.
     const testCasesToUse = runType === 'run' ? challenge.examples.map(ex => ({input: ex.input, output: ex.output})) : challenge.testCases;
     
-    // In a real app, you would execute the code and get the actual output.
-    // For this prototype, we'll just pretend the user provided the correct solution.
     const isCorrectSolution = code.trim() === challenge.solution.trim();
 
     const results: TestResult[] = testCasesToUse.map(testCase => {
-        const passed = isCorrectSolution; // Simplified check
+        const passed = isCorrectSolution;
         return {
             input: testCase.input,
             expected: testCase.output,
@@ -172,9 +184,15 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     setSubmissionResult({ results, score });
     
     if (runType === 'run') setIsRunning(false);
-    if (runType === 'submit') setIsSubmitting(false);
-
     if (runType === 'submit') {
+      setIsSubmitting(false);
+
+      if (passRate === 1) {
+          const completedChallenges = JSON.parse(localStorage.getItem('completedChallenges') || '{}');
+          completedChallenges[params.id] = true;
+          localStorage.setItem('completedChallenges', JSON.stringify(completedChallenges));
+      }
+
       toast({
           title: passRate === 1 ? 'Accepted!' : 'Some tests failed on submission',
           description: `You passed ${passedCount} out of ${totalCount} test cases. You earned ${score} points.`,
@@ -359,7 +377,10 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
                   <CodeEditor value={code} onChange={handleCodeChange} language={language} />
               </div>
               <div className="p-4 bg-background border-t flex items-center justify-between gap-4">
-                  <div>
+                  <div className="flex items-center gap-4">
+                    <Button variant="outline" onClick={handleSaveCode} disabled={!code}>
+                      <Save className="mr-2 h-4 w-4" /> Save
+                    </Button>
                     {nextChallengeId && (
                       <Button variant="outline" onClick={() => router.push(`/challenge/${nextChallengeId}`)}>
                           Next Challenge <ArrowRight className="ml-2 h-4 w-4" />
