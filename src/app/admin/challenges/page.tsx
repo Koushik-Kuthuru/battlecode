@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { challenges as initialChallenges, type Challenge } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp, ShieldOff, Shield, Code } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction, getDoc, deleteField } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -206,24 +206,22 @@ export default function ManageChallengesPage() {
             const challengeRef = doc(db, "challenges", challengeToDelete);
             transaction.delete(challengeRef);
 
+            // Get all users to iterate through them
             const usersSnapshot = await getDocs(collection(db, "users"));
-
             for (const userDoc of usersSnapshot.docs) {
                 const userId = userDoc.id;
 
+                // Delete solution if it exists
                 const solutionRef = doc(db, `users/${userId}/solutions`, challengeToDelete);
                 transaction.delete(solutionRef);
                 
+                // Remove challenge from 'inProgress' map
                 const inProgressRef = doc(db, `users/${userId}/challengeData`, 'inProgress');
-                 transaction.update(inProgressRef, {
-                    [challengeToDelete]: false
-                 });
+                transaction.update(inProgressRef, { [challengeToDelete]: deleteField() });
 
-
+                // Remove challenge from 'completed' map
                 const completedRef = doc(db, `users/${userId}/challengeData`, 'completed');
-                 transaction.update(completedRef, {
-                    [challengeToDelete]: false
-                 });
+                transaction.update(completedRef, { [challengeToDelete]: deleteField() });
             }
         });
 
@@ -237,7 +235,7 @@ export default function ManageChallengesPage() {
         toast({
             variant: "destructive",
             title: "Error Deleting Challenge",
-            description: "Could not delete the challenge. The operation was rolled back.",
+            description: "Could not delete the challenge. Please try again.",
         });
     } finally {
         setChallengeToDelete(null);
