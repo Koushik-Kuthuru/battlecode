@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -39,19 +40,19 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
       e.preventDefault();
     };
 
-    // Disable copy/paste/cut without breaking typing
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
-        e.preventDefault();
-      }
-    };
-
+    const preventDefault = (e: Event) => e.preventDefault();
+    
+    // Disable copy/paste/cut
     dom.addEventListener('contextmenu', handleContextMenu);
-    dom.addEventListener('keydown', handleKeyDown);
+    dom.addEventListener('cut', preventDefault);
+    dom.addEventListener('copy', preventDefault);
+    dom.addEventListener('paste', preventDefault);
 
     return () => {
       dom.removeEventListener('contextmenu', handleContextMenu);
-      dom.removeEventListener('keydown', handleKeyDown);
+      dom.removeEventListener('cut', preventDefault);
+      dom.removeEventListener('copy', preventDefault);
+      dom.removeEventListener('paste', preventDefault);
     };
   }, []);
 

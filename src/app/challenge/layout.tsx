@@ -6,11 +6,11 @@ import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code,
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import React, { useEffect, useState, createContext, useContext } from 'react';
+import React, { useEffect, useState, createContext, useContext, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, runTransaction } from 'firebase/firestore';
 import { app, db } from '@/lib/firebase';
 import {
   ResizableHandleWithHandle,
@@ -28,6 +28,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useToast } from '@/hooks/use-toast';
 
 type CurrentUser = {
   uid: string;
@@ -72,6 +73,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const params = useParams();
   const { setTheme, theme } = useTheme();
+  const { toast } = useToast();
   
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -153,6 +155,71 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
         setActiveResultTab('0');
     }
   }, [runResult]);
+
+  // Anti-cheat tab switch detection
+  const handleVisibilityChange = useCallback(async () => {
+      if (document.hidden && currentUser && challenge) {
+          try {
+              const penaltyDocRef = doc(db, `users/${currentUser.uid}/penalties`, challenge.id!);
+              const userDocRef = doc(db, `users/${currentUser.uid}`);
+              
+              await runTransaction(db, async (transaction) => {
+                  const penaltyDoc = await transaction.get(penaltyDocRef);
+                  const userDoc = await transaction.get(userDocRef);
+                  
+                  if (!userDoc.exists()) {
+                      throw "User document does not exist!";
+                  }
+
+                  const userData = userDoc.data();
+                  let currentPoints = userData.points || 0;
+
+                  if (!penaltyDoc.exists()) {
+                      // First offense: Show warning
+                      transaction.set(penaltyDocRef, { warningCount: 1 });
+                      toast({
+                          variant: "destructive",
+                          title: "Warning: Tab Switch Detected",
+                          description: "Navigating away from the challenge is discouraged. A point penalty will be applied on the next offense.",
+                          duration: 8000
+                      });
+                  } else {
+                      // Second offense: Apply penalty
+                      const difficultyPenaltyMap = { 'Easy': 5, 'Medium': 10, 'Hard': 20 };
+                      const penaltyPoints = difficultyPenaltyMap[challenge.difficulty] || 10;
+                      
+                      const newPoints = Math.max(0, currentPoints - penaltyPoints);
+                      
+                      transaction.update(userDocRef, { points: newPoints });
+                      // We don't need to update the penalty doc again, just apply penalty every time now
+                      
+                      toast({
+                          variant: "destructive",
+                          title: "Penalty Applied for Tab Switching",
+                          description: `You have lost ${penaltyPoints} points for navigating away from the challenge page again.`,
+                          duration: 8000
+                      });
+                  }
+              });
+
+          } catch (error) {
+              console.error("Error applying penalty: ", error);
+              toast({
+                  variant: 'destructive',
+                  title: 'Error',
+                  description: 'Could not process the tab switch penalty.'
+              });
+          }
+      }
+  }, [currentUser, challenge, toast, db]);
+
+  useEffect(() => {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      return () => {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+  }, [handleVisibilityChange]);
+
   
   if (isLoading) {
     return (
@@ -399,7 +466,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                         <div className="flex-shrink-0 p-2 border-b">
                             <TabsList className={cn("grid w-full", (runResult || isRunning) ? "grid-cols-4" : "grid-cols-3")}>
                                 <TabsTrigger value="description">Description</TabsTrigger>
-                                <TabsTrigger value="code">Code</TabsTrigger>
+                                <TabsTrigger value="code" onClick={() => setActiveTab('code')}>Code</TabsTrigger>
                                 {(runResult || isRunning) && <TabsTrigger value="result">Result</TabsTrigger>}
                                 <TabsTrigger value="submissions">Submissions</TabsTrigger>
                             </TabsList>
