@@ -153,7 +153,7 @@ export default function LandingPage() {
         <section id="leaderboard-preview" className="py-20 md:py-32">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-12 animate-fade-in-up">
-                    <h2 className="text-3xl md:text-4xl font-bold">Leaderboard Preview</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold">Ranking Arena</h2>
                     <p className="max-w-xl mx-auto text-muted-foreground mt-4">
                         See who's leading the charge. Can you dethrone them?
                     </p>
