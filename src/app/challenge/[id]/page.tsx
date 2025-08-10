@@ -24,6 +24,7 @@ export default function ChallengeDetail() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [canSubmit, setCanSubmit] = useState(false);
   
   const auth = getAuth(app);
 
@@ -60,6 +61,7 @@ export default function ChallengeDetail() {
 
   const handleSolutionChange = (newCode: string) => {
     setSolution(newCode);
+    setCanSubmit(false); // Code changed, must re-validate
   };
   
   const handleSave = async () => {
@@ -86,6 +88,7 @@ export default function ChallengeDetail() {
   const handleRunCode = async () => {
     if (!challenge) return;
     setIsRunning(true);
+    setCanSubmit(false); // Reset submit state
     setRunResult(null); // Clear previous results
     setActiveTab('result'); // Switch to result tab
     try {
@@ -96,6 +99,12 @@ export default function ChallengeDetail() {
             testCases: challenge.testCases,
         });
         setRunResult(result);
+        if (result.allPassed) {
+            setCanSubmit(true); // Enable submit button if all tests pass
+            toast({ title: "All Tests Passed!", description: "You can now submit your solution." });
+        } else {
+             toast({ variant: "destructive", title: "Tests Failed", description: "Some test cases did not pass. Check the results." });
+        }
     } catch(error) {
         console.error("Error running code:", error);
         toast({ variant: "destructive", title: "Evaluation Error", description: "Could not evaluate your code. Please try again." });
@@ -109,35 +118,26 @@ export default function ChallengeDetail() {
         toast({ variant: "destructive", title: "Submission Error", description: "You must be logged in to submit." });
         return;
     }
+     if (!canSubmit) {
+        toast({ variant: "destructive", title: "Submission Blocked", description: "Please run your code and ensure all test cases pass before submitting." });
+        return;
+    }
     setIsSubmitting(true);
-    setRunResult(null);
-    setActiveTab('result');
     try {
-      const result = await evaluateCode({
-            code: solution,
-            programmingLanguage: language,
-            problemDescription: challenge.description,
-            testCases: challenge.testCases,
-      });
-      setRunResult(result);
+      // Logic assumes canSubmit is true, so all tests have passed.
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      const currentPoints = userSnap.data()?.points || 0;
+      await updateDoc(userRef, { points: currentPoints + challenge.points });
 
-      if (result.allPassed) {
-          // Update user points and mark as completed
-          const userRef = doc(db, "users", user.uid);
-          const userSnap = await getDoc(userRef);
-          const currentPoints = userSnap.data()?.points || 0;
-          await updateDoc(userRef, { points: currentPoints + challenge.points });
-
-          const completedRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
-          await setDoc(completedRef, { [challenge.id!]: true }, { merge: true });
-          
-          const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
-          await setDoc(inProgressRef, { [challenge.id!]: false }, { merge: true });
-          
-          toast({ title: "Challenge Passed!", description: `You've earned ${challenge.points} points!` });
-      } else {
-          toast({ variant: "destructive", title: "Submission Failed", description: "Your solution did not pass all test cases." });
-      }
+      const completedRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
+      await setDoc(completedRef, { [challenge.id!]: true }, { merge: true });
+      
+      const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
+      await setDoc(inProgressRef, { [challenge.id!]: false }, { merge: true });
+      
+      toast({ title: "Challenge Passed!", description: `You've earned ${challenge.points} points!` });
+      setCanSubmit(false); // Disable submit after successful submission
 
     } catch (error) {
       console.error("Error submitting code:", error);
@@ -151,6 +151,7 @@ export default function ChallengeDetail() {
   const handleReset = () => {
       if(window.confirm("Are you sure you want to reset your code to your last saved version?")) {
           setSolution(initialSolution);
+          setCanSubmit(false);
       }
   };
 
@@ -187,7 +188,7 @@ export default function ChallengeDetail() {
            <Button size="sm" onClick={handleRunCode} disabled={isSaving || isRunning || isSubmitting}>
              {isRunning ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Code className="mr-2 h-4 w-4" />} Run Code
            </Button>
-           <Button size="sm" variant="default" onClick={handleSubmit} disabled={isSaving || isRunning || isSubmitting}>
+           <Button size="sm" variant="default" onClick={handleSubmit} disabled={isSaving || isRunning || isSubmitting || !canSubmit} title={!canSubmit ? "Run your code and pass all test cases to submit" : ""}>
              {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Bug className="mr-2 h-4 w-4" />} Submit
            </Button>
        </div>
