@@ -170,9 +170,9 @@ export default function ChallengeDetail() {
              </SelectContent>
          </Select>
          <div className="flex items-center gap-2">
-           <Button variant="outline" size="sm" onClick={handleReset} disabled={isSaving || isRunning || isSubmitting}><RefreshCcw /> Reset</Button>
+           <Button variant="outline" size="sm" onClick={handleReset} disabled={isSaving || isRunning || isSubmitting}><RefreshCcw className="mr-2 h-4 w-4" /> Reset</Button>
            <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving || isRunning || isSubmitting}>
-            {isSaving ? <Loader2 className="animate-spin" /> : <Save />} Save
+            {isSaving ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Save
            </Button>
          </div>
        </div>
@@ -185,10 +185,10 @@ export default function ChallengeDetail() {
        </div>
        <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t">
            <Button size="sm" onClick={handleRunCode} disabled={isSaving || isRunning || isSubmitting}>
-             {isRunning ? <Loader2 className="animate-spin" /> : <Code />} Run Code
+             {isRunning ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Code className="mr-2 h-4 w-4" />} Run Code
            </Button>
            <Button size="sm" variant="default" onClick={handleSubmit} disabled={isSaving || isRunning || isSubmitting}>
-             {isSubmitting ? <Loader2 className="animate-spin" /> : <Bug />} Submit
+             {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Bug className="mr-2 h-4 w-4" />} Submit
            </Button>
        </div>
     </div>
