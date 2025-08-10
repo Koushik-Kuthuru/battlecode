@@ -25,18 +25,7 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     setIsLoading(true);
-    // Handle admin login
-    if (studentId.toLowerCase() === 'admin0822' && password === 'admin0822') {
-      localStorage.setItem('currentUser', JSON.stringify({ email: 'admin@smec.ac.in', name: 'Admin', isAdmin: true }));
-      router.push('/admin/dashboard');
-      toast({
-        title: 'Admin Login Successful',
-        description: 'Welcome back, Admin!',
-      });
-      setIsLoading(false);
-      return;
-    }
-
+    
     if (!studentId || !password) {
       toast({
         variant: 'destructive',
@@ -68,13 +57,29 @@ export default function LoginPage() {
       const userEmail = userData.email;
 
       // Sign in with Firebase Auth
-      await signInWithEmailAndPassword(auth, userEmail, password);
+      const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
+      
+      const loggedInUser = {
+        email: userCredential.user.email,
+        name: userData.name,
+        isAdmin: userData.isAdmin || false,
+      };
+      
+      localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
 
-      router.push('/dashboard');
-      toast({
-        title: 'Login Successful',
-        description: `Welcome back, ${userData.name}!`,
-      });
+      if(loggedInUser.isAdmin) {
+        router.push('/admin/dashboard');
+        toast({
+          title: 'Admin Login Successful',
+          description: `Welcome back, ${userData.name}!`,
+        });
+      } else {
+        router.push('/dashboard');
+        toast({
+          title: 'Login Successful',
+          description: `Welcome back, ${userData.name}!`,
+        });
+      }
 
     } catch (error) {
       console.error("Login Error: ", error);
@@ -83,6 +88,7 @@ export default function LoginPage() {
         title: 'Login Failed',
         description: 'Invalid Student ID or password.',
       });
+      localStorage.removeItem('currentUser');
     } finally {
         setIsLoading(false);
     }
