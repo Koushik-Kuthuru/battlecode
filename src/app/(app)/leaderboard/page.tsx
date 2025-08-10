@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Medal, User } from 'lucide-react';
+import { Award, Medal, User } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
@@ -120,7 +120,12 @@ export default function LeaderboardPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{user.points.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">
+                        <div className="flex items-center justify-end font-semibold gap-1">
+                            <Award className="h-4 w-4 text-primary" />
+                            <span>{user.points.toLocaleString()}</span>
+                        </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

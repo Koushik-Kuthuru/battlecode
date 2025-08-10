@@ -4,7 +4,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserData } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Crown, Medal, Trophy, User } from "lucide-react";
+import { Award, Crown, Medal, Trophy, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
@@ -63,7 +63,10 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                 </Avatar>
                                 <h4 className="font-bold mt-2 truncate w-full">{podiumDisplayUsers[0]?.name}</h4>
                                 <p className="text-xs text-muted-foreground truncate w-full">{getFormattedBranchAndYear(podiumDisplayUsers[0])}</p>
-                                <p className="text-sm font-semibold">{podiumDisplayUsers[0]?.points.toLocaleString()} pts</p>
+                                <div className="flex items-center justify-center gap-1 text-sm font-semibold">
+                                    <Award className="h-4 w-4 text-primary" />
+                                    <span>{podiumDisplayUsers[0]?.points.toLocaleString()}</span>
+                                </div>
                                 <div className="bg-slate-200 dark:bg-slate-700 h-24 w-full rounded-t-lg mt-2 flex items-center justify-center text-3xl font-bold text-slate-600 dark:text-slate-300">2</div>
                             </div>
                         )}
@@ -78,7 +81,10 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                 </Avatar>
                                 <h4 className="font-bold mt-2 truncate w-full">{podiumDisplayUsers[1]?.name}</h4>
                                 <p className="text-xs text-muted-foreground truncate w-full">{getFormattedBranchAndYear(podiumDisplayUsers[1])}</p>
-                                <p className="text-sm font-semibold">{podiumDisplayUsers[1]?.points.toLocaleString()} pts</p>
+                                <div className="flex items-center justify-center gap-1 text-sm font-semibold">
+                                    <Award className="h-4 w-4 text-primary" />
+                                    <span>{podiumDisplayUsers[1]?.points.toLocaleString()}</span>
+                                </div>
                                 <div className="bg-yellow-200 dark:bg-yellow-700/50 h-32 w-full rounded-t-lg mt-2 flex items-center justify-center text-4xl font-bold text-yellow-700 dark:text-yellow-200">1</div>
                             </div>
                         )}
@@ -93,7 +99,10 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                 </Avatar>
                                 <h4 className="font-bold mt-2 truncate w-full">{podiumDisplayUsers[2]?.name}</h4>
                                 <p className="text-xs text-muted-foreground truncate w-full">{getFormattedBranchAndYear(podiumDisplayUsers[2])}</p>
-                                <p className="text-sm font-semibold">{podiumDisplayUsers[2]?.points.toLocaleString()} pts</p>
+                                <div className="flex items-center justify-center gap-1 text-sm font-semibold">
+                                    <Award className="h-4 w-4 text-primary" />
+                                    <span>{podiumDisplayUsers[2]?.points.toLocaleString()}</span>
+                                </div>
                                 <div className="bg-amber-200 dark:bg-amber-900/50 h-20 w-full rounded-t-lg mt-2 flex items-center justify-center text-2xl font-bold text-amber-800 dark:text-amber-300">3</div>
                             </div>
                         )}
@@ -126,7 +135,12 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right font-semibold">{user.points.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end font-semibold gap-1">
+                                            <Award className="h-4 w-4 text-primary" />
+                                            <span>{user.points.toLocaleString()}</span>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
