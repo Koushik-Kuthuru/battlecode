@@ -40,7 +40,7 @@ export type Submission = {
   id: string;
   code: string;
   language: string;
-  status: 'Accepted' | 'Failed';
+  status: 'Solved' | 'Failed';
   timestamp: {
     seconds: number;
     nanoseconds: number;
@@ -232,7 +232,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
               {submission.timestamp ? formatDistanceToNow(new Date(submission.timestamp.seconds * 1000), { addSuffix: true }) : 'Just now'}
             </TableCell>
             <TableCell>
-              <Badge variant={submission.status === 'Accepted' ? 'default' : 'destructive'}>
+              <Badge variant={submission.status === 'Solved' ? 'default' : 'destructive'}>
                 {submission.status}
               </Badge>
             </TableCell>

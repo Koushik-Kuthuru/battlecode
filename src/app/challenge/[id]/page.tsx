@@ -149,7 +149,7 @@ export default function ChallengeDetail() {
 
       setRunResult(result);
       
-      const submissionStatus = result.allPassed ? 'Accepted' : 'Failed';
+      const submissionStatus = result.allPassed ? 'Solved' : 'Failed';
 
       const submissionsRef = collection(db, `users/${user.uid}/submissions/${challengeId}/attempts`);
       await addDoc(submissionsRef, {
@@ -170,9 +170,9 @@ export default function ChallengeDetail() {
         if (!completedChallenges[challenge.id!]) {
             const currentPoints = userSnap.data()?.points || 0;
             await updateDoc(userRef, { points: currentPoints + challenge.points });
-            toast({ title: "Challenge Passed!", description: `You've earned ${challenge.points} points!` });
+            toast({ title: "Challenge Solved!", description: `You've earned ${challenge.points} points!` });
         } else {
-            toast({ title: "Challenge Passed!", description: "You have already completed this challenge." });
+            toast({ title: "Challenge Solved!", description: "You have already completed this challenge." });
         }
 
         const completedRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
