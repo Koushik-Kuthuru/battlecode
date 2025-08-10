@@ -2,7 +2,6 @@
 'use client'
 
 import { SmecBattleCodeLogo } from '@/components/icons';
-import { cn } from '@/lib/utils';
 import { LogOut, Moon, Sun, User, Home, Code, Bug } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
@@ -50,15 +49,18 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
             imageUrl: userData.imageUrl,
           });
         } else {
-          router.push('/login');
+          // This case might occur if auth user exists but firestore doc doesn't.
+          // For now, we'll treat them as logged out for this layout.
+          setCurrentUser(null);
         }
       } else {
         // Allow non-logged in users to view challenges
+        setCurrentUser(null);
       }
       setIsLoading(false);
     });
     return () => unsubscribe();
-  }, [auth, db, router]);
+  }, [auth, db]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -74,7 +76,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden flex-col">
+    <div className="flex h-screen w-full flex-col overflow-hidden">
        <header className="flex-shrink-0 flex items-center justify-between p-2 bg-slate-900 text-white border-b border-slate-700">
            <div className="flex items-center gap-4">
                 <Link href="/dashboard" className="flex items-center gap-2 font-semibold px-2">
@@ -126,16 +128,18 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
            </div>
        </header>
 
-        <main className="flex-1 flex flex-col overflow-auto bg-muted/40">
+        <main className="flex-1 flex flex-col overflow-hidden bg-muted/40">
            <ResizablePanelGroup direction="vertical">
-               <ResizablePanel defaultSize={75}>
-                 {children}
+               <ResizablePanel defaultSize={75} minSize={50}>
+                 <div className="h-full w-full flex">
+                    {children}
+                 </div>
                </ResizablePanel>
                <ResizableHandle withHandle />
-               <ResizablePanel defaultSize={25}>
-                   <div className="h-full p-4">
-                     <h2 className="text-lg font-semibold">Test Results</h2>
-                     <div className="mt-4 bg-background rounded-md p-4 h-full text-sm text-muted-foreground">
+               <ResizablePanel defaultSize={25} minSize={15}>
+                   <div className="h-full p-4 flex flex-col">
+                     <h2 className="text-lg font-semibold mb-2">Test Results</h2>
+                     <div className="flex-grow mt-2 bg-background rounded-md p-4 text-sm text-muted-foreground overflow-auto">
                        Run your code to see test case results here.
                      </div>
                    </div>

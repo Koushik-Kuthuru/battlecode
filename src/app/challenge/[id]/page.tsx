@@ -28,6 +28,7 @@ export default function ChallengeDetail() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      // If we have challenge data but the user logs out, stop loading.
       if (!currentUser && challenge) {
         setIsLoading(false);
       }
@@ -44,12 +45,13 @@ export default function ChallengeDetail() {
       if (docSnap.exists()) {
         const challengeData = { id: docSnap.id, ...docSnap.data() } as Challenge;
         setChallenge(challengeData);
-        // If user is already loaded and it's null, stop loading
+        // If user is already known to be null, stop loading
         if (auth.currentUser === null) {
-          setSolution(challengeData.solution); // Set default solution for non-logged in users
+          setSolution(challengeData.solution); 
           setIsLoading(false);
         }
       } else {
+        setChallenge(null);
         setIsLoading(false); // Challenge not found
       }
     };
@@ -57,23 +59,31 @@ export default function ChallengeDetail() {
   }, [challengeId, auth]);
 
   useEffect(() => {
-    if (!user || !challengeId || !challenge) {
-      return;
+    if (!challenge) {
+        // If challenge isn't loaded yet, or not found, we wait.
+        return;
     };
 
-    const fetchSolution = async () => {
-      const solRef = doc(db, `users/${user.uid}/solutions`, challengeId);
-      const solSnap = await getDoc(solRef);
-      if (solSnap.exists()) {
-        setSolution(solSnap.data().code);
-      } else {
+    if (user) {
+        // User is logged in, fetch their saved solution
+        const fetchSolution = async () => {
+          const solRef = doc(db, `users/${user.uid}/solutions`, challenge.id!);
+          const solSnap = await getDoc(solRef);
+          if (solSnap.exists()) {
+            setSolution(solSnap.data().code);
+          } else {
+            // No saved solution, use the default from the challenge
+            setSolution(challenge.solution);
+          }
+          setIsLoading(false); // Done loading
+        };
+        fetchSolution();
+    } else {
+        // User is not logged in, use default solution
         setSolution(challenge.solution);
-      }
-      setIsLoading(false);
-    };
-
-    fetchSolution();
-  }, [user, challengeId, challenge]);
+        setIsLoading(false); // Done loading
+    }
+  }, [user, challenge, db]);
 
   const handleSolutionChange = async (newCode: string) => {
     setSolution(newCode);
@@ -94,16 +104,16 @@ export default function ChallengeDetail() {
   };
 
   if (isLoading) {
-    return <div className="flex h-full items-center justify-center">Loading challenge...</div>;
+    return <div className="flex h-full w-full items-center justify-center">Loading challenge...</div>;
   }
   
   if (!challenge) {
-     return <div className="flex h-full items-center justify-center">Challenge not found.</div>;
+     return <div className="flex h-full w-full items-center justify-center">Challenge not found.</div>;
   }
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="flex-1">
-      <ResizablePanel defaultSize={50}>
+    <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+      <ResizablePanel defaultSize={50} minSize={30}>
         <ScrollArea className="h-full p-6">
             <h1 className="text-2xl font-bold mb-2">{challenge.title}</h1>
             <div className="flex items-center gap-4 mb-4">
@@ -128,7 +138,7 @@ export default function ChallengeDetail() {
         </ScrollArea>
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={50}>
+      <ResizablePanel defaultSize={50} minSize={30}>
          <div className="h-full relative">
             <CodeEditor
               value={solution}
