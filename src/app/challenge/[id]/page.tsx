@@ -22,7 +22,6 @@ export default function ChallengeDetail() {
   const [initialSolution, setInitialSolution] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { id: challengeId } = useParams();
   
   const auth = getAuth(app);
@@ -129,7 +128,7 @@ export default function ChallengeDetail() {
         toast({ variant: "destructive", title: "Submission Error", description: "You must be logged in to submit.", position: 'center' });
         return;
     }
-    setIsSubmitting(true);
+    setIsRunning(true);
     setRunResult(null);
     setActiveTab('result');
 
@@ -137,7 +136,7 @@ export default function ChallengeDetail() {
       const allTestCases = challenge.testCases || [];
       if (allTestCases.length === 0) {
          toast({ variant: "destructive", title: "No Test Cases", description: "Cannot submit, no test cases exist.", position: 'center' });
-         setIsSubmitting(false);
+         setIsRunning(false);
          return;
       }
       
@@ -197,7 +196,7 @@ export default function ChallengeDetail() {
       console.error("Error submitting code:", error);
       toast({ variant: "destructive", title: "Submission Error", description: "An error occurred during submission.", position: 'center' });
     } finally {
-      setIsSubmitting(false);
+      setIsRunning(false);
     }
   }
 
@@ -224,10 +223,10 @@ export default function ChallengeDetail() {
              </SelectContent>
          </Select>
          <div className="flex items-center gap-2">
-           <Button variant="outline" size="sm" onClick={handleReset} disabled={isSaving || isRunning || isSubmitting}>
+           <Button variant="outline" size="sm" onClick={handleReset} disabled={isSaving || isRunning}>
              <RefreshCcw className="mr-2 h-4 w-4" /> Reset
            </Button>
-           <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving || isRunning || isSubmitting}>
+           <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving || isRunning}>
             {isSaving ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Save
            </Button>
          </div>
@@ -240,11 +239,11 @@ export default function ChallengeDetail() {
           />
        </div>
        <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t bg-muted">
-           <Button size="sm" onClick={handleRunCode} disabled={isSaving || isRunning || isSubmitting}>
+           <Button size="sm" onClick={handleRunCode} disabled={isSaving || isRunning}>
              {isRunning ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Code className="mr-2 h-4 w-4" />} Run Code
            </Button>
-           <Button size="sm" variant="default" onClick={handleSubmit} disabled={isSaving || isRunning || isSubmitting}>
-             {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Bug className="mr-2 h-4 w-4" />} Submit
+           <Button size="sm" variant="default" onClick={handleSubmit} disabled={isSaving || isRunning}>
+             {isRunning ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Bug className="mr-2 h-4 w-4" />} Submit
            </Button>
        </div>
     </div>
