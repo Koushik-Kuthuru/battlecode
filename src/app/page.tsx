@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SmecBattleCodeLogo } from '@/components/icons';
-import { ArrowRight, BrainCircuit, Code, Trophy, Calendar, Target, Users, LogIn, ListChecks, Send, Flame, Star } from 'lucide-react';
+import { ArrowRight, BrainCircuit, Code, Trophy, Calendar, Target, Users, LogIn, ListChecks, Send, Flame, Star, Gavel, BookCheck, ShieldCheck } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -221,8 +221,47 @@ export default function LandingPage() {
             </div>
         </section>
 
+         <section id="rules" className="bg-muted py-20 md:py-32">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold">Rules & Regulations</h2>
+              <p className="max-w-xl mx-auto text-muted-foreground mt-4">
+                A fair and competitive environment is key. Please follow the rules.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md">
+                <div className="p-4 bg-primary/10 rounded-full mb-4">
+                  <Gavel className="h-10 w-10 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">No Plagiarism</h3>
+                <p className="text-muted-foreground">
+                  All submitted code must be your own original work. Any form of plagiarism will result in disqualification.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md">
+                <div className="p-4 bg-primary/10 rounded-full mb-4">
+                  <BookCheck className="h-10 w-10 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Allowed Languages</h3>
+                <p className="text-muted-foreground">
+                  You can solve challenges in Python, Java, JavaScript, C, and C++. Choose the one you're most comfortable with.
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md">
+                <div className="p-4 bg-primary/10 rounded-full mb-4">
+                  <ShieldCheck className="h-10 w-10 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Fair Play</h3>
+                <p className="text-muted-foreground">
+                  Focus on the challenge. Navigating away from the editor tab during a challenge will result in a point penalty.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        <section id="about" className="bg-muted py-20 md:py-32">
+        <section id="about" className="py-20 md:py-32">
             <div className="container mx-auto px-4">
                  <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-bold">About the Battle</h2>
@@ -264,7 +303,7 @@ export default function LandingPage() {
 
       </main>
 
-      <footer className="container mx-auto flex items-center justify-center h-20 px-4 md:px-6">
+      <footer className="container mx-auto flex items-center justify-center h-20 px-4 md:px-6 border-t">
         <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} SMEC Battle Code. All rights reserved.</p>
       </footer>
     </div>
