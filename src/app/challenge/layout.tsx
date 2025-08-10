@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { type Challenge } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type CurrentUser = {
   uid: string;
@@ -37,6 +38,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [isChallengeLoading, setIsChallengeLoading] = useState(true);
 
   const auth = getAuth(app);
   const challengeId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -67,12 +69,14 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (!challengeId) return;
+    setIsChallengeLoading(true);
     const fetchChallenge = async () => {
       const docRef = doc(db, "challenges", challengeId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setChallenge({ id: docSnap.id, ...docSnap.data() } as Challenge);
       }
+      setIsChallengeLoading(false);
     };
     fetchChallenge();
   }, [challengeId]);
@@ -99,7 +103,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                     <span className="text-xl hidden sm:inline">SMEC Battle Code</span>
                 </Link>
                 <Button variant="ghost" asChild>
-                    <Link href="/dashboard"><Home className="mr-2 h-4 w-4"/> Dashboard</Link>
+                    <Link href="/dashboard"><Home className="mr-2"/> Dashboard</Link>
                 </Button>
            </div>
            
@@ -138,30 +142,28 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
            </div>
        </header>
 
-        <main className="flex-1 flex flex-col overflow-hidden bg-muted/40">
-           <ResizablePanelGroup direction="vertical">
-               <ResizablePanel defaultSize={65} minSize={50}>
-                 <div className="h-full w-full flex">
-                    {children}
-                 </div>
-               </ResizablePanel>
-               <ResizableHandle withHandle />
-               <ResizablePanel defaultSize={35} minSize={20}>
-                  <Tabs defaultValue="description" className="h-full flex flex-col">
-                    <div className="flex-shrink-0 flex items-center justify-between p-2 border-b">
+        <main className="flex-1 flex flex-row overflow-hidden bg-muted/40">
+           <ResizablePanelGroup direction="horizontal">
+               <ResizablePanel defaultSize={50} minSize={30}>
+                 <Tabs defaultValue="description" className="h-full flex flex-col">
+                    <div className="flex-shrink-0 flex items-center justify-between p-2 border-b border-r">
                         <TabsList>
                           <TabsTrigger value="description">Description</TabsTrigger>
                           <TabsTrigger value="result">Result</TabsTrigger>
                         </TabsList>
-                        <div className="flex items-center gap-2">
-                           <Button><Code className="mr-2"/> Run Code</Button>
-                           <Button variant="outline"><Bug className="mr-2"/> Submit</Button>
-                        </div>
                     </div>
-                    <div className="flex-grow overflow-auto">
+                    <div className="flex-grow overflow-auto border-r">
                         <TabsContent value="description" className="mt-0 h-full">
                            <ScrollArea className="h-full p-6">
-                            {challenge ? (
+                            {isChallengeLoading ? (
+                                <div className="space-y-4">
+                                  <Skeleton className="h-8 w-3/4" />
+                                  <Skeleton className="h-4 w-1/2" />
+                                  <Skeleton className="h-20 w-full" />
+                                  <Skeleton className="h-12 w-full" />
+                                  <Skeleton className="h-12 w-full" />
+                                </div>
+                            ) : challenge ? (
                                 <>
                                   <h1 className="text-2xl font-bold mb-2">{challenge.title}</h1>
                                   <div className="flex items-center gap-4 mb-4">
@@ -172,7 +174,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                                   <p className="text-base mb-6 whitespace-pre-wrap">{challenge.description}</p>
                                   
                                   {challenge?.examples.map((example, index) => (
-                                    <div key={index} className="bg-background p-3 rounded-md mb-3">
+                                    <div key={index} className="bg-background p-3 rounded-md mb-3 border">
                                       <p className="font-semibold text-sm mb-1">Example {index + 1}</p>
                                       <p className="font-mono text-xs"><strong>Input:</strong> {example.input}</p>
                                       <p className="font-mono text-xs"><strong>Output:</strong> {example.output}</p>
@@ -185,7 +187,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                                   </div>
                                 </>
                             ) : (
-                                <div>Loading description...</div>
+                                <div>Challenge details not found.</div>
                             )}
                            </ScrollArea>
                         </TabsContent>
@@ -195,7 +197,17 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                           </div>
                         </TabsContent>
                     </div>
+                    <div className="flex-shrink-0 flex items-center justify-end gap-2 p-2 border-t border-r">
+                       <Button><Code className="mr-2"/> Run Code</Button>
+                       <Button variant="outline"><Bug className="mr-2"/> Submit</Button>
+                    </div>
                   </Tabs>
+               </ResizablePanel>
+               <ResizableHandle withHandle />
+               <ResizablePanel defaultSize={50} minSize={30}>
+                 <div className="h-full w-full flex">
+                    {children}
+                 </div>
                </ResizablePanel>
            </ResizablePanelGroup>
         </main>
