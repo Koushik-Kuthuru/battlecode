@@ -59,7 +59,7 @@ export default function AdminRegisterPage() {
         studentId: `ADMIN_${Date.now()}` // Generate a unique ID for admin
       });
       
-      router.push('/admin/login');
+      router.push('/admin-login');
       toast({
         title: 'Admin Registration Successful!',
         description: `Admin account for ${fullName} created. You can now log in.`,
@@ -112,7 +112,7 @@ export default function AdminRegisterPage() {
               {isLoading ? 'Creating Account...' : 'Create Admin Account'}
             </Button>
              <Button variant="link" asChild>
-                <Link href="/admin/login">Back to Login</Link>
+                <Link href="/admin-login">Back to Login</Link>
             </Button>
           </div>
         </CardContent>
