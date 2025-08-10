@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SmecBattleCodeLogo } from '@/components/icons';
 import { ArrowRight, BrainCircuit, Code, Trophy, Calendar, Target, Users, LogIn, ListChecks, Send, Flame, Star, Gavel, BookCheck, ShieldCheck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function LandingPage() {
   return (
@@ -303,18 +304,52 @@ export default function LandingPage() {
 
       </main>
 
-      <footer className="container mx-auto flex items-center justify-center h-20 px-4 md:px-6 border-t">
-        <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} SMEC Battle Code. All rights reserved.</p>
+      <footer className="bg-slate-900 text-slate-300 py-12">
+        <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <Link href="/" className="flex items-center gap-2 font-semibold text-white mb-4">
+                        <SmecBattleCodeLogo className="h-8 w-8 text-primary" />
+                        <span className="text-xl font-bold">SMEC Battle Code</span>
+                    </Link>
+                    <p className="text-sm">The official competitive programming platform of St. Martin's Engineering College.</p>
+                </div>
+                <div>
+                    <h4 className="font-semibold text-white mb-4">Quick Links</h4>
+                    <ul className="space-y-2 text-sm">
+                        <li><a href="#features" className="hover:text-white">Features</a></li>
+                        <li><a href="#how-it-works" className="hover:text-white">How It Works</a></li>
+                        <li><a href="#rules" className="hover:text-white">Rules</a></li>
+                        <li><Link href="/leaderboard" className="hover:text-white">Leaderboard</Link></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 className="font-semibold text-white mb-4">Contact</h4>
+                     <ul className="space-y-2 text-sm">
+                        <li><a href="mailto:contact@smec.ac.in" className="hover:text-white">contact@smec.ac.in</a></li>
+                        <li><p>Dhulapally, Secunderabad, Telangana</p></li>
+                    </ul>
+                </div>
+                 <div>
+                    <h4 className="font-semibold text-white mb-4">Follow Us</h4>
+                    <div className="flex space-x-4">
+                        {/* Placeholder social links */}
+                        <a href="#" className="hover:text-white">Twitter</a>
+                        <a href="#" className="hover:text-white">LinkedIn</a>
+                        <a href="#" className="hover:text-white">GitHub</a>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-8 pt-8 border-t border-slate-700 text-center text-sm">
+                <p>&copy; {new Date().getFullYear()} SMEC Battle Code. All Rights Reserved.</p>
+                 <div className="mt-2">
+                    <Link href="#" className="hover:text-white underline underline-offset-4">Terms of Service</Link>
+                    <span className="mx-2">|</span>
+                    <Link href="#" className="hover:text-white underline underline-offset-4">Privacy Policy</Link>
+                </div>
+            </div>
+        </div>
       </footer>
     </div>
   );
-}
-
-// A simple Badge component for the landing page
-function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
-    return (
-        <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 ${className}`}>
-            {children}
-        </div>
-    )
 }
