@@ -10,8 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { User, Upload, Mail, KeyRound } from 'lucide-react';
-import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, type User as FirebaseUser } from 'firebase/auth';
+import { User, Upload, Mail, KeyRound, LogOut } from 'lucide-react';
+import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, type User as FirebaseUser, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 import { app } from '@/lib/firebase';
@@ -308,7 +308,6 @@ export default function ProfilePage() {
                   </Button>
               </div>
            </div>
-
         </CardContent>
       </Card>
     </div>
