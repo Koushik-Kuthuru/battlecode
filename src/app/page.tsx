@@ -3,9 +3,10 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { SmecBattleCodeLogo } from '@/components/icons';
+import { SmecBattleCodeLogo, BulletCoin } from '@/components/icons';
 import { ArrowRight, BrainCircuit, Code, Trophy, Calendar, Target, Users, LogIn, ListChecks, Send, Flame, Star, Gavel, BookCheck, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function LandingPage() {
   return (
@@ -63,14 +64,14 @@ export default function LandingPage() {
 
         <section id="features" className="bg-slate-900 text-white py-20 md:py-32">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
+            <div className="text-center mb-12 animate-fade-in-up">
               <h2 className="text-3xl md:text-4xl font-bold">Why SMEC Battle Code?</h2>
               <p className="max-w-xl mx-auto text-slate-300 mt-4">
                 We provide the tools and environment to help you succeed in your coding journey.
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="flex flex-col items-center text-center p-8 bg-slate-800 rounded-lg shadow-lg border-2 border-transparent hover:border-sky-500 transition-all duration-300 transform hover:scale-105">
+              <div className="flex flex-col items-center text-center p-8 bg-slate-800 rounded-lg shadow-lg border-2 border-transparent hover:border-sky-500 transition-all duration-300 transform hover:scale-105 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
                 <div className="p-4 bg-sky-500/10 rounded-full mb-4">
                   <Code className="h-10 w-10 text-sky-400" />
                 </div>
@@ -79,7 +80,7 @@ export default function LandingPage() {
                   Solve problems that mirror technical interviews at top companies.
                 </p>
               </div>
-              <div className="flex flex-col items-center text-center p-8 bg-slate-800 rounded-lg shadow-lg border-2 border-transparent hover:border-amber-500 transition-all duration-300 transform hover:scale-105">
+              <div className="flex flex-col items-center text-center p-8 bg-slate-800 rounded-lg shadow-lg border-2 border-transparent hover:border-amber-500 transition-all duration-300 transform hover:scale-105 animate-fade-in-up" style={{animationDelay: '0.4s'}}>
                 <div className="p-4 bg-amber-500/10 rounded-full mb-4">
                   <Trophy className="h-10 w-10 text-amber-400" />
                 </div>
@@ -88,7 +89,7 @@ export default function LandingPage() {
                   Test your skills against fellow students and earn your spot on the leaderboard.
                 </p>
               </div>
-              <div className="flex flex-col items-center text-center p-8 bg-slate-800 rounded-lg shadow-lg border-2 border-transparent hover:border-emerald-500 transition-all duration-300 transform hover:scale-105">
+              <div className="flex flex-col items-center text-center p-8 bg-slate-800 rounded-lg shadow-lg border-2 border-transparent hover:border-emerald-500 transition-all duration-300 transform hover:scale-105 animate-fade-in-up" style={{animationDelay: '0.6s'}}>
                 <div className="p-4 bg-emerald-500/10 rounded-full mb-4">
                   <BrainCircuit className="h-10 w-10 text-emerald-400" />
                 </div>
@@ -103,14 +104,14 @@ export default function LandingPage() {
 
         <section id="missions" className="bg-muted py-20 md:py-32">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
+            <div className="text-center mb-12 animate-fade-in-up">
               <h2 className="text-3xl md:text-4xl font-bold">Start Your Mission</h2>
               <p className="max-w-xl mx-auto text-muted-foreground mt-4">
                 Challenges are organized by difficulty to guide your progress.
               </p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-green-500 transition-colors">
+                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-green-500 transition-colors animate-fade-in-up" style={{animationDelay: '0.2s'}}>
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-2 bg-green-500/10 rounded-full">
                            <ListChecks className="h-8 w-8 text-green-500" />
@@ -120,7 +121,7 @@ export default function LandingPage() {
                     <p className="text-sm text-muted-foreground mb-4">Perfect for beginners to get started with fundamental concepts and build confidence.</p>
                     <p className="text-sm font-semibold">Languages: C++, Java, Python, JS</p>
                 </div>
-                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-yellow-500 transition-colors">
+                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-yellow-500 transition-colors animate-fade-in-up" style={{animationDelay: '0.4s'}}>
                     <div className="flex items-center gap-4 mb-4">
                          <div className="p-2 bg-yellow-500/10 rounded-full">
                            <Send className="h-8 w-8 text-yellow-500" />
@@ -130,7 +131,7 @@ export default function LandingPage() {
                     <p className="text-sm text-muted-foreground mb-4">Challenge your problem-solving skills with questions that require a solid grasp of data structures.</p>
                     <p className="text-sm font-semibold">Languages: C++, Java, Python, JS</p>
                 </div>
-                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-red-500 transition-colors">
+                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-red-500 transition-colors animate-fade-in-up" style={{animationDelay: '0.6s'}}>
                      <div className="flex items-center gap-4 mb-4">
                          <div className="p-2 bg-red-500/10 rounded-full">
                            <Flame className="h-8 w-8 text-red-500" />
@@ -141,7 +142,7 @@ export default function LandingPage() {
                     <p className="text-sm font-semibold">Languages: C++, Java, Python, JS</p>
                 </div>
             </div>
-            <div className="text-center mt-12">
+            <div className="text-center mt-12 animate-fade-in-up" style={{animationDelay: '0.8s'}}>
                 <Button size="lg" asChild>
                     <Link href="/register">Start a Mission</Link>
                 </Button>
@@ -151,41 +152,60 @@ export default function LandingPage() {
 
         <section id="leaderboard-preview" className="py-20 md:py-32">
             <div className="container mx-auto px-4">
-                <div className="text-center mb-12">
+                <div className="text-center mb-12 animate-fade-in-up">
                     <h2 className="text-3xl md:text-4xl font-bold">Leaderboard Preview</h2>
                     <p className="max-w-xl mx-auto text-muted-foreground mt-4">
                         See who's leading the charge. Can you dethrone them?
                     </p>
                 </div>
-                <div className="max-w-lg mx-auto">
-                    <div className="space-y-4">
-                        <div className="flex items-center p-4 bg-card rounded-lg shadow-md border border-yellow-400">
-                            <Trophy className="h-8 w-8 text-yellow-400 mr-4" />
-                            <div className="flex-1">
-                                <p className="font-bold">Alex Johnson</p>
-                                <p className="text-sm text-muted-foreground">1st Place</p>
+                <div className="relative flex justify-center items-end gap-4 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+                    {/* 2nd Place */}
+                    <div className="flex-1 flex flex-col items-center justify-end h-64">
+                        <Trophy className="w-16 h-16 text-slate-400" />
+                        <div className="bg-card w-full mt-4 p-4 rounded-t-lg shadow-lg text-center h-40 flex flex-col justify-end items-center">
+                            <Avatar className="w-20 h-20 -mt-14 border-4 border-card">
+                                <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="male student" />
+                                <AvatarFallback>P</AvatarFallback>
+                            </Avatar>
+                            <h3 className="font-bold text-lg mt-2">Praveen</h3>
+                            <div className="flex items-center gap-2">
+                                <BulletCoin className="w-5 h-5" />
+                                <span className="font-semibold text-lg">1,180</span>
                             </div>
-                            <p className="font-bold text-lg">1,250 PTS</p>
                         </div>
-                        <div className="flex items-center p-4 bg-card rounded-lg shadow-md border">
-                            <Star className="h-8 w-8 text-slate-400 mr-4" />
-                            <div className="flex-1">
-                                <p className="font-semibold">Maria Garcia</p>
-                                <p className="text-sm text-muted-foreground">2nd Place</p>
+                    </div>
+                    {/* 1st Place */}
+                    <div className="flex-1 flex flex-col items-center justify-end h-80">
+                         <Trophy className="w-24 h-24 text-yellow-400" />
+                        <div className="bg-card w-full mt-4 p-4 rounded-t-lg shadow-lg text-center h-48 flex flex-col justify-end items-center">
+                             <Avatar className="w-24 h-24 -mt-16 border-4 border-card">
+                                <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="male student" />
+                                <AvatarFallback>S</AvatarFallback>
+                            </Avatar>
+                            <h3 className="font-bold text-xl mt-2">Suraj</h3>
+                             <div className="flex items-center gap-2">
+                                <BulletCoin className="w-5 h-5" />
+                                <span className="font-semibold text-xl">1,250</span>
                             </div>
-                            <p className="font-semibold text-lg">1,180 PTS</p>
                         </div>
-                        <div className="flex items-center p-4 bg-card rounded-lg shadow-md border">
-                             <Star className="h-8 w-8 text-amber-600 mr-4" />
-                            <div className="flex-1">
-                                <p className="font-semibold">Sameer Khan</p>
-                                <p className="text-sm text-muted-foreground">3rd Place</p>
+                    </div>
+                    {/* 3rd Place */}
+                    <div className="flex-1 flex flex-col items-center justify-end h-56">
+                        <Trophy className="w-14 h-14 text-amber-600" />
+                         <div className="bg-card w-full mt-4 p-4 rounded-t-lg shadow-lg text-center h-32 flex flex-col justify-end items-center">
+                             <Avatar className="w-16 h-16 -mt-10 border-4 border-card">
+                                <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="female student" />
+                                <AvatarFallback>A</AvatarFallback>
+                            </Avatar>
+                            <h3 className="font-bold text-md mt-2">Anjali</h3>
+                            <div className="flex items-center gap-2">
+                                <BulletCoin className="w-5 h-5" />
+                                <span className="font-semibold text-md">1,150</span>
                             </div>
-                            <p className="font-semibold text-lg">1,150 PTS</p>
                         </div>
                     </div>
                 </div>
-                 <div className="text-center mt-12">
+                 <div className="text-center mt-12 animate-fade-in-up" style={{animationDelay: '0.4s'}}>
                     <Button size="lg" variant="outline" asChild>
                         <Link href="/register">View Full Leaderboard</Link>
                     </Button>
@@ -195,14 +215,14 @@ export default function LandingPage() {
 
          <section id="rules" className="bg-muted py-20 md:py-32">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
+            <div className="text-center mb-12 animate-fade-in-up">
               <h2 className="text-3xl md:text-4xl font-bold">Rules & Regulations</h2>
               <p className="max-w-xl mx-auto text-muted-foreground mt-4">
                 A fair and competitive environment is key. Please follow the rules.
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md">
+              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.2s'}}>
                 <div className="p-4 bg-primary/10 rounded-full mb-4">
                   <Gavel className="h-10 w-10 text-primary" />
                 </div>
@@ -211,7 +231,7 @@ export default function LandingPage() {
                   All submitted code must be your own original work. Any form of plagiarism will result in disqualification.
                 </p>
               </div>
-              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md">
+              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.4s'}}>
                 <div className="p-4 bg-primary/10 rounded-full mb-4">
                   <BookCheck className="h-10 w-10 text-primary" />
                 </div>
@@ -220,7 +240,7 @@ export default function LandingPage() {
                   You can solve challenges in Python, Java, JavaScript, C, and C++. Choose the one you're most comfortable with.
                 </p>
               </div>
-              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md">
+              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.6s'}}>
                 <div className="p-4 bg-primary/10 rounded-full mb-4">
                   <ShieldCheck className="h-10 w-10 text-primary" />
                 </div>
@@ -235,14 +255,14 @@ export default function LandingPage() {
 
         <section id="about" className="py-20 md:py-32">
             <div className="container mx-auto px-4">
-                 <div className="text-center mb-12">
+                 <div className="text-center mb-12 animate-fade-in-up">
                     <h2 className="text-3xl md:text-4xl font-bold">About the Battle</h2>
                     <p className="max-w-xl mx-auto text-muted-foreground mt-4">
                         Everything you need to know about the SMEC coding arena.
                     </p>
                 </div>
                 <div className="grid md:grid-cols-3 gap-8 text-center">
-                    <div className="p-8 bg-card rounded-lg shadow-md">
+                    <div className="p-8 bg-card rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.2s'}}>
                         <div className="p-4 bg-primary/10 rounded-full mb-4 inline-block">
                           <Target className="h-10 w-10 text-primary" />
                         </div>
@@ -251,7 +271,7 @@ export default function LandingPage() {
                             To provide a platform for SMEC students to test their programming skills, compete with peers, and prepare for real-world technical challenges in a fun and engaging way.
                         </p>
                     </div>
-                     <div className="p-8 bg-card rounded-lg shadow-md">
+                     <div className="p-8 bg-card rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.4s'}}>
                         <div className="p-4 bg-primary/10 rounded-full mb-4 inline-block">
                           <Users className="h-10 w-10 text-primary" />
                         </div>
@@ -260,7 +280,7 @@ export default function LandingPage() {
                             Participation is exclusive to the students of St. Martin's Engineering College. This is your personal arena to shine and showcase your talent.
                         </p>
                     </div>
-                     <div className="p-8 bg-card rounded-lg shadow-md">
+                     <div className="p-8 bg-card rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.6s'}}>
                         <div className="p-4 bg-primary/10 rounded-full mb-4 inline-block">
                           <Calendar className="h-10 w-10 text-primary" />
                         </div>
@@ -275,7 +295,7 @@ export default function LandingPage() {
 
       </main>
 
-      <footer className="bg-slate-900 text-slate-300 py-12">
+       <footer className="bg-slate-900 text-slate-300 py-12">
         <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
@@ -289,7 +309,7 @@ export default function LandingPage() {
                     <h4 className="font-semibold text-white mb-4">Quick Links</h4>
                     <ul className="space-y-2 text-sm">
                         <li><a href="#features" className="hover:text-white">Features</a></li>
-                        <li><a href="#how-it-works" className="hover:text-white">How It Works</a></li>
+                        <li><a href="#missions" className="hover:text-white">Missions</a></li>
                         <li><a href="#rules" className="hover:text-white">Rules</a></li>
                         <li><Link href="/register" className="hover:text-white">Leaderboard</Link></li>
                     </ul>
@@ -323,5 +343,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
