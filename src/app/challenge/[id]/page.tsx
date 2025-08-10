@@ -23,7 +23,6 @@ export default function ChallengeDetail() {
   const [user, setUser] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [canSubmit, setCanSubmit] = useState(false);
   const { id: challengeId } = useParams();
   
   const auth = getAuth(app);
@@ -61,7 +60,6 @@ export default function ChallengeDetail() {
 
   const handleSolutionChange = (newCode: string) => {
     setSolution(newCode);
-    setCanSubmit(false); // Code changed, must re-validate
   };
   
   const handleSave = async () => {
@@ -98,12 +96,10 @@ export default function ChallengeDetail() {
             title: "Missing Test Cases",
             description: "This challenge has no visible test cases to run against. You can still submit.",
         });
-        setCanSubmit(true); // Allow submission if there are no visible tests
         return;
     }
     
     setIsRunning(true);
-    setCanSubmit(false); // Reset submit state
     setRunResult(null); // Clear previous results
     setActiveTab('result'); // Switch to result tab
     try {
@@ -116,14 +112,12 @@ export default function ChallengeDetail() {
         setRunResult(result);
         if (result.allPassed) {
             toast({ title: "All Visible Tests Passed!", description: "You can now try submitting your solution." });
-            setCanSubmit(true);
         } else {
              toast({ variant: "destructive", title: "Tests Failed", description: "Some test cases did not pass. Check the results." });
         }
     } catch(error) {
         console.error("Error running code:", error);
         toast({ variant: "destructive", title: "Evaluation Error", description: "Could not evaluate your code. Please try again." });
-        setCanSubmit(false);
     } finally {
         setIsRunning(false);
     }
@@ -132,10 +126,6 @@ export default function ChallengeDetail() {
   const handleSubmit = async () => {
     if (!user || !challenge || !challengeId) {
         toast({ variant: "destructive", title: "Submission Error", description: "You must be logged in to submit." });
-        return;
-    }
-     if (!canSubmit) {
-        toast({ variant: "destructive", title: "Submission Blocked", description: "Please run your code against the visible test cases and pass them all before submitting." });
         return;
     }
     setIsSubmitting(true);
@@ -208,7 +198,6 @@ export default function ChallengeDetail() {
   const handleReset = () => {
       if(window.confirm("Are you sure you want to reset your code to your last saved version?")) {
           setSolution(initialSolution);
-          setCanSubmit(false);
       }
   };
 
@@ -247,7 +236,7 @@ export default function ChallengeDetail() {
            <Button size="sm" onClick={handleRunCode} disabled={isSaving || isRunning || isSubmitting}>
              {isRunning ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Code className="mr-2 h-4 w-4" />} Run Code
            </Button>
-           <Button size="sm" variant="default" onClick={handleSubmit} disabled={isSaving || isRunning || isSubmitting || !canSubmit}>
+           <Button size="sm" variant="default" onClick={handleSubmit} disabled={isSaving || isRunning || isSubmitting}>
              {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Bug className="mr-2 h-4 w-4" />} Submit
            </Button>
        </div>
