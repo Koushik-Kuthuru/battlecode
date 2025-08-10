@@ -267,8 +267,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   );
 
   const resultPanel = (
-    <ScrollArea className="h-full">
-      <div className="h-full">
+    <ScrollArea className="h-full w-full">
+      <div className="h-full w-full">
       { isRunning ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <Loader2 className="h-12 w-12 animate-spin mb-4" />
