@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SmecBattleCodeLogo } from '@/components/icons';
-import { ArrowRight, BrainCircuit, Code, Trophy } from 'lucide-react';
+import { ArrowRight, BrainCircuit, Code, Trophy, Calendar, Target, Users } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -86,6 +86,47 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        <section id="about" className="py-20 md:py-32">
+            <div className="container mx-auto px-4">
+                 <div className="text-center mb-12">
+                    <h2 className="text-3xl md:text-4xl font-bold">About the Battle</h2>
+                    <p className="max-w-xl mx-auto text-muted-foreground mt-4">
+                        Everything you need to know about the SMEC coding arena.
+                    </p>
+                </div>
+                <div className="grid md:grid-cols-3 gap-8 text-center">
+                    <div className="p-8 bg-card rounded-lg shadow-md">
+                        <div className="p-4 bg-primary/10 rounded-full mb-4 inline-block">
+                          <Target className="h-10 w-10 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">Our Purpose</h3>
+                        <p className="text-muted-foreground">
+                            To provide a platform for SMEC students to test their programming skills, compete with peers, and prepare for real-world technical challenges in a fun and engaging way.
+                        </p>
+                    </div>
+                     <div className="p-8 bg-card rounded-lg shadow-md">
+                        <div className="p-4 bg-primary/10 rounded-full mb-4 inline-block">
+                          <Users className="h-10 w-10 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">Who Can Participate?</h3>
+                        <p className="text-muted-foreground">
+                            Participation is exclusive to the students of St. Martin's Engineering College. This is your personal arena to shine and showcase your talent.
+                        </p>
+                    </div>
+                     <div className="p-8 bg-card rounded-lg shadow-md">
+                        <div className="p-4 bg-primary/10 rounded-full mb-4 inline-block">
+                          <Calendar className="h-10 w-10 text-primary" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">Events & Timelines</h3>
+                        <p className="text-muted-foreground">
+                           Stay tuned for regular challenges, workshops, and special coding events. Keep an eye on the dashboard for all upcoming timelines and announcements.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
       </main>
 
       <footer className="container mx-auto flex items-center justify-center h-20 px-4 md:px-6">
