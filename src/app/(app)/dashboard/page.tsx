@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ChallengeCard } from '@/components/challenge-card';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
@@ -17,8 +16,9 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { UserData } from '@/lib/types';
-import { ArrowRight, Award, Badge as BadgeIcon, Calendar, Trophy, User } from 'lucide-react';
+import { ArrowRight, Award, Badge as BadgeIcon, Calendar, CheckCircle, Circle, RefreshCw, Trophy, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 type Advertisement = {
   id: string;
@@ -31,6 +31,47 @@ type Advertisement = {
 }
 
 type Difficulty = 'All' | 'Easy' | 'Medium' | 'Hard';
+
+const ChallengeListItem = ({ challenge, isCompleted, isInProgress, isLast }: { challenge: Challenge, isCompleted: boolean, isInProgress: boolean, isLast: boolean }) => {
+  const difficultyColors = {
+    Easy: 'text-green-500 border-green-500/50 bg-green-500/10',
+    Medium: 'text-yellow-500 border-yellow-500/50 bg-yellow-500/10',
+    Hard: 'text-red-500 border-red-500/50 bg-red-500/10',
+  };
+
+  const getStatusIcon = () => {
+    if (isCompleted) {
+      return <CheckCircle className="h-6 w-6 text-green-500" />;
+    }
+    if (isInProgress) {
+      return <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />;
+    }
+    return <Circle className="h-6 w-6 text-slate-300 dark:text-slate-600" />;
+  }
+
+  return (
+    <Link href={`/challenge/${challenge.id}`} className="group block">
+        <div className="flex items-center gap-4 py-4 px-2 rounded-lg transition-colors hover:bg-muted/50">
+           <div className="relative flex flex-col items-center">
+                {getStatusIcon()}
+                {!isLast && <div className="absolute top-8 left-1/2 h-full w-0.5 -translate-x-1/2 bg-slate-200 dark:bg-slate-700" />}
+           </div>
+           <div className="flex-1">
+                <p className="font-semibold">{challenge.title}</p>
+                 <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                    <Badge variant="outline" className={cn("text-xs", difficultyColors[challenge.difficulty])}>{challenge.difficulty}</Badge>
+                    <div className="flex items-center gap-1">
+                        <Award className="h-4 w-4 text-primary" />
+                        <span>{challenge.points} Points</span>
+                    </div>
+                </div>
+           </div>
+           <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+        </div>
+    </Link>
+  );
+};
+
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -52,7 +93,7 @@ export default function DashboardPage() {
   
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const ITEMS_PER_PAGE = 6;
+  const ITEMS_PER_PAGE = 10;
    const autoplay = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: true })
   );
@@ -297,72 +338,78 @@ export default function DashboardPage() {
               </Carousel>
             )}
 
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
-                <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
-                    {difficultyFilters.map((filter) => (
-                        <Button
-                            key={filter}
-                            variant={difficultyFilter === filter ? 'default' : 'ghost'}
-                            size="sm"
-                            onClick={() => setDifficultyFilter(filter)}
-                            className="w-full sm:w-auto"
-                        >
-                            {filter}
-                        </Button>
-                    ))}
-                </div>
-            </div>
-
-            {isChallengesLoading && challenges.length === 0 ? (
-                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                   {[...Array(6)].map((_, i) => (
-                     <div key={`skeleton-initial-${i}`} className="flex flex-col space-y-3">
-                       <Skeleton className="h-[125px] w-full rounded-xl" />
-                       <div className="space-y-2">
-                         <Skeleton className="h-4 w-4/5" />
-                         <Skeleton className="h-4 w-3/5" />
-                       </div>
-                     </div>
-                   ))}
-                 </div>
-            ) : (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  {displayedChallenges.map((challenge) => (
-                    <ChallengeCard 
-                      key={challenge.id} 
-                      challenge={challenge} 
-                      isCompleted={!!completedChallenges[challenge.id!]}
-                      isInProgress={!!inProgressChallenges[challenge.id!]} 
-                    />
-                  ))}
-                </div>
-            )}
-            
-            {hasMore && !isChallengesLoading && (
-              <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                {[...Array(2)].map((_, i) => (
-                  <div key={`skeleton-loader-${i}`} className="flex flex-col space-y-3">
-                    <Skeleton className="h-[125px] w-full rounded-xl" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-4/5" />
-                      <Skeleton className="h-4 w-3/5" />
+            <Card>
+                <CardHeader>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <CardTitle>Your Challenges</CardTitle>
+                        <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                            {difficultyFilters.map((filter) => (
+                                <Button
+                                    key={filter}
+                                    variant={difficultyFilter === filter ? 'default' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => setDifficultyFilter(filter)}
+                                    className="w-full sm:w-auto"
+                                >
+                                    {filter}
+                                </Button>
+                            ))}
+                        </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                </CardHeader>
+                <CardContent>
+                    {isChallengesLoading && challenges.length === 0 ? (
+                        <div className="space-y-4">
+                           {[...Array(6)].map((_, i) => (
+                             <div key={`skeleton-initial-${i}`} className="flex items-center gap-4">
+                               <Skeleton className="h-8 w-8 rounded-full" />
+                               <div className="flex-1 space-y-2">
+                                 <Skeleton className="h-4 w-4/5" />
+                                 <Skeleton className="h-4 w-2/5" />
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                    ) : (
+                        <div>
+                          {displayedChallenges.map((challenge, index) => (
+                             <ChallengeListItem
+                              key={challenge.id}
+                              challenge={challenge}
+                              isCompleted={!!completedChallenges[challenge.id!]}
+                              isInProgress={!!inProgressChallenges[challenge.id!]}
+                              isLast={index === displayedChallenges.length - 1}
+                            />
+                          ))}
+                        </div>
+                    )}
+                    
+                    {hasMore && !isChallengesLoading && (
+                       <div ref={loaderRef} className="mt-8 space-y-4">
+                        {[...Array(2)].map((_, i) => (
+                           <div key={`skeleton-loader-${i}`} className="flex items-center gap-4">
+                               <Skeleton className="h-8 w-8 rounded-full" />
+                               <div className="flex-1 space-y-2">
+                                 <Skeleton className="h-4 w-4/5" />
+                                 <Skeleton className="h-4 w-2/5" />
+                               </div>
+                             </div>
+                        ))}
+                      </div>
+                    )}
 
-            {!isChallengesLoading && filteredChallenges.length === 0 && (
-              <div className="mt-16 flex flex-col items-center justify-center text-center">
-                  <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
-                  <p className="text-muted-foreground">
-                    {difficultyFilter === 'All'
-                      ? 'It seems there are no challenges available right now.'
-                      : `No ${difficultyFilter.toLowerCase()} challenges found for your preferred languages.`}
-                  </p>
-              </div>
-            )}
+                    {!isChallengesLoading && filteredChallenges.length === 0 && (
+                      <div className="mt-16 flex flex-col items-center justify-center text-center">
+                          <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
+                          <p className="text-muted-foreground">
+                            {difficultyFilter === 'All'
+                              ? 'It seems there are no challenges available right now.'
+                              : `No ${difficultyFilter.toLowerCase()} challenges found for your preferred languages.`}
+                          </p>
+                      </div>
+                    )}
+                </CardContent>
+            </Card>
           </div>
 
           <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-8">

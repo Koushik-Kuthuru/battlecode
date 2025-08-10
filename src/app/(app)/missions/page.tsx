@@ -158,7 +158,7 @@ export default function MissionsPage() {
     
     return challenges.filter(challenge => {
       const difficultyMatch = difficultyFilter === 'All' || challenge.difficulty === difficultyFilter;
-      const languageMatch = !languageFilter || currentUser.preferredLanguages!.includes(challenge.language);
+      const languageMatch = !languageFilter || (currentUser.preferredLanguages && currentUser.preferredLanguages.includes(challenge.language));
 
       const isCompleted = !!completedChallenges[challenge.id!];
       const isInProgress = !!inProgressChallenges[challenge.id!] && !isCompleted;
@@ -308,7 +308,7 @@ export default function MissionsPage() {
         </div>
 
         {isChallengesLoading ? (
-             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                {[...Array(6)].map((_, i) => (
                  <div key={`skeleton-initial-${i}`} className="flex flex-col space-y-3">
                    <Skeleton className="h-[125px] w-full rounded-xl" />
@@ -320,7 +320,7 @@ export default function MissionsPage() {
                ))}
              </div>
         ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {displayedChallenges.map((challenge) => (
                 <ChallengeCard 
                   key={challenge.id} 
@@ -333,14 +333,10 @@ export default function MissionsPage() {
         )}
         
         {hasMore && !isChallengesLoading && (
-          <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {[...Array(2)].map((_, i) => (
+          <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
               <div key={`skeleton-loader-${i}`} className="flex flex-col space-y-3">
-                <Skeleton className="h-[125px] w-full rounded-xl" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-4/5" />
-                  <Skeleton className="h-4 w-3/5" />
-                </div>
+                <Skeleton className="h-[250px] w-full rounded-xl" />
               </div>
             ))}
           </div>
