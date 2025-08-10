@@ -295,11 +295,11 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
   const leftPanel = (
     <div className="h-full flex flex-col bg-background">
-      <Tabs defaultValue="description" className="h-full flex flex-col">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <div className="flex-shrink-0 p-2 border-b border-r">
               <TabsList>
                 <TabsTrigger value="description">Description</TabsTrigger>
-                <TabsTrigger value="result">Result</TabsTrigger>
+                {runResult && <TabsTrigger value="result">Result</TabsTrigger>}
                 <TabsTrigger value="submissions">Submissions</TabsTrigger>
               </TabsList>
           </div>
@@ -381,10 +381,10 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                   <div className="flex flex-col w-full h-full">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
                         <div className="flex-shrink-0 p-2 border-b">
-                            <TabsList className="grid w-full grid-cols-4">
+                            <TabsList className={cn("grid w-full", runResult ? "grid-cols-4" : "grid-cols-3")}>
                                 <TabsTrigger value="description">Description</TabsTrigger>
                                 <TabsTrigger value="code">Code</TabsTrigger>
-                                <TabsTrigger value="result">Result</TabsTrigger>
+                                {runResult && <TabsTrigger value="result">Result</TabsTrigger>}
                                 <TabsTrigger value="submissions">Submissions</TabsTrigger>
                             </TabsList>
                         </div>
@@ -412,5 +412,3 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     </ChallengeContext.Provider>
   );
 }
-
-    
