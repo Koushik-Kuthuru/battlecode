@@ -6,17 +6,19 @@ import { ChallengeCard } from '@/components/challenge-card';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { UserData } from '@/lib/types';
+import { ArrowRight, Award, Badge as BadgeIcon, Calendar, Trophy, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type Advertisement = {
   id: string;
@@ -45,6 +47,8 @@ export default function DashboardPage() {
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty>('All');
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const [topUser, setTopUser] = useState<UserData | null>(null);
   
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -58,30 +62,54 @@ export default function DashboardPage() {
       setIsUserLoading(true);
       if (user) {
         const userDocRef = doc(db, 'users', user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data() as UserData;
+        
+        const unsubscribeUser = onSnapshot(userDocRef, (userDocSnap) => {
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data() as UserData;
 
-          if (!userData.profileComplete) {
-              router.push('/complete-profile');
-              return;
+            if (!userData.profileComplete) {
+                router.push('/complete-profile');
+                return;
+            }
+            setCurrentUser({ ...userData, uid: user.uid, email: user.email! });
+          } else {
+             router.push('/login');
           }
+        });
 
-          setCurrentUser({ ...userData, uid: user.uid, email: user.email! });
-          
-          const completedChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/completed`));
-          setCompletedChallenges(completedChallengesSnap.exists() ? completedChallengesSnap.data() : {});
-          
-          const inProgressChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/inProgress`));
-          setInProgressChallenges(inProgressChallengesSnap.exists() ? inProgressChallengesSnap.data() : {});
+        const completedChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/completed`));
+        setCompletedChallenges(completedChallengesSnap.exists() ? completedChallengesSnap.data() : {});
+        
+        const inProgressChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/inProgress`));
+        setInProgressChallenges(inProgressChallengesSnap.exists() ? inProgressChallengesSnap.data() : {});
 
-        } else {
-          router.push('/login');
+        // Fetch user rank and top user
+        const usersQuery = query(collection(db, 'users'), orderBy('points', 'desc'));
+        const unsubscribeLeaderboard = onSnapshot(usersQuery, (snapshot) => {
+            let rank = -1;
+            snapshot.docs.forEach((doc, index) => {
+                if (doc.id === user.uid) {
+                    rank = index + 1;
+                }
+            });
+            setUserRank(rank);
+            if (snapshot.docs.length > 0 && snapshot.docs[0].id !== user.uid) {
+                setTopUser(snapshot.docs[0].data() as UserData);
+            } else {
+                setTopUser(null);
+            }
+        });
+
+        setIsUserLoading(false);
+
+        return () => {
+          unsubscribeUser();
+          unsubscribeLeaderboard();
         }
       } else {
         router.push('/login');
+        setIsUserLoading(false);
       }
-      setIsUserLoading(false);
     });
 
     return () => unsubscribe();
@@ -232,107 +260,167 @@ export default function DashboardPage() {
             <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser?.name} 👋</h2>
         </div>
         
-        {advertisements.length > 0 && (
-          <Carousel
-            plugins={[autoplay.current]}
-            onMouseEnter={autoplay.current.stop}
-            onMouseLeave={autoplay.current.reset}
-            className="w-full"
-            opts={{ loop: true }}
-          >
-            <CarouselContent>
-              {advertisements.map((ad) => (
-                <CarouselItem key={ad.id}>
-                  <Card className="bg-slate-900 text-white border-0 overflow-hidden">
-                    <CardContent className="p-0 flex flex-col md:flex-row items-stretch justify-between gap-0 h-64">
-                       <div className="w-full md:w-1/2 h-full">
-                          <img src={ad.imageUrl || 'https://placehold.co/600x400'} alt={ad.title} className="w-full h-full object-cover" data-ai-hint="advertisement event" />
-                        </div>
-                      <div className="w-full md:w-1/2 p-6 flex flex-col justify-center">
-                          <h3 className="text-xl md:text-2xl font-bold leading-tight">{ad.title}</h3>
-                          <p className="text-muted-foreground text-white/80 text-sm md:text-base mt-2">{ad.description}</p>
-                          <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto mt-6">
-                            <Link href={ad.buttonLink || '#'} target="_blank" rel="noopener noreferrer">
-                              {ad.buttonText || 'Learn More'}
-                            </Link>
-                          </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-4 hidden md:flex" />
-            <CarouselNext className="right-4 hidden md:flex" />
-          </Carousel>
-        )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-2 space-y-8">
+            {advertisements.length > 0 && (
+              <Carousel
+                plugins={[autoplay.current]}
+                onMouseEnter={autoplay.current.stop}
+                onMouseLeave={autoplay.current.reset}
+                className="w-full"
+                opts={{ loop: true }}
+              >
+                <CarouselContent>
+                  {advertisements.map((ad) => (
+                    <CarouselItem key={ad.id}>
+                      <Card className="bg-slate-900 text-white border-0 overflow-hidden">
+                        <CardContent className="p-0 flex flex-col md:flex-row items-stretch justify-between gap-0 h-64">
+                           <div className="w-full md:w-1/2 h-full">
+                              <img src={ad.imageUrl || 'https://placehold.co/600x400.png'} alt={ad.title} className="w-full h-full object-cover" data-ai-hint="advertisement event" />
+                            </div>
+                          <div className="w-full md:w-1/2 p-6 flex flex-col justify-center">
+                              <h3 className="text-xl md:text-2xl font-bold leading-tight">{ad.title}</h3>
+                              <p className="text-muted-foreground text-white/80 text-sm md:text-base mt-2">{ad.description}</p>
+                              <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto mt-6">
+                                <Link href={ad.buttonLink || '#'} target="_blank" rel="noopener noreferrer">
+                                  {ad.buttonText || 'Learn More'}
+                                </Link>
+                              </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-4 hidden md:flex" />
+                <CarouselNext className="right-4 hidden md:flex" />
+              </Carousel>
+            )}
 
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
-            <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
-                {difficultyFilters.map((filter) => (
-                    <Button
-                        key={filter}
-                        variant={difficultyFilter === filter ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setDifficultyFilter(filter)}
-                        className="w-full sm:w-auto"
-                    >
-                        {filter}
-                    </Button>
-                ))}
-            </div>
-        </div>
-
-        {isChallengesLoading && challenges.length === 0 ? (
-             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-               {[...Array(6)].map((_, i) => (
-                 <div key={`skeleton-initial-${i}`} className="flex flex-col space-y-3">
-                   <Skeleton className="h-[125px] w-full rounded-xl" />
-                   <div className="space-y-2">
-                     <Skeleton className="h-4 w-4/5" />
-                     <Skeleton className="h-4 w-3/5" />
-                   </div>
-                 </div>
-               ))}
-             </div>
-        ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              {displayedChallenges.map((challenge) => (
-                <ChallengeCard 
-                  key={challenge.id} 
-                  challenge={challenge} 
-                  isCompleted={!!completedChallenges[challenge.id!]}
-                  isInProgress={!!inProgressChallenges[challenge.id!]} 
-                />
-              ))}
-            </div>
-        )}
-        
-        {hasMore && !isChallengesLoading && (
-          <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {[...Array(2)].map((_, i) => (
-              <div key={`skeleton-loader-${i}`} className="flex flex-col space-y-3">
-                <Skeleton className="h-[125px] w-full rounded-xl" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-4/5" />
-                  <Skeleton className="h-4 w-3/5" />
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
+                <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                    {difficultyFilters.map((filter) => (
+                        <Button
+                            key={filter}
+                            variant={difficultyFilter === filter ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setDifficultyFilter(filter)}
+                            className="w-full sm:w-auto"
+                        >
+                            {filter}
+                        </Button>
+                    ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+            </div>
 
-        {!isChallengesLoading && filteredChallenges.length === 0 && (
-          <div className="mt-16 flex flex-col items-center justify-center text-center">
-              <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
-              <p className="text-muted-foreground">
-                {difficultyFilter === 'All'
-                  ? 'It seems there are no challenges available right now.'
-                  : `No ${difficultyFilter.toLowerCase()} challenges found.`}
-              </p>
+            {isChallengesLoading && challenges.length === 0 ? (
+                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                   {[...Array(6)].map((_, i) => (
+                     <div key={`skeleton-initial-${i}`} className="flex flex-col space-y-3">
+                       <Skeleton className="h-[125px] w-full rounded-xl" />
+                       <div className="space-y-2">
+                         <Skeleton className="h-4 w-4/5" />
+                         <Skeleton className="h-4 w-3/5" />
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {displayedChallenges.map((challenge) => (
+                    <ChallengeCard 
+                      key={challenge.id} 
+                      challenge={challenge} 
+                      isCompleted={!!completedChallenges[challenge.id!]}
+                      isInProgress={!!inProgressChallenges[challenge.id!]} 
+                    />
+                  ))}
+                </div>
+            )}
+            
+            {hasMore && !isChallengesLoading && (
+              <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {[...Array(2)].map((_, i) => (
+                  <div key={`skeleton-loader-${i}`} className="flex flex-col space-y-3">
+                    <Skeleton className="h-[125px] w-full rounded-xl" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-4/5" />
+                      <Skeleton className="h-4 w-3/5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!isChallengesLoading && filteredChallenges.length === 0 && (
+              <div className="mt-16 flex flex-col items-center justify-center text-center">
+                  <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
+                  <p className="text-muted-foreground">
+                    {difficultyFilter === 'All'
+                      ? 'It seems there are no challenges available right now.'
+                      : `No ${difficultyFilter.toLowerCase()} challenges found.`}
+                  </p>
+              </div>
+            )}
           </div>
-        )}
+
+          <aside className="lg:col-span-1 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                        <span>Events</span>
+                         <Link href="#" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+                            View <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </CardTitle>
+                    <CardDescription>Challenges, podcasts & a lot more activities!</CardDescription>
+                </CardHeader>
+                <CardContent className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
+                        <span className="font-semibold">Live Now: {advertisements.length}</span>
+                    </div>
+                     <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="h-5 w-5 text-amber-500" />
+                        <span className="font-semibold">Upcoming: 0</span>
+                    </div>
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                        <span>Leaderboard</span>
+                         <Link href="/leaderboard" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+                            View <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Avatar className="h-16 w-16">
+                            <AvatarImage src={currentUser?.imageUrl} alt={currentUser?.name} />
+                            <AvatarFallback>
+                                <User />
+                            </AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p className="font-bold text-lg">{currentUser?.name}</p>
+                            <p className="text-sm text-muted-foreground">Your Rank: <span className="font-semibold text-primary">{userRank ?? 'N/A'}</span></p>
+                            <p className="text-sm text-muted-foreground">Your Score: <span className="font-semibold text-primary">{currentUser?.points ?? 0}</span></p>
+                        </div>
+                    </div>
+                    {topUser && (
+                         <div className="text-sm text-center bg-muted p-2 rounded-lg">
+                            <p>You are chasing <span className="font-semibold">{topUser.name}</span> with {topUser.points} points! 🔥</p>
+                         </div>
+                    )}
+                </CardContent>
+            </Card>
+          </aside>
+        </div>
     </div>
   );
 }
+
