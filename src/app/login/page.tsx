@@ -36,6 +36,23 @@ export default function LoginPage() {
       return;
     }
 
+    // Special case for admin login
+    if (studentId === 'ADMIN0822' && password === 'admin0822') {
+      const adminUser = {
+        email: 'admin@smec.ac.in',
+        name: 'Admin',
+        isAdmin: true,
+      };
+      localStorage.setItem('currentUser', JSON.stringify(adminUser));
+      toast({
+        title: 'Admin Login Successful',
+        description: 'Welcome, Admin!',
+      });
+      router.push('/admin/dashboard');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // Find user by student ID in Firestore
       const usersRef = collection(db, "users");
@@ -59,7 +76,6 @@ export default function LoginPage() {
       // Sign in with Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
       
-      // For both admin and regular users, we set the item for their respective layouts
       const loggedInUser = {
         uid: userCredential.user.uid,
         email: userCredential.user.email,
@@ -68,7 +84,6 @@ export default function LoginPage() {
         imageUrl: userData.imageUrl,
       };
       
-      // We set a generic 'currentUser' for admin checks or other cross-cutting concerns
       localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
 
       if(loggedInUser.isAdmin) {
