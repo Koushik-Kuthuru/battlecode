@@ -4,14 +4,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useEffect, useState } from 'react';
-import { getFirestore, collection, getDocs, doc, collectionGroup, query, where, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, collectionGroup, query, where, Timestamp, onSnapshot } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { Challenge } from '@/lib/data';
-import { Flame, ListChecks, Users } from 'lucide-react';
+import { Flame, ListChecks, Users, Wifi } from 'lucide-react';
 
 type AnalyticsData = {
   totalUsers: number;
   totalChallenges: number;
+  activeUsers: number;
   mostSolvedChallenge: string;
 };
 
@@ -40,104 +41,95 @@ export function AnalyticsDashboard() {
 
   useEffect(() => {
     const fetchAnalytics = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch all data in parallel
-        const [usersSnapshot, challengesSnapshot, completedDocsSnapshot] = await Promise.all([
-          getDocs(collection(db, 'users')),
-          getDocs(collection(db, 'challenges')),
-          getDocs(collection(db, 'challengeData'))
-        ]);
-        
-        // --- Calculate Stats ---
+      // We only need to fetch static data once
+      const challengesSnapshot = await getDocs(collection(db, 'challenges'));
+      const totalChallenges = challengesSnapshot.size;
+      const challengesMap = new Map<string, string>();
+      challengesSnapshot.docs.forEach(doc => {
+          challengesMap.set(doc.id, doc.data().title);
+      });
+
+      // Set up real-time listener for users
+      const usersQuery = query(collection(db, 'users'));
+      const unsubscribeUsers = onSnapshot(usersQuery, (usersSnapshot) => {
         const totalUsers = usersSnapshot.size;
-        const totalChallenges = challengesSnapshot.size;
-
-        const challengesMap = new Map<string, string>();
-        challengesSnapshot.docs.forEach(doc => {
-            challengesMap.set(doc.id, doc.data().title);
-        });
-
-        // Most Solved Challenge
-        const completionCounts: Record<string, number> = {};
-        
-        // Because 'completed' is a document inside 'challengeData', we can query the 'challengeData' collection directly
-        // However, the structure seems to be users/{uid}/challengeData/{doc}, so let's use a collectionGroup query
-        const completedSnapshot = await getDocs(collectionGroup(db, 'challengeData'));
-
-        completedSnapshot.forEach(doc => {
-            if (doc.id === 'completed') {
-                const data = doc.data();
-                Object.keys(data).forEach(challengeId => {
-                    // Correctly check if the field value is an object with a timestamp
-                    if (data[challengeId] && typeof data[challengeId] === 'object' && data[challengeId].completedAt) {
-                         completionCounts[challengeId] = (completionCounts[challengeId] || 0) + 1;
-                    }
-                });
+        let activeUsers = 0;
+        usersSnapshot.forEach(doc => {
+            const userData = doc.data();
+            if (userData.lastSeen && (new Date().getTime() - userData.lastSeen.toDate().getTime()) < 5 * 60 * 1000) {
+                activeUsers++;
             }
         });
-        
-        let mostSolvedId = 'N/A';
-        let maxCompletions = 0;
-        Object.entries(completionCounts).forEach(([challengeId, count]) => {
-            if (count > maxCompletions) {
-                maxCompletions = count;
-                mostSolvedId = challengeId;
+        setAnalytics(prev => ({...prev, totalUsers, activeUsers, totalChallenges} as AnalyticsData));
+      });
+
+      // Set up real-time listener for completions
+       const completedQuery = query(collectionGroup(db, 'challengeData'));
+       const unsubscribeCompletions = onSnapshot(completedQuery, (completedSnapshot) => {
+            // Most Solved Challenge
+            const completionCounts: Record<string, number> = {};
+            // Chart Data
+            const completionsByDay: Record<string, number> = {};
+            const today = new Date();
+            for (let i = 0; i < 7; i++) {
+              const date = new Date(today);
+              date.setDate(date.getDate() - i);
+              const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              completionsByDay[formattedDate] = 0;
             }
-        });
 
-        const mostSolvedChallenge = challengesMap.get(mostSolvedId) || 'N/A';
-        
-        setAnalytics({ totalUsers, totalChallenges, mostSolvedChallenge });
-
-        // --- Prepare Chart Data ---
-        const last7Days = new Date();
-        last7Days.setDate(last7Days.getDate() - 7);
-        const sevenDaysAgo = Timestamp.fromDate(last7Days);
-
-        const completionsByDay: Record<string, number> = {};
-        const today = new Date();
-        for (let i = 0; i < 7; i++) {
-          const date = new Date(today);
-          date.setDate(date.getDate() - i);
-          const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          completionsByDay[formattedDate] = 0;
-        }
-
-        completedSnapshot.forEach(doc => {
-             if (doc.id === 'completed') {
-                const data = doc.data();
-                Object.keys(data).forEach(challengeId => {
-                    const completedInfo = data[challengeId];
-                    if (completedInfo && completedInfo.completedAt && completedInfo.completedAt instanceof Timestamp) {
-                       const completedTimestamp = completedInfo.completedAt;
-                        if (completedTimestamp >= sevenDaysAgo) {
-                            const date = completedTimestamp.toDate();
-                            const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                            if (completionsByDay[formattedDate] !== undefined) {
-                                completionsByDay[formattedDate]++;
-                            }
+            completedSnapshot.forEach(doc => {
+                if (doc.id === 'completed') {
+                    const data = doc.data();
+                    Object.keys(data).forEach(challengeId => {
+                        const completedInfo = data[challengeId];
+                        if (completedInfo && completedInfo.completedAt && completedInfo.completedAt instanceof Timestamp) {
+                             // Tally for most solved
+                             completionCounts[challengeId] = (completionCounts[challengeId] || 0) + 1;
+                             
+                             // Tally for chart
+                             const completedTimestamp = completedInfo.completedAt;
+                             const sevenDaysAgo = new Date();
+                             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                             if (completedTimestamp.toDate() >= sevenDaysAgo) {
+                                const date = completedTimestamp.toDate();
+                                const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                if (completionsByDay[formattedDate] !== undefined) {
+                                    completionsByDay[formattedDate]++;
+                                }
+                             }
                         }
-                    }
-                });
-             }
-        });
+                    });
+                }
+            });
 
-        const finalChartData = Object.entries(completionsByDay).map(([date, completions]) => ({
-            date,
-            completions
-        })).reverse();
-        
-        setChartData(finalChartData);
+            let mostSolvedId = 'N/A';
+            let maxCompletions = 0;
+            Object.entries(completionCounts).forEach(([challengeId, count]) => {
+                if (count > maxCompletions) {
+                    maxCompletions = count;
+                    mostSolvedId = challengeId;
+                }
+            });
+            const mostSolvedChallenge = challengesMap.get(mostSolvedId) || 'N/A';
+            setAnalytics(prev => ({...prev, mostSolvedChallenge} as AnalyticsData));
 
-      } catch (error) {
-        console.error("Error fetching analytics:", error);
-      } finally {
-        setIsLoading(false);
-      }
+            const finalChartData = Object.entries(completionsByDay).map(([date, completions]) => ({
+                date,
+                completions
+            })).reverse();
+            setChartData(finalChartData);
+            setIsLoading(false);
+       });
+       
+       return () => {
+        unsubscribeUsers();
+        unsubscribeCompletions();
+       }
+
     };
 
-    fetchAnalytics();
+    fetchAnalytics().catch(console.error);
   }, [db]);
 
   if (isLoading) {
@@ -146,8 +138,9 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Total Users" value={analytics?.totalUsers ?? 0} icon={Users} />
+        <StatCard title="Active Users" value={analytics?.activeUsers ?? 0} icon={Wifi} />
         <StatCard title="Total Challenges" value={analytics?.totalChallenges ?? 0} icon={ListChecks} />
         <StatCard title="Most Solved Challenge" value={analytics?.mostSolvedChallenge ?? 'N/A'} icon={Flame} />
       </div>
@@ -176,3 +169,5 @@ export function AnalyticsDashboard() {
     </div>
   );
 }
+
+    

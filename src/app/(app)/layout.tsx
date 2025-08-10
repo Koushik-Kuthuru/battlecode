@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs, orderBy, query, limit, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
 type CurrentUser = {
@@ -87,6 +87,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     return () => unsubscribe();
   }, [auth, db, router, pathname]);
+
+  // Effect to update user's lastSeen timestamp
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const userDocRef = doc(db, 'users', currentUser.uid);
+
+    const updateLastSeen = () => {
+        updateDoc(userDocRef, {
+            lastSeen: serverTimestamp(),
+        }).catch(console.error);
+    };
+
+    updateLastSeen(); // Update once on load
+
+    const intervalId = setInterval(updateLastSeen, 60 * 1000); // Update every 60 seconds
+
+    return () => clearInterval(intervalId);
+  }, [currentUser, db]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -238,3 +257,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+    
