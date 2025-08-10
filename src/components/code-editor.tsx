@@ -32,27 +32,40 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
   useEffect(() => {
     const view = editorRef.current?.view;
     if (!view) return;
-
+  
     const dom = view.dom;
-
-    // Disable right-click context menu
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-    };
-    
-    // Disable Ctrl+C and Ctrl+V
+  
+    // Disable right-click
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+  
+    // Disable copy, paste, cut, select all
     const handleKeyDown = (e: KeyboardEvent) => {
-        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v')) {
-            e.preventDefault();
+      if (e.ctrlKey || e.metaKey) {
+        const blockedKeys = ['c', 'v', 'x', 'a']; // copy, paste, cut, select all
+        if (blockedKeys.includes(e.key.toLowerCase())) {
+          e.preventDefault();
         }
+      }
     };
-    
+  
+    // Disable drag & drop
+    const handleDrop = (e: DragEvent) => e.preventDefault();
+  
+    // Disable middle-click paste
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 1) e.preventDefault();
+    };
+  
     dom.addEventListener('contextmenu', handleContextMenu);
     dom.addEventListener('keydown', handleKeyDown);
-
+    dom.addEventListener('drop', handleDrop);
+    dom.addEventListener('mousedown', handleMouseDown);
+  
     return () => {
       dom.removeEventListener('contextmenu', handleContextMenu);
       dom.removeEventListener('keydown', handleKeyDown);
+      dom.removeEventListener('drop', handleDrop);
+      dom.removeEventListener('mousedown', handleMouseDown);
     };
   }, []);
 
@@ -73,7 +86,6 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
         style={{
           fontSize: '14px',
           height: '100%',
-          userSelect: 'none',
         }}
       />
     </div>
