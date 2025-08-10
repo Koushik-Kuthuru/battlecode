@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { challenges as initialChallenges, type Challenge } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, addDoc, writeBatch } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
 type SortType = 'title' | 'difficulty';
@@ -49,29 +49,27 @@ export default function ManageChallengesPage() {
     setIsLoading(true);
     try {
       const challengesCollection = collection(db, 'challenges');
-      const challengesSnapshot = await getDocs(challengesCollection);
+      let challengesSnapshot = await getDocs(challengesCollection);
 
       if (challengesSnapshot.empty) {
-        // Seed initial challenges if the collection is empty
-        await Promise.all(initialChallenges.map(challenge => {
-            const { id, ...challengeData } = challenge; // Exclude old ID
-            const challengesRef = collection(db, 'challenges');
-            return addDoc(challengesRef, challengeData);
-        }));
+        console.log("No challenges found, seeding initial data...");
+        const batch = writeBatch(db);
+        initialChallenges.forEach(challengeData => {
+            const challengeRef = doc(collection(db, 'challenges')); // Create ref with new ID
+            batch.set(challengeRef, { ...challengeData, id: challengeRef.id }); // Store the ID within the doc
+        });
+        await batch.commit();
         
-        // Refetch after seeding
-        const newSnapshot = await getDocs(challengesCollection);
-        const challengesList = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
-        setChallenges(challengesList);
-
+        challengesSnapshot = await getDocs(challengesCollection); // Re-fetch after seeding
         toast({
           title: 'Challenges Seeded',
           description: 'Initial challenges have been loaded into Firestore.',
         });
-      } else {
-        const challengesList = challengesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
-        setChallenges(challengesList);
       }
+      
+      const challengesList = challengesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+      setChallenges(challengesList);
+
     } catch (error) {
        console.error("Error loading challenges from Firestore: ", error);
        toast({
@@ -127,7 +125,7 @@ export default function ManageChallengesPage() {
   };
   
   const handleEditClick = (challenge: Challenge) => {
-      setEditingChallengeId(challenge.id);
+      setEditingChallengeId(challenge.id!);
       setFormData({
         ...challenge,
         tags: Array.isArray(challenge.tags) ? challenge.tags.join(', ') : '',
@@ -155,10 +153,11 @@ export default function ManageChallengesPage() {
     try {
       if(editingChallengeId) {
         const challengeRef = doc(db, 'challenges', editingChallengeId);
-        await setDoc(challengeRef, challengeDataToSave, { merge: true });
+        await setDoc(challengeRef, { ...challengeDataToSave, id: editingChallengeId }, { merge: true });
       } else {
         const challengesRef = collection(db, 'challenges');
-        await addDoc(challengesRef, challengeDataToSave);
+        const newDocRef = doc(challengesRef); // Create ref to get ID first
+        await setDoc(newDocRef, { ...challengeDataToSave, id: newDocRef.id }); // Save data with its own ID
       }
       
       toast({
@@ -178,6 +177,26 @@ export default function ManageChallengesPage() {
         });
     } finally {
       handleCancel();
+    }
+  };
+  
+  const handleDelete = async (challengeId: string) => {
+    if (!window.confirm("Are you sure you want to delete this challenge?")) return;
+
+    try {
+        await deleteDoc(doc(db, "challenges", challengeId));
+        toast({
+            title: "Challenge Deleted",
+            description: "The challenge has been removed successfully.",
+        });
+        fetchChallenges(); // Refresh the list
+    } catch (error) {
+        console.error("Error deleting challenge: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error Deleting Challenge",
+            description: "Could not delete the challenge from Firestore.",
+        });
     }
   };
 
@@ -377,12 +396,18 @@ export default function ManageChallengesPage() {
                   <div key={challenge.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg gap-4">
                     <div>
                       <h3 className="font-semibold">{challenge.title}</h3>
-                      <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} - {challenge.language}</p>
+                      <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} Points - {challenge.language}</p>
                     </div>
-                     <Button variant="outline" size="sm" onClick={() => handleEditClick(challenge)}>
-                         <Edit className="mr-2 h-4 w-4" />
-                         Edit
-                     </Button>
+                     <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEditClick(challenge)}>
+                             <Edit className="mr-2 h-4 w-4" />
+                             Edit
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(challenge.id!)}>
+                             <Trash2 className="mr-2 h-4 w-4" />
+                             Delete
+                        </Button>
+                     </div>
                   </div>
                 )) : (
                   <div className="text-center py-16 text-muted-foreground">
@@ -396,5 +421,3 @@ export default function ManageChallengesPage() {
     </div>
   );
 }
-
-    

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ChallengeCard } from '@/components/challenge-card';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, getDocs, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
 
@@ -70,44 +70,53 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [auth, db, router]);
   
-  useEffect(() => {
-    const fetchChallenges = async () => {
-      setIsChallengesLoading(true);
-      try {
-        const challengesCollection = collection(db, 'challenges');
-        const challengesSnapshot = await getDocs(challengesCollection);
+  const fetchChallenges = useCallback(async () => {
+    setIsChallengesLoading(true);
+    try {
+      const challengesCollection = collection(db, 'challenges');
+      let challengesSnapshot = await getDocs(challengesCollection);
 
-        if (challengesSnapshot.empty) {
-            // Seed initial challenges if collection is empty
-            await Promise.all(initialChallenges.map(challenge => {
-                const challengeRef = doc(db, 'challenges', challenge.id);
-                return setDoc(challengeRef, challenge);
-            }));
-             setChallenges(initialChallenges);
-        } else {
-            const challengesList = challengesSnapshot.docs.map(doc => doc.data() as Challenge);
-            setChallenges(challengesList);
-        }
-
-      } catch (error) {
-        console.error("Error fetching challenges: ", error);
-        toast({
-          variant: 'destructive',
-          title: 'Error fetching challenges',
-          description: 'Could not load challenges. Please try again later.'
-        });
-        setChallenges(initialChallenges); // Fallback
-      } finally {
-        setIsChallengesLoading(false);
+      if (challengesSnapshot.empty) {
+          console.log("No challenges found, seeding initial data...");
+          const batch = writeBatch(db);
+          initialChallenges.forEach(challengeData => {
+              const challengeRef = doc(collection(db, 'challenges'));
+              batch.set(challengeRef, { ...challengeData, id: challengeRef.id });
+          });
+          await batch.commit();
+          
+          challengesSnapshot = await getDocs(challengesCollection); // Re-fetch after seeding
+          toast({
+            title: 'Welcome!',
+            description: 'Initial challenges have been loaded for you.'
+          });
       }
-    };
+      
+      const challengesList = challengesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Challenge));
+      setChallenges(challengesList);
 
+    } catch (error) {
+      console.error("Error fetching challenges: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Error fetching challenges',
+        description: 'Could not load challenges. Please try again later.'
+      });
+      // Fallback to static data on error
+      const challengesWithIds = initialChallenges.map((c, i) => ({...c, id: `fallback-${i}`}));
+      setChallenges(challengesWithIds); 
+    } finally {
+      setIsChallengesLoading(false);
+    }
+  }, [db, toast]);
+
+  useEffect(() => {
     if (currentUser) {
         fetchChallenges();
     }
-  }, [currentUser, db, toast]);
+  }, [currentUser, fetchChallenges]);
 
-  const loadMoreChallenges = () => {
+  const loadMoreChallenges = useCallback(() => {
     const nextPage = page + 1;
     const newChallenges = challenges.slice(0, nextPage * ITEMS_PER_PAGE);
     setDisplayedChallenges(newChallenges);
@@ -115,7 +124,7 @@ export default function DashboardPage() {
     if(newChallenges.length >= challenges.length) {
       setHasMore(false);
     }
-  }
+  }, [page, challenges]);
 
   useEffect(() => {
     if (challenges.length > 0) {
@@ -147,7 +156,7 @@ export default function DashboardPage() {
         observer.unobserve(currentLoader);
       }
     };
-  }, [hasMore, page, displayedChallenges, isLoading, isChallengesLoading]);
+  }, [hasMore, isLoading, isChallengesLoading, loadMoreChallenges]);
 
   if (isLoading || !currentUser) {
       return (
@@ -201,8 +210,8 @@ export default function DashboardPage() {
                 <ChallengeCard 
                   key={challenge.id} 
                   challenge={challenge} 
-                  isCompleted={!!completedChallenges[challenge.id]}
-                  isInProgress={!!inProgressChallenges[challenge.id]} 
+                  isCompleted={!!completedChallenges[challenge.id!]}
+                  isInProgress={!!inProgressChallenges[challenge.id!]} 
                 />
               ))}
             </div>
