@@ -87,7 +87,7 @@ export default function AdminLoginPage() {
     <AuthLayout>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Admin Login</CardTitle>
+          <CardTitle className="text-2xl">admin-login page</CardTitle>
           <CardDescription>Enter your credentials to access the admin panel.</CardDescription>
         </CardHeader>
         <CardContent>
