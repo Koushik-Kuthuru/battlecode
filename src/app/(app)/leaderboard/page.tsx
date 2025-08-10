@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Info, ShieldCheck, Trophy, User, X, CheckCircle } from 'lucide-react';
-import { getFirestore, collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, getDocs, limit } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,7 +58,7 @@ export default function LeaderboardPage() {
       setIsLoading(true);
       try {
         const usersCollection = collection(db, 'users');
-        const q = query(usersCollection, orderBy('points', 'desc'));
+        const q = query(usersCollection, orderBy('points', 'desc'), limit(3));
         const querySnapshot = await getDocs(q);
 
         const sortedUsers: LeaderboardEntry[] = querySnapshot.docs.map((doc, index) => {
@@ -85,11 +85,10 @@ export default function LeaderboardPage() {
     fetchLeaderboard();
   }, [db]);
 
-  const top3 = leaderboardData.slice(0, 3);
   const podiumUsers = [
-      top3.find(u => u.rank === 2),
-      top3.find(u => u.rank === 1),
-      top3.find(u => u.rank === 3)
+      leaderboardData.find(u => u.rank === 2),
+      leaderboardData.find(u => u.rank === 1),
+      leaderboardData.find(u => u.rank === 3)
   ];
 
   return (
@@ -233,53 +232,8 @@ export default function LeaderboardPage() {
                 )}
               </div>
             </div>
-          ) : null }
-
-          {isLoading ? (
-            <div className="space-y-2 mt-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : leaderboardData.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[80px] text-center">Rank</TableHead>
-                  <TableHead>Learner</TableHead>
-                  <TableHead className="text-right">Score</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leaderboardData.map((user: LeaderboardEntry) => (
-                  <TableRow key={user.rank} className="font-medium">
-                    <TableCell className="text-center font-bold text-lg">{user.rank}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                           <AvatarImage src={user.imageUrl} alt={user.name} />
-                          <AvatarFallback>
-                            <User />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-semibold">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">{getFormattedBranchAndYear(user)}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                        <div className="flex items-center justify-end font-semibold gap-1">
-                            <BulletCoin className="h-4 w-4 text-primary" />
-                            <span>{user.points.toLocaleString()}</span>
-                        </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           ) : (
-            <div className="text-center text-muted-foreground py-16">
+             <div className="text-center text-muted-foreground py-16">
               <h3 className="text-xl font-semibold">The leaderboard is empty.</h3>
               <p>Complete some challenges to get on the board!</p>
             </div>
@@ -289,5 +243,3 @@ export default function LeaderboardPage() {
     </div>
   );
 }
-
-    
