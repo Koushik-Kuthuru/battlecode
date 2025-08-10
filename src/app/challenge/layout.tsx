@@ -11,7 +11,7 @@ import React, { useEffect, useState, createContext, useContext, useCallback } fr
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, runTransaction } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, runTransaction, setDoc } from 'firebase/firestore';
 import { app, db } from '@/lib/firebase';
 import {
   ResizableHandleWithHandle,
@@ -165,8 +165,15 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
               setIsChallengeCompleted(false);
           }
       });
+
+      // Mark as in-progress when visiting the page
+      if (!isChallengeCompleted) {
+        const inProgressRef = doc(db, `users/${currentUser.uid}/challengeData`, 'inProgress');
+        setDoc(inProgressRef, { [challengeId]: true }, { merge: true });
+      }
+
       return () => unsubscribe();
-  }, [currentUser, challengeId]);
+  }, [currentUser, challengeId, isChallengeCompleted]);
 
   useEffect(() => {
     if (!currentUser || !challengeId) return;
