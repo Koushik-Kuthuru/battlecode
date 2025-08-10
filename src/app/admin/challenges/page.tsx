@@ -15,6 +15,17 @@ import { CodeEditor } from '@/components/code-editor';
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 
 type SortType = 'title' | 'difficulty';
 
@@ -44,6 +55,7 @@ export default function ManageChallengesPage() {
   const [sortType, setSortType] = useState<SortType>('title');
   const [formData, setFormData] = useState<FormData>(defaultFormData);
   const [isCodeEditorVisible, setIsCodeEditorVisible] = useState(false);
+  const [challengeToDelete, setChallengeToDelete] = useState<string | null>(null);
   
   const db = getFirestore(app);
 
@@ -186,12 +198,12 @@ export default function ManageChallengesPage() {
     }
   };
   
-   const handleDelete = async (challengeId: string) => {
-    if (!window.confirm("Are you sure you want to delete this challenge? This will remove it for ALL users.")) return;
+   const handleDelete = async () => {
+    if (!challengeToDelete) return;
 
     try {
         await runTransaction(db, async (transaction) => {
-            const challengeRef = doc(db, "challenges", challengeId);
+            const challengeRef = doc(db, "challenges", challengeToDelete);
             transaction.delete(challengeRef);
 
             const usersSnapshot = await getDocs(collection(db, "users"));
@@ -199,18 +211,18 @@ export default function ManageChallengesPage() {
             for (const userDoc of usersSnapshot.docs) {
                 const userId = userDoc.id;
 
-                const solutionRef = doc(db, `users/${userId}/solutions`, challengeId);
+                const solutionRef = doc(db, `users/${userId}/solutions`, challengeToDelete);
                 transaction.delete(solutionRef);
                 
                 const inProgressRef = doc(db, `users/${userId}/challengeData`, 'inProgress');
                  transaction.update(inProgressRef, {
-                    [challengeId]: false
+                    [challengeToDelete]: false
                  });
 
 
                 const completedRef = doc(db, `users/${userId}/challengeData`, 'completed');
                  transaction.update(completedRef, {
-                    [challengeId]: false
+                    [challengeToDelete]: false
                  });
             }
         });
@@ -227,6 +239,8 @@ export default function ManageChallengesPage() {
             title: "Error Deleting Challenge",
             description: "Could not delete the challenge. The operation was rolled back.",
         });
+    } finally {
+        setChallengeToDelete(null);
     }
   };
 
@@ -395,6 +409,7 @@ export default function ManageChallengesPage() {
   }
 
   return (
+    <>
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Manage Challenges</h1>
@@ -453,7 +468,7 @@ export default function ManageChallengesPage() {
                              <Edit className="mr-2 h-4 w-4" />
                              Edit
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(challenge.id!)}>
+                        <Button variant="destructive" size="sm" onClick={() => setChallengeToDelete(challenge.id!)}>
                              <Trash2 className="mr-2 h-4 w-4" />
                              Delete
                         </Button>
@@ -469,5 +484,22 @@ export default function ManageChallengesPage() {
         </CardContent>
       </Card>
     </div>
+     <AlertDialog open={!!challengeToDelete} onOpenChange={(open) => !open && setChallengeToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the challenge and all associated user data (solutions, progress, etc.) from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setChallengeToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
