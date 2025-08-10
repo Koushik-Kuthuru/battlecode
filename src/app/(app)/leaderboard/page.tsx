@@ -9,12 +9,22 @@ import { Medal, User } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
+const BRANCH_MAP: Record<string, string> = {
+    cse: 'CSE',
+    ece: 'ECE',
+    eee: 'EEE',
+    mech: 'Mechanical',
+    civil: 'Civil',
+};
+
 type LeaderboardEntry = {
   rank: number;
   name: string;
   points: number;
   email: string;
   imageUrl?: string;
+  branch?: string;
+  year?: string;
 };
 
 const getBadge = (rank: number) => {
@@ -51,6 +61,8 @@ export default function LeaderboardPage() {
             points: data.points || 0,
             email: data.email,
             imageUrl: data.imageUrl,
+            branch: data.branch ? BRANCH_MAP[data.branch] || data.branch : 'N/A',
+            year: data.year ? `${data.year} Year` : 'N/A',
           };
         });
         setLeaderboardData(sortedUsers);
@@ -102,7 +114,10 @@ export default function LeaderboardPage() {
                             <User />
                           </AvatarFallback>
                         </Avatar>
-                        <span>{user.name}</span>
+                        <div>
+                            <p className="font-semibold">{user.name}</p>
+                            <p className="text-sm text-muted-foreground">{user.branch} - {user.year}</p>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">{user.points.toLocaleString()}</TableCell>

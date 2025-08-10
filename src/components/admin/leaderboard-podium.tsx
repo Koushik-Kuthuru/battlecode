@@ -8,6 +8,15 @@ import { Crown, Medal, Trophy, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
+const BRANCH_MAP: Record<string, string> = {
+    cse: 'CSE',
+    ece: 'ECE',
+    eee: 'EEE',
+    mech: 'Mechanical',
+    civil: 'Civil',
+};
+
+
 export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isLoading: boolean }) {
     if (isLoading) {
         return <div className="text-center py-8">Loading leaderboard...</div>;
@@ -22,6 +31,13 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
         top3.length > 0 ? top3[0] : undefined, // 1st place
         top3.length > 2 ? top3[2] : undefined, // 3rd place
     ];
+
+    const getFormattedBranchAndYear = (user: UserData) => {
+        const branch = user.branch ? BRANCH_MAP[user.branch] || user.branch : 'N/A';
+        const year = user.year ? `${user.year} Year` : 'N/A';
+        if(branch === 'N/A' && year === 'N/A') return null;
+        return `${branch} - ${year}`;
+    }
 
     return (
         <Card>
@@ -45,8 +61,9 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                     <AvatarImage src={podiumDisplayUsers[0]?.imageUrl} />
                                     <AvatarFallback><User /></AvatarFallback>
                                 </Avatar>
-                                <h4 className="font-bold mt-2 truncate">{podiumDisplayUsers[0]?.name}</h4>
-                                <p className="text-sm text-muted-foreground">{podiumDisplayUsers[0]?.points.toLocaleString()} pts</p>
+                                <h4 className="font-bold mt-2 truncate w-full">{podiumDisplayUsers[0]?.name}</h4>
+                                <p className="text-xs text-muted-foreground truncate w-full">{getFormattedBranchAndYear(podiumDisplayUsers[0])}</p>
+                                <p className="text-sm font-semibold">{podiumDisplayUsers[0]?.points.toLocaleString()} pts</p>
                                 <div className="bg-slate-200 dark:bg-slate-700 h-24 w-full rounded-t-lg mt-2 flex items-center justify-center text-3xl font-bold text-slate-600 dark:text-slate-300">2</div>
                             </div>
                         )}
@@ -59,8 +76,9 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                     <AvatarImage src={podiumDisplayUsers[1]?.imageUrl} />
                                     <AvatarFallback><User /></AvatarFallback>
                                 </Avatar>
-                                <h4 className="font-bold mt-2 truncate">{podiumDisplayUsers[1]?.name}</h4>
-                                <p className="text-sm text-muted-foreground">{podiumDisplayUsers[1]?.points.toLocaleString()} pts</p>
+                                <h4 className="font-bold mt-2 truncate w-full">{podiumDisplayUsers[1]?.name}</h4>
+                                <p className="text-xs text-muted-foreground truncate w-full">{getFormattedBranchAndYear(podiumDisplayUsers[1])}</p>
+                                <p className="text-sm font-semibold">{podiumDisplayUsers[1]?.points.toLocaleString()} pts</p>
                                 <div className="bg-yellow-200 dark:bg-yellow-700/50 h-32 w-full rounded-t-lg mt-2 flex items-center justify-center text-4xl font-bold text-yellow-700 dark:text-yellow-200">1</div>
                             </div>
                         )}
@@ -73,8 +91,9 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                     <AvatarImage src={podiumDisplayUsers[2]?.imageUrl} />
                                     <AvatarFallback><User /></AvatarFallback>
                                 </Avatar>
-                                <h4 className="font-bold mt-2 truncate">{podiumDisplayUsers[2]?.name}</h4>
-                                <p className="text-sm text-muted-foreground">{podiumDisplayUsers[2]?.points.toLocaleString()} pts</p>
+                                <h4 className="font-bold mt-2 truncate w-full">{podiumDisplayUsers[2]?.name}</h4>
+                                <p className="text-xs text-muted-foreground truncate w-full">{getFormattedBranchAndYear(podiumDisplayUsers[2])}</p>
+                                <p className="text-sm font-semibold">{podiumDisplayUsers[2]?.points.toLocaleString()} pts</p>
                                 <div className="bg-amber-200 dark:bg-amber-900/50 h-20 w-full rounded-t-lg mt-2 flex items-center justify-center text-2xl font-bold text-amber-800 dark:text-amber-300">3</div>
                             </div>
                         )}
@@ -101,7 +120,10 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                                 <AvatarImage src={user.imageUrl} />
                                                 <AvatarFallback><User /></AvatarFallback>
                                             </Avatar>
-                                            <span className="font-medium">{user.name}</span>
+                                            <div>
+                                                <p className="font-medium">{user.name}</p>
+                                                <p className="text-xs text-muted-foreground">{getFormattedBranchAndYear(user)}</p>
+                                            </div>
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right font-semibold">{user.points.toLocaleString()}</TableCell>
