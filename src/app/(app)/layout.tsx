@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
 import { getFirestore, doc, getDoc, collection, getDocs, orderBy, query, limit, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
+import { Toaster } from '@/components/ui/toaster';
 
 type CurrentUser = {
   uid: string;
@@ -237,6 +238,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
         </nav>
+        <Toaster />
     </div>
   );
 }

@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SmecBattleCodeLogo } from '@/components/icons';
-import { ArrowRight, BrainCircuit, Code, Trophy, Calendar, Target, Users, LogIn, ListChecks, Send } from 'lucide-react';
+import { ArrowRight, BrainCircuit, Code, Trophy, Calendar, Target, Users, LogIn, ListChecks, Send, Flame, Star } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -134,6 +134,89 @@ export default function LandingPage() {
                              </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="challenge-highlights" className="bg-muted py-20 md:py-32">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold">Challenge Highlights</h2>
+              <p className="max-w-xl mx-auto text-muted-foreground mt-4">
+                Here's a taste of the challenges that await you.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-primary transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold">Two Sum</h3>
+                        <Badge variant="outline" className="text-green-500 border-green-500/50">Easy</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Find two numbers in an array that add up to a specific target.</p>
+                </div>
+                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-primary transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold">Longest Substring</h3>
+                        <Badge variant="outline" className="text-yellow-500 border-yellow-500/50">Medium</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Find the length of the longest substring without repeating characters.</p>
+                </div>
+                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-primary transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold">Trapping Rain Water</h3>
+                        <Badge variant="outline" className="text-red-500 border-red-500/50">Hard</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Compute how much water an elevation map can trap after raining.</p>
+                </div>
+            </div>
+            <div className="text-center mt-12">
+                <Button size="lg" asChild>
+                    <Link href="/missions">View All Challenges</Link>
+                </Button>
+            </div>
+          </div>
+        </section>
+
+        <section id="leaderboard-preview" className="py-20 md:py-32">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl md:text-4xl font-bold">Leaderboard Preview</h2>
+                    <p className="max-w-xl mx-auto text-muted-foreground mt-4">
+                        See who's leading the charge. Can you dethrone them?
+                    </p>
+                </div>
+                <div className="max-w-lg mx-auto">
+                    <div className="space-y-4">
+                        <div className="flex items-center p-4 bg-card rounded-lg shadow-md border border-yellow-400">
+                            <Trophy className="h-8 w-8 text-yellow-400 mr-4" />
+                            <div className="flex-1">
+                                <p className="font-bold">Alex Johnson</p>
+                                <p className="text-sm text-muted-foreground">1st Place</p>
+                            </div>
+                            <p className="font-bold text-lg">1,250 PTS</p>
+                        </div>
+                        <div className="flex items-center p-4 bg-card rounded-lg shadow-md border">
+                            <Star className="h-8 w-8 text-slate-400 mr-4" />
+                            <div className="flex-1">
+                                <p className="font-semibold">Maria Garcia</p>
+                                <p className="text-sm text-muted-foreground">2nd Place</p>
+                            </div>
+                            <p className="font-semibold text-lg">1,180 PTS</p>
+                        </div>
+                        <div className="flex items-center p-4 bg-card rounded-lg shadow-md border">
+                             <Star className="h-8 w-8 text-amber-600 mr-4" />
+                            <div className="flex-1">
+                                <p className="font-semibold">Sameer Khan</p>
+                                <p className="text-sm text-muted-foreground">3rd Place</p>
+                            </div>
+                            <p className="font-semibold text-lg">1,150 PTS</p>
+                        </div>
+                    </div>
+                </div>
+                 <div className="text-center mt-12">
+                    <Button size="lg" variant="outline" asChild>
+                        <Link href="/leaderboard">View Full Leaderboard</Link>
+                    </Button>
                 </div>
             </div>
         </section>

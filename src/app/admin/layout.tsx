@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { getAuth, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
+import { Toaster } from '@/components/ui/toaster';
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -154,6 +155,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <main className="bg-muted/40 p-4 md:p-8">{children}</main>
             </ScrollArea>
         </div>
+        <Toaster />
     </div>
   );
 }
