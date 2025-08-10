@@ -173,7 +173,7 @@ export default function ChallengeDetail() {
             await updateDoc(userRef, { points: currentPoints + challenge.points });
             toast({ title: "Challenge Solved!", description: `You've earned ${challenge.points} points!`, position: 'center' });
         } else {
-            toast({ title: "Challenge Solved!", description: "You have already completed this challenge.", position: 'center' });
+            toast({ title: "Challenge Accepted!", description: "You have already completed this challenge.", position: 'center' });
         }
 
         const completedRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
@@ -226,7 +226,7 @@ export default function ChallengeDetail() {
            </Button>
          </div>
        </div>
-       <div className="flex-grow relative">
+       <div className="flex-grow relative bg-white pr-[2px]">
           <CodeEditor
             value={solution}
             onChange={handleSolutionChange}
