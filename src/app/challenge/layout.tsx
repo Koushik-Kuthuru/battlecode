@@ -29,6 +29,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatDistanceToNow } from 'date-fns';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 type CurrentUser = {
   uid: string;
@@ -181,7 +182,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                           variant: "destructive",
                           title: "Warning: Tab Switch Detected",
                           description: "Navigating away from the challenge is discouraged. A point penalty will be applied on the next offense.",
-                          duration: 8000
+                          duration: 8000,
+                          action: <ToastAction altText="Okay">Okay</ToastAction>
                       });
                   } else {
                       // Second offense: Apply penalty
@@ -197,7 +199,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                           variant: "destructive",
                           title: "Penalty Applied for Tab Switching",
                           description: `You have lost ${penaltyPoints} points for navigating away from the challenge page again.`,
-                          duration: 8000
+                          duration: 8000,
+                          action: <ToastAction altText="Okay">Okay</ToastAction>
                       });
                   }
               });
@@ -207,7 +210,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
               toast({
                   variant: 'destructive',
                   title: 'Error',
-                  description: 'Could not process the tab switch penalty.'
+                  description: 'Could not process the tab switch penalty.',
+                  action: <ToastAction altText="Okay">Okay</ToastAction>
               });
           }
       }
