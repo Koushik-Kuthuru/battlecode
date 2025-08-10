@@ -2,7 +2,7 @@
 'use client'
 
 import { SmecBattleCodeLogo } from '@/components/icons';
-import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code } from 'lucide-react';
+import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code, Loader2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
@@ -53,6 +53,8 @@ type ChallengeContextType = {
   setRunResult: React.Dispatch<React.SetStateAction<EvaluateCodeOutput | null>>;
   activeTab: string;
   setActiveTab: React.Dispatch<React.SetStateAction<string>>;
+  isRunning: boolean;
+  setIsRunning: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const ChallengeContext = createContext<ChallengeContextType | null>(null);
@@ -79,6 +81,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const [activeTab, setActiveTab] = useState('description');
   const [activeResultTab, setActiveResultTab] = useState('0');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
 
   const auth = getAuth(app);
   const challengeId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -170,6 +173,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
       setRunResult,
       activeTab,
       setActiveTab,
+      isRunning,
+      setIsRunning,
   };
 
   const descriptionPanel = (
@@ -248,7 +253,13 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
   const resultPanel = (
     <ScrollArea className="h-full">
-    {runResult ? (
+    { isRunning ? (
+         <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+          <Loader2 className="h-12 w-12 animate-spin mb-4" />
+          <p className="font-semibold text-lg">Running test cases...</p>
+          <p>Please wait a moment.</p>
+        </div>
+    ) : runResult ? (
         <div className="p-4 space-y-4">
             <h2 className={cn("text-xl font-bold flex items-center gap-2", runResult.allPassed ? 'text-green-600' : 'text-red-600')}>
                 {runResult.allPassed ? <CheckCircle /> : <XCircle />}
@@ -299,7 +310,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
           <div className="flex-shrink-0 p-2 border-b border-r">
               <TabsList>
                 <TabsTrigger value="description">Description</TabsTrigger>
-                {runResult && <TabsTrigger value="result">Result</TabsTrigger>}
+                {(runResult || isRunning) && <TabsTrigger value="result">Result</TabsTrigger>}
                 <TabsTrigger value="submissions">Submissions</TabsTrigger>
               </TabsList>
           </div>
@@ -381,10 +392,10 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                   <div className="flex flex-col w-full h-full">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
                         <div className="flex-shrink-0 p-2 border-b">
-                            <TabsList className={cn("grid w-full", runResult ? "grid-cols-4" : "grid-cols-3")}>
+                            <TabsList className={cn("grid w-full", (runResult || isRunning) ? "grid-cols-4" : "grid-cols-3")}>
                                 <TabsTrigger value="description">Description</TabsTrigger>
                                 <TabsTrigger value="code">Code</TabsTrigger>
-                                {runResult && <TabsTrigger value="result">Result</TabsTrigger>}
+                                {(runResult || isRunning) && <TabsTrigger value="result">Result</TabsTrigger>}
                                 <TabsTrigger value="submissions">Submissions</TabsTrigger>
                             </TabsList>
                         </div>

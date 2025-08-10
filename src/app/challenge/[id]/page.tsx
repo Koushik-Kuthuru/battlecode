@@ -15,7 +15,7 @@ import { useChallenge } from "../layout";
 import { evaluateCode, type EvaluateCodeOutput } from "@/ai/flows/evaluate-code";
 
 export default function ChallengeDetail() {
-  const { challenge, setRunResult, setActiveTab } = useChallenge();
+  const { challenge, setRunResult, setActiveTab, isRunning, setIsRunning } = useChallenge();
   const { toast } = useToast();
   const [solution, setSolution] = useState("");
   const [language, setLanguage] = useState('python');
@@ -23,7 +23,6 @@ export default function ChallengeDetail() {
   const [user, setUser] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   const { id: challengeId } = useParams();
   
