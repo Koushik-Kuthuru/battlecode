@@ -5,18 +5,21 @@ import { SmecBattleCodeLogo } from '@/components/icons';
 import { LogOut, Moon, Sun, User, Home, Code, Bug } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { app } from '@/lib/firebase';
+import { app, db } from '@/lib/firebase';
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { type Challenge } from '@/lib/data';
 
 type CurrentUser = {
   uid: string;
@@ -27,13 +30,15 @@ type CurrentUser = {
 
 export default function ChallengeLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const params = useParams();
   const { setTheme, theme } = useTheme();
   
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
 
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  const challengeId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
@@ -49,18 +54,27 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
             imageUrl: userData.imageUrl,
           });
         } else {
-          // This case might occur if auth user exists but firestore doc doesn't.
-          // For now, we'll treat them as logged out for this layout.
           setCurrentUser(null);
         }
       } else {
-        // Allow non-logged in users to view challenges
         setCurrentUser(null);
       }
       setIsLoading(false);
     });
     return () => unsubscribe();
-  }, [auth, db]);
+  }, [auth]);
+
+  useEffect(() => {
+    if (!challengeId) return;
+    const fetchChallenge = async () => {
+      const docRef = doc(db, "challenges", challengeId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setChallenge({ id: docSnap.id, ...docSnap.data() } as Challenge);
+      }
+    };
+    fetchChallenge();
+  }, [challengeId]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -88,11 +102,6 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                 </Button>
            </div>
            
-           <div className="flex items-center gap-4">
-              <Button><Code className="mr-2"/> Run Code</Button>
-              <Button variant="outline"><Bug className="mr-2"/> Submit</Button>
-           </div>
-
            <div className="flex items-center gap-2">
                  <Button
                     variant="ghost"
@@ -130,19 +139,44 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
         <main className="flex-1 flex flex-col overflow-hidden bg-muted/40">
            <ResizablePanelGroup direction="vertical">
-               <ResizablePanel defaultSize={75} minSize={50}>
+               <ResizablePanel defaultSize={65} minSize={50}>
                  <div className="h-full w-full flex">
                     {children}
                  </div>
                </ResizablePanel>
                <ResizableHandle withHandle />
-               <ResizablePanel defaultSize={25} minSize={15}>
-                   <div className="h-full p-4 flex flex-col">
-                     <h2 className="text-lg font-semibold mb-2">Test Results</h2>
-                     <div className="flex-grow mt-2 bg-background rounded-md p-4 text-sm text-muted-foreground overflow-auto">
-                       Run your code to see test case results here.
-                     </div>
-                   </div>
+               <ResizablePanel defaultSize={35} minSize={20}>
+                  <Tabs defaultValue="test-cases" className="h-full flex flex-col">
+                    <div className="flex-shrink-0 flex items-center justify-between p-2 border-b">
+                        <TabsList>
+                          <TabsTrigger value="test-cases">Test Cases</TabsTrigger>
+                          <TabsTrigger value="result">Result</TabsTrigger>
+                        </TabsList>
+                        <div className="flex items-center gap-2">
+                           <Button><Code className="mr-2"/> Run Code</Button>
+                           <Button variant="outline"><Bug className="mr-2"/> Submit</Button>
+                        </div>
+                    </div>
+                    <div className="flex-grow overflow-auto">
+                        <TabsContent value="test-cases" className="mt-0 h-full">
+                           <ScrollArea className="h-full p-4">
+                             {challenge?.examples.map((example, index) => (
+                               <div key={index} className="bg-background p-3 rounded-md mb-3">
+                                 <p className="font-semibold text-sm mb-1">Example {index + 1}</p>
+                                 <p className="font-mono text-xs"><strong>Input:</strong> {example.input}</p>
+                                 <p className="font-mono text-xs"><strong>Output:</strong> {example.output}</p>
+                                 {example.explanation && <p className="text-xs mt-1 text-muted-foreground"><strong>Explanation:</strong> {example.explanation}</p>}
+                               </div>
+                             ))}
+                           </ScrollArea>
+                        </TabsContent>
+                        <TabsContent value="result" className="mt-0 h-full">
+                          <div className="p-4 text-sm text-muted-foreground">
+                            Run your code to see test case results here.
+                          </div>
+                        </TabsContent>
+                    </div>
+                  </Tabs>
                </ResizablePanel>
            </ResizablePanelGroup>
         </main>
