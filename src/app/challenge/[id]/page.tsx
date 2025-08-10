@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CodeEditor } from "@/components/code-editor";
 import { app, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import type { Challenge } from "@/lib/data";
 import { Button } from "@/components/ui/button";
@@ -164,21 +164,27 @@ export default function ChallengeDetail() {
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
         
-        // Prevent re-awarding points for already completed challenges
-        const completedChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/completed`));
-        const completedChallenges = completedChallengesSnap.exists() ? completedChallengesSnap.data() : {};
+        const completedChallengesDocRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
+        const completedChallengesSnap = await getDoc(completedChallengesDocRef);
+        const completedData = completedChallengesSnap.exists() ? completedChallengesSnap.data() : {};
         
-        if (!completedChallenges[challenge.id!]) {
+        if (!completedData[challenge.id!] || completedData[challenge.id!] === true) {
             const currentPoints = userSnap.data()?.points || 0;
-            await updateDoc(userRef, { points: currentPoints + challenge.points });
-            toast({ title: "Challenge Solved!", description: `You've earned ${challenge.points} points!`, position: 'center' });
+            if (completedData[challenge.id!] !== true) {
+              await updateDoc(userRef, { points: currentPoints + challenge.points });
+              toast({ title: "Challenge Solved!", description: `You've earned ${challenge.points} points!`, position: 'center' });
+            } else {
+               toast({ title: "Challenge Accepted!", description: "You have already completed this challenge.", position: 'center' });
+            }
+            
+            await setDoc(completedChallengesDocRef, { 
+                [challenge.id!]: { completedAt: Timestamp.now() }
+            }, { merge: true });
+
         } else {
-            toast({ title: "Challenge Accepted!", description: "You have already completed this challenge.", position: 'center' });
+             toast({ title: "Challenge Accepted!", description: "You have already completed this challenge.", position: 'center' });
         }
 
-        const completedRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
-        await setDoc(completedRef, { [challenge.id!]: true }, { merge: true });
-        
         const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
         await setDoc(inProgressRef, { [challenge.id!]: false }, { merge: true });
         
