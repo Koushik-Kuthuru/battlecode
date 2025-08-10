@@ -224,7 +224,7 @@ export default function CompleteProfilePage() {
                   <Select value={profile.section} onValueChange={(value) => handleInputChange('section', value)}>
                     <SelectTrigger id="section">
                       <SelectValue placeholder="Select section" />
-                    </Trigger>
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="A">Section A</SelectItem>
                       <SelectItem value="B">Section B</SelectItem>
