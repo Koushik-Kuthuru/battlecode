@@ -56,9 +56,9 @@ function EventCard({ event }: { event: Event }) {
             <Users className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">{event.enrolled} Enrolled</span>
         </div>
-        <Button asChild size="sm" variant="ghost">
+        <Button asChild size="sm">
             <Link href="#">
-                View Details <ArrowRight className="ml-2 h-4 w-4" />
+                Register
             </Link>
         </Button>
       </CardFooter>
