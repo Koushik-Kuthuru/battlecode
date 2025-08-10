@@ -63,7 +63,8 @@ export default function ManageAdvertisementPage() {
       }
     };
     fetchAdvertisement();
-  }, [db, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleInputChange = (field: keyof AdvertisementData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
