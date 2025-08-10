@@ -94,11 +94,11 @@ export default function AdminRegisterPage() {
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="full-name">Full Name</Label>
-              <Input id="full-name" placeholder="Admin Name" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <Input id="full-name" placeholder="Your Full Name" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="admin@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input id="email" type="email" placeholder="your-email@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
