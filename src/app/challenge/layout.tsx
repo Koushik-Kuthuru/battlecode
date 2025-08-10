@@ -198,10 +198,25 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
           <p className="text-base mb-6 whitespace-pre-wrap">{challenge.description}</p>
           
           {challenge.examples.map((example, index) => (
-            <div key={index} className="bg-muted p-3 rounded-md mb-3 border">
-              <p className="font-semibold text-sm mb-1">Example {index + 1}</p>
-              <pre className="font-mono text-xs bg-slate-900 text-white p-2 rounded-md"><strong>Input:</strong> {example.input}{'\n'}<strong>Output:</strong> {example.output}</pre>
-              {example.explanation && <p className="text-xs mt-1 text-muted-foreground"><strong>Explanation:</strong> {example.explanation}</p>}
+            <div key={index} className="space-y-4 mb-6">
+                {example.explanation && (
+                    <div>
+                        <h3 className="font-semibold text-lg mb-2">Explanation</h3>
+                        <p className="text-muted-foreground">{example.explanation}</p>
+                    </div>
+                )}
+                 <div>
+                    <h3 className="font-semibold text-lg mb-2">Sample Input {index + 1}</h3>
+                    <div className="bg-muted p-3 rounded-md border">
+                        <pre className="font-mono text-sm whitespace-pre-wrap">{example.input}</pre>
+                    </div>
+                 </div>
+                 <div>
+                    <h3 className="font-semibold text-lg mb-2">Sample Output {index + 1}</h3>
+                    <div className="bg-muted p-3 rounded-md border">
+                        <pre className="font-mono text-sm whitespace-pre-wrap">{example.output}</pre>
+                    </div>
+                 </div>
             </div>
           ))}
 
