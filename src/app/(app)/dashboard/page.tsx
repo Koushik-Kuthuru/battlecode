@@ -15,6 +15,7 @@ import { app } from '@/lib/firebase';
 import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
+import { cn } from '@/lib/utils';
 
 type CurrentUser = {
   uid: string;
@@ -32,6 +33,8 @@ type Advertisement = {
   isEnabled: boolean;
 }
 
+type Difficulty = 'All' | 'Easy' | 'Medium' | 'Hard';
+
 export default function DashboardPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -46,6 +49,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
+  const [difficultyFilter, setDifficultyFilter] = useState<Difficulty>('All');
   
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -153,24 +157,28 @@ export default function DashboardPage() {
     }
   }, [currentUser, fetchChallenges]);
 
+  const filteredChallenges = challenges.filter(challenge => 
+    difficultyFilter === 'All' || challenge.difficulty === difficultyFilter
+  );
+
   const loadMoreChallenges = useCallback(() => {
     const nextPage = page + 1;
-    const newChallenges = challenges.slice(0, nextPage * ITEMS_PER_PAGE);
+    const newChallenges = filteredChallenges.slice(0, nextPage * ITEMS_PER_PAGE);
     setDisplayedChallenges(newChallenges);
     setPage(nextPage);
-    if(newChallenges.length >= challenges.length) {
+    if(newChallenges.length >= filteredChallenges.length) {
       setHasMore(false);
     }
-  }, [page, challenges]);
+  }, [page, filteredChallenges]);
 
   useEffect(() => {
     if (challenges.length > 0) {
-        const initialLoad = challenges.slice(0, ITEMS_PER_PAGE);
+        const initialLoad = filteredChallenges.slice(0, ITEMS_PER_PAGE);
         setDisplayedChallenges(initialLoad);
         setPage(1);
-        setHasMore(initialLoad.length < challenges.length);
+        setHasMore(initialLoad.length < filteredChallenges.length);
     }
-  }, [challenges]);
+  }, [challenges, difficultyFilter]);
 
   useEffect(() => {
     if (!hasMore || isLoading || isChallengesLoading) return;
@@ -202,6 +210,8 @@ export default function DashboardPage() {
           </div>
       )
   }
+
+  const difficultyFilters: Difficulty[] = ['All', 'Easy', 'Medium', 'Hard'];
 
   return (
     <div className="flex-1 space-y-8">
@@ -247,10 +257,25 @@ export default function DashboardPage() {
           </Carousel>
         )}
 
-        <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
+            <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                {difficultyFilters.map((filter) => (
+                    <Button
+                        key={filter}
+                        variant={difficultyFilter === filter ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setDifficultyFilter(filter)}
+                        className="w-full sm:w-auto"
+                    >
+                        {filter}
+                    </Button>
+                ))}
+            </div>
+        </div>
 
         {isChallengesLoading ? (
-             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                {[...Array(6)].map((_, i) => (
                  <div key={`skeleton-initial-${i}`} className="flex flex-col space-y-3">
                    <Skeleton className="h-[125px] w-full rounded-xl" />
@@ -262,7 +287,7 @@ export default function DashboardPage() {
                ))}
              </div>
         ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               {displayedChallenges.map((challenge) => (
                 <ChallengeCard 
                   key={challenge.id} 
@@ -275,8 +300,8 @@ export default function DashboardPage() {
         )}
         
         {hasMore && !isChallengesLoading && (
-          <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[...Array(3)].map((_, i) => (
+          <div ref={loaderRef} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {[...Array(2)].map((_, i) => (
               <div key={`skeleton-loader-${i}`} className="flex flex-col space-y-3">
                 <Skeleton className="h-[125px] w-full rounded-xl" />
                 <div className="space-y-2">
@@ -288,10 +313,14 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {!isChallengesLoading && challenges.length === 0 && (
+        {!isChallengesLoading && filteredChallenges.length === 0 && (
           <div className="mt-16 flex flex-col items-center justify-center text-center">
               <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
-              <p className="text-muted-foreground">It seems there are no challenges available right now.</p>
+              <p className="text-muted-foreground">
+                {difficultyFilter === 'All'
+                  ? 'It seems there are no challenges available right now.'
+                  : `No ${difficultyFilter.toLowerCase()} challenges found.`}
+              </p>
           </div>
         )}
     </div>
