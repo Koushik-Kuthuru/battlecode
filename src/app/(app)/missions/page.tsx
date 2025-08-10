@@ -13,21 +13,10 @@ import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase
 import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import Link from 'next/link';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserData } from '@/lib/types';
 
-type Advertisement = {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  buttonLink: string;
-  buttonText: string;
-  isEnabled: boolean;
-}
 
 type Difficulty = 'All' | 'Easy' | 'Medium' | 'Hard';
 type Status = 'All' | 'Completed' | 'In Progress' | 'Not Started';
@@ -45,17 +34,13 @@ export default function MissionsPage() {
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
-  const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty>('All');
   const [statusFilter, setStatusFilter] = useState<Status>('All');
   
   const auth = getAuth(app);
   const db = getFirestore(app);
   const ITEMS_PER_PAGE = 6;
-   const autoplay = useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: true })
-  );
-
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
       setIsLoading(true);
@@ -90,21 +75,6 @@ export default function MissionsPage() {
     return () => unsubscribe();
   }, [auth, db, router]);
   
-  // Real-time listener for advertisements
-  useEffect(() => {
-    const adsCollectionRef = collection(db, 'advertisements');
-    const q = query(adsCollectionRef, orderBy('createdAt', 'desc'));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const adsList = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as Advertisement))
-        .filter(ad => ad.isEnabled);
-      setAdvertisements(adsList);
-    });
-    return () => unsubscribe();
-  }, [db]);
-
-
   const fetchChallenges = useCallback(async () => {
     setIsChallengesLoading(true);
     try {
@@ -242,41 +212,6 @@ export default function MissionsPage() {
             <h2 className="text-3xl font-bold tracking-tight">Missions</h2>
         </div>
         
-        {advertisements.length > 0 && (
-          <Carousel
-            plugins={[autoplay.current]}
-            onMouseEnter={autoplay.current.stop}
-            onMouseLeave={autoplay.current.reset}
-            className="w-full"
-            opts={{ loop: true }}
-          >
-            <CarouselContent>
-              {advertisements.map((ad) => (
-                <CarouselItem key={ad.id}>
-                  <Card className="bg-slate-900 text-white border-0 overflow-hidden">
-                    <CardContent className="p-0 flex flex-col md:flex-row items-stretch justify-between gap-0 h-64">
-                       <div className="w-full md:w-1/2 h-full">
-                          <img src={ad.imageUrl || 'https://placehold.co/600x400'} alt={ad.title} className="w-full h-full object-cover" data-ai-hint="advertisement event" />
-                        </div>
-                      <div className="w-full md:w-1/2 p-6 flex flex-col justify-center">
-                          <h3 className="text-xl md:text-2xl font-bold leading-tight">{ad.title}</h3>
-                          <p className="text-muted-foreground text-white/80 text-sm md:text-base mt-2">{ad.description}</p>
-                          <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto mt-6">
-                            <Link href={ad.buttonLink || '#'} target="_blank" rel="noopener noreferrer">
-                              {ad.buttonText || 'Learn More'}
-                            </Link>
-                          </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-4 hidden md:flex" />
-            <CarouselNext className="right-4 hidden md:flex" />
-          </Carousel>
-        )}
-
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
