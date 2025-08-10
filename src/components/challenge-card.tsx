@@ -4,11 +4,12 @@
 
 import { type Challenge } from '@/lib/data';
 import { cn } from '@/lib/utils';
-import { Award, ArrowRight, CheckCircle, RefreshCw } from 'lucide-react';
+import { ArrowRight, CheckCircle, RefreshCw } from 'lucide-react';
 import { Badge } from './ui/badge';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
+import { BulletCoin } from './icons';
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -47,7 +48,7 @@ export function ChallengeCard({ challenge, isCompleted, isInProgress }: Challeng
             </div>
             <CardDescription className="flex items-center gap-4 pt-2">
                  <div className="flex items-center gap-1">
-                    <Award className="h-4 w-4 text-primary" />
+                    <BulletCoin className="h-4 w-4 text-primary" />
                     <span>{challenge.points} Points</span>
                  </div>
                  {statusIcon && (

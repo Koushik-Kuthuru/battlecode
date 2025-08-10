@@ -2,8 +2,8 @@
 
 'use client'
 
-import { SmecBattleCodeLogo } from '@/components/icons';
-import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code, Loader2, Award, ArrowLeft } from 'lucide-react';
+import { SmecBattleCodeLogo, BulletCoin } from '@/components/icons';
+import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code, Loader2, ArrowLeft } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
@@ -533,7 +533,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                   {penaltyDialogContent.type === 'penalty' && penaltyDialogContent.points && (
                     <div className="my-4 flex items-center justify-center gap-2 text-2xl font-bold text-red-500">
                         <span>- {penaltyDialogContent.points}</span>
-                        <Award className="h-7 w-7" />
+                        <BulletCoin className="h-7 w-7" />
                     </div>
                   )}
 

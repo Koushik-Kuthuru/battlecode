@@ -16,9 +16,10 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { UserData } from '@/lib/types';
-import { ArrowRight, Award, Badge as BadgeIcon, Calendar, CheckCircle, Circle, RefreshCw, Trophy, User } from 'lucide-react';
+import { ArrowRight, Badge as BadgeIcon, Calendar, CheckCircle, Circle, RefreshCw, Trophy, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { BulletCoin } from '@/components/icons';
 
 type Advertisement = {
   id: string;
@@ -61,7 +62,7 @@ const ChallengeListItem = ({ challenge, isCompleted, isInProgress, isLast }: { c
                  <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                     <Badge variant="outline" className={cn("text-xs", difficultyColors[challenge.difficulty])}>{challenge.difficulty}</Badge>
                     <div className="flex items-center gap-1">
-                        <Award className="h-4 w-4 text-primary" />
+                        <BulletCoin className="h-4 w-4 text-primary" />
                         <span>{challenge.points} Points</span>
                     </div>
                 </div>

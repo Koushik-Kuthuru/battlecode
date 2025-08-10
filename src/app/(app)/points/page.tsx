@@ -2,7 +2,8 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, CheckCircle, ShieldCheck } from 'lucide-react';
+import { BulletCoin } from '@/components/icons';
+import { CheckCircle, ShieldCheck } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function PointsPage() {
@@ -11,7 +12,7 @@ export default function PointsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Award className="h-8 w-8 text-primary" />
+            <BulletCoin className="h-8 w-8 text-primary" />
             Scoring System
           </CardTitle>
           <CardDescription>
