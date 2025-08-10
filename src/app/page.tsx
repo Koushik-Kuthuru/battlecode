@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="container mx-auto flex items-center justify-between h-20 px-4 md:px-6">
+      <header className="container z-10 mx-auto flex items-center justify-between h-20 px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2 font-semibold">
           <SmecBattleCodeLogo className="h-8 w-8 text-primary" />
           <span className="text-xl font-bold">SMEC Battle Code</span>
@@ -28,24 +28,37 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        <section className="container mx-auto flex flex-col items-center justify-center text-center py-20 md:py-32 px-4">
-          <div className="animate-fade-in-up">
-            <Badge className="mb-4">Exclusive for SMEC Students</Badge>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-6">
-              The Ultimate Arena for Coders
-            </h1>
-            <p className="max-w-2xl mx-auto text-lg text-muted-foreground mb-8">
-              Sharpen your skills, compete with peers, and climb the leaderboard. Welcome to the official competitive programming platform of St. Martin's Engineering College.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" asChild>
-                <Link href="/register">Get Started for Free</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/register">Learn More</Link>
-              </Button>
+        <section className="relative w-full h-[60vh] md:h-[80vh] flex items-center justify-center text-center overflow-hidden">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute top-0 left-0 w-full h-full object-cover z-0"
+            >
+              <source src="/hero-background.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <div className="absolute top-0 left-0 w-full h-full bg-black/60 z-10" />
+             <div className="relative z-20 text-white container mx-auto flex flex-col items-center justify-center px-4">
+                 <div className="animate-fade-in-up">
+                    <Badge className="mb-4 bg-white/10 text-white hover:bg-white/20">Exclusive for SMEC Students</Badge>
+                    <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-6">
+                      The Ultimate Arena for Coders
+                    </h1>
+                    <p className="max-w-2xl mx-auto text-lg text-slate-200 mb-8">
+                      Sharpen your skills, compete with peers, and climb the leaderboard. Welcome to the official competitive programming platform of St. Martin's Engineering College.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                      <Button size="lg" asChild>
+                        <Link href="/register">Join the Battle</Link>
+                      </Button>
+                      <Button size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-black" asChild>
+                        <Link href="/register">Learn More</Link>
+                      </Button>
+                    </div>
+                </div>
             </div>
-          </div>
         </section>
 
         <section id="features" className="bg-muted py-20 md:py-32">
@@ -317,9 +330,9 @@ export default function LandingPage() {
                 <div>
                     <h4 className="font-semibold text-white mb-4">Quick Links</h4>
                     <ul className="space-y-2 text-sm">
-                        <li><a href="/register" className="hover:text-white">Features</a></li>
-                        <li><a href="/register" className="hover:text-white">How It Works</a></li>
-                        <li><a href="/register" className="hover:text-white">Rules</a></li>
+                        <li><a href="#features" className="hover:text-white">Features</a></li>
+                        <li><a href="#how-it-works" className="hover:text-white">How It Works</a></li>
+                        <li><a href="#rules" className="hover:text-white">Rules</a></li>
                         <li><Link href="/register" className="hover:text-white">Leaderboard</Link></li>
                     </ul>
                 </div>
