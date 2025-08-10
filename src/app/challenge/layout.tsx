@@ -13,7 +13,7 @@ import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 
 import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { app, db } from '@/lib/firebase';
 import {
-  ResizableHandle,
+  ResizableHandleWithHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
@@ -153,11 +153,6 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
         setActiveResultTab('0');
     }
   }, [runResult]);
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
-  }
   
   if (isLoading) {
     return (
@@ -204,11 +199,11 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                      <div className="space-y-2">
                         <p className="font-mono text-sm font-semibold">Input:</p>
                         <div className="bg-muted p-3 rounded-md border">
-                            <pre className="whitespace-pre-wrap">{example.input}</pre>
+                            <pre className="whitespace-pre-wrap font-sans">{example.input}</pre>
                         </div>
                         <p className="font-mono text-sm font-semibold">Output:</p>
                          <div className="bg-muted p-3 rounded-md border">
-                           <pre className="whitespace-pre-wrap">{example.output}</pre>
+                           <pre className="whitespace-pre-wrap font-sans">{example.output}</pre>
                         </div>
                         {example.explanation && (
                             <>
@@ -372,10 +367,6 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                     
                     {currentUser ? (
                         <>
-                            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-slate-300 hover:bg-slate-800 hover:text-white">
-                                <LogOut className="h-5 w-5" />
-                            </Button>
-
                             <Link href="/profile">
                                  <Avatar className="h-9 w-9">
                                     <AvatarImage src={currentUser.imageUrl} alt={currentUser.name} />
@@ -399,7 +390,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                      <ResizablePanel defaultSize={50} minSize={30}>
                        {leftPanel}
                      </ResizablePanel>
-                     <ResizableHandle withHandle />
+                     <ResizableHandleWithHandle />
                      <ResizablePanel defaultSize={50} minSize={30}>
                        <div className="h-full w-full flex">
                           {children}

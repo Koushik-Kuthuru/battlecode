@@ -1,7 +1,23 @@
 "use client"
 
 import { Panel as ResizablePanel, PanelGroup as ResizablePanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { cn } from "@/lib/utils"
 
 const ResizableHandle = PanelResizeHandle
 
-export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
+const ResizableHandleWithHandle = ({
+  className,
+  ...props
+}: React.ComponentProps<typeof PanelResizeHandle>) => (
+  <ResizableHandle
+    className={cn(
+      "relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 [&[data-panel-group-direction=vertical]>div]:rotate-90",
+      className
+    )}
+    {...props}
+  >
+    <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border bg-border" />
+  </ResizableHandle>
+)
+
+export { ResizablePanelGroup, ResizablePanel, ResizableHandle, ResizableHandleWithHandle }
