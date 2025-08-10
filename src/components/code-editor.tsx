@@ -73,6 +73,7 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
         style={{
           fontSize: '14px',
           height: '100%',
+          userSelect: 'none',
         }}
       />
     </div>
