@@ -183,6 +183,10 @@ export default function ProfilePage() {
       }
   }
 
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  }
 
   if (isLoading) {
     return (
@@ -308,6 +312,14 @@ export default function ProfilePage() {
                   </Button>
               </div>
            </div>
+
+           <Separator />
+            <div className="pt-2">
+                <Button variant="destructive-outline" onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                </Button>
+            </div>
         </CardContent>
       </Card>
     </div>

@@ -139,10 +139,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </ScrollArea>
             
             <div className="mt-auto flex flex-col gap-4 p-4">
-                 <div className="flex items-center justify-between">
-                     <Button variant="ghost" size="icon" onClick={handleLogout} className="text-slate-300 hover:bg-slate-800 hover:text-white">
-                        <LogOut className="h-5 w-5" />
-                     </Button>
+                 <div className="flex items-center justify-end">
                      <Button
                         variant="ghost"
                         size="icon"
@@ -198,10 +195,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       ))}
                     </nav>
                      <div className="mt-auto flex flex-col gap-4 absolute bottom-4 right-4 left-4">
-                         <div className="flex items-center justify-between">
-                             <Button variant="ghost" size="icon" onClick={handleLogout} className="text-slate-300 hover:bg-slate-800 hover:text-white">
-                                <LogOut className="h-5 w-5" />
-                             </Button>
+                         <div className="flex items-center justify-end">
                              <Button
                                 variant="ghost"
                                 size="icon"
