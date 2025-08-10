@@ -199,22 +199,23 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
           
           {challenge.examples.map((example, index) => (
             <div key={index} className="space-y-4 mb-6">
-                {example.explanation && (
-                    <div>
-                        <h3 className="font-semibold text-lg mb-2">Explanation</h3>
-                        <p className="text-muted-foreground">{example.explanation}</p>
-                    </div>
-                )}
                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Sample Input {index + 1}</h3>
-                    <div className="bg-muted p-3 rounded-md border">
-                        <pre className="font-mono text-sm whitespace-pre-wrap">{example.input}</pre>
-                    </div>
-                 </div>
-                 <div>
-                    <h3 className="font-semibold text-lg mb-2">Sample Output {index + 1}</h3>
-                    <div className="bg-muted p-3 rounded-md border">
-                        <pre className="font-mono text-sm whitespace-pre-wrap">{example.output}</pre>
+                    <h3 className="font-semibold text-lg mb-2">Example {index + 1}</h3>
+                     <div className="space-y-2">
+                        <p className="font-mono text-sm font-semibold">Input:</p>
+                        <div className="bg-muted p-3 rounded-md border">
+                            <pre className="whitespace-pre-wrap">{example.input}</pre>
+                        </div>
+                        <p className="font-mono text-sm font-semibold">Output:</p>
+                         <div className="bg-muted p-3 rounded-md border">
+                           <pre className="whitespace-pre-wrap">{example.output}</pre>
+                        </div>
+                        {example.explanation && (
+                            <>
+                                <p className="font-mono text-sm font-semibold">Explanation:</p>
+                                <p className="text-muted-foreground">{example.explanation}</p>
+                            </>
+                        )}
                     </div>
                  </div>
             </div>
@@ -352,8 +353,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
            <header className="flex-shrink-0 flex items-center justify-between p-2 bg-slate-900 text-white border-b border-slate-700">
                <div className="flex items-center gap-4">
                     <Link href="/dashboard" className="flex items-center gap-2 font-semibold px-2">
-                        <Home className="h-6 w-6" />
-                        <span className="text-xl hidden sm:inline">{isChallengeLoading ? "Loading..." : challenge?.title}</span>
+                        <SmecBattleCodeLogo className="h-8 w-8" />
+                        <span className="text-xl hidden sm:inline">SMEC Battle Code</span>
                     </Link>
                </div>
                
