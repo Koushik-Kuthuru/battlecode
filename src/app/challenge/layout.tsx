@@ -350,7 +350,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                          </Tabs>
                      </div>
                    </ResizablePanel>
-                   <ResizableHandle withHandle />
+                   <ResizableHandle />
                    <ResizablePanel defaultSize={50} minSize={30}>
                      <div className="h-full w-full flex">
                         {children}
@@ -362,4 +362,3 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     </ChallengeContext.Provider>
   );
 }
-
