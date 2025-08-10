@@ -49,7 +49,7 @@ const ChallengeListItem = ({ challenge, isCompleted, isInProgress, isLast }: { c
     if (isInProgress) {
       return <RefreshCw className="h-6 w-6 text-blue-500 animate-spin" />;
     }
-    return <Circle className="h-6 w-6 text-slate-300 dark:text-slate-600" />;
+    return <Circle className="h-6 w-6 text-slate-300" />;
   }
 
   return (
@@ -57,7 +57,7 @@ const ChallengeListItem = ({ challenge, isCompleted, isInProgress, isLast }: { c
         <div className="flex items-center gap-4 py-4 px-2 rounded-lg transition-colors hover:bg-muted/50">
            <div className="relative flex flex-col items-center">
                 {getStatusIcon()}
-                {!isLast && <div className="absolute top-8 left-1/2 h-full w-0.5 -translate-x-1/2 bg-slate-200 dark:bg-slate-700" />}
+                {!isLast && <div className="absolute top-8 left-1/2 h-full w-0.5 -translate-x-1/2 bg-slate-200" />}
            </div>
            <div className="flex-1">
                 <p className="font-semibold">{challenge.title}</p>
@@ -451,7 +451,7 @@ export default function DashboardPage() {
           </div>
 
           <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-8">
-            <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <Card className="bg-white border border-slate-200">
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         <span>Events</span>
@@ -473,7 +473,7 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
 
-             <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden">
+             <Card className="bg-white border border-slate-200 overflow-hidden">
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         <span>Leaderboard</span>
@@ -493,9 +493,9 @@ export default function DashboardPage() {
                         <span>{currentUser?.points ?? 0}</span>
                     </div>
 
-                    <div className="bg-yellow-200 dark:bg-yellow-700/50 py-4 rounded-b-lg -m-6 mt-6">
-                        <p className="text-yellow-800 dark:text-yellow-100 font-bold text-5xl">#{userRank ?? 'N/A'}</p>
-                        <p className="text-xs text-yellow-700 dark:text-yellow-200/80 font-semibold tracking-widest">RANK</p>
+                    <div className="bg-yellow-200 py-4 rounded-b-lg -m-6 mt-6">
+                        <p className="text-yellow-800 font-bold text-5xl">#{userRank ?? 'N/A'}</p>
+                        <p className="text-xs text-yellow-700 font-semibold tracking-widest">RANK</p>
                     </div>
                     {topUser && (
                          <div className="text-sm text-center bg-muted p-2 rounded-lg mt-4">
@@ -505,7 +505,7 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
 
-             <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+             <Card className="bg-white border border-slate-200">
                 <CardHeader>
                     <CardTitle>Mission Report</CardTitle>
                     <CardDescription>Your performance summary.</CardDescription>
@@ -536,5 +536,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     

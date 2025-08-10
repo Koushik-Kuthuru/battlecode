@@ -194,7 +194,7 @@ export default function LeaderboardPage() {
                         <BulletCoin className="h-4 w-4 text-primary" />
                         <span>{podiumUsers[0].points.toLocaleString()}</span>
                     </div>
-                    <div className="bg-slate-100 dark:bg-slate-700 h-24 w-full rounded-t-lg mt-2 flex items-center justify-center text-3xl font-bold text-slate-500 dark:text-slate-300">2</div>
+                    <div className="bg-slate-100 h-24 w-full rounded-t-lg mt-2 flex items-center justify-center text-3xl font-bold text-slate-500">2</div>
                   </div>
                 )}
                 
@@ -211,7 +211,7 @@ export default function LeaderboardPage() {
                           <BulletCoin className="h-4 w-4 text-primary" />
                           <span>{podiumUsers[1].points.toLocaleString()}</span>
                       </div>
-                      <div className="bg-yellow-100 dark:bg-yellow-800/40 h-32 w-full rounded-t-lg mt-2 flex items-center justify-center text-4xl font-bold text-yellow-600 dark:text-yellow-200">1</div>
+                      <div className="bg-yellow-100 h-32 w-full rounded-t-lg mt-2 flex items-center justify-center text-4xl font-bold text-yellow-600">1</div>
                   </div>
                 )}
 
@@ -228,7 +228,7 @@ export default function LeaderboardPage() {
                         <BulletCoin className="h-4 w-4 text-primary" />
                         <span>{podiumUsers[2].points.toLocaleString()}</span>
                     </div>
-                    <div className="bg-amber-100 dark:bg-amber-900/50 h-20 w-full rounded-t-lg mt-2 flex items-center justify-center text-2xl font-bold text-amber-800 dark:text-amber-300">3</div>
+                    <div className="bg-amber-100 h-20 w-full rounded-t-lg mt-2 flex items-center justify-center text-2xl font-bold text-amber-800">3</div>
                   </div>
                 )}
               </div>
@@ -289,3 +289,5 @@ export default function LeaderboardPage() {
     </div>
   );
 }
+
+    

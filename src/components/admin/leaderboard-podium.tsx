@@ -73,7 +73,7 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                     <BulletCoin className="h-4 w-4 text-primary" />
                                     <span>{podiumDisplayUsers[0]?.points.toLocaleString()}</span>
                                 </div>
-                                <div className="bg-slate-200 dark:bg-slate-700 h-24 w-full rounded-t-lg mt-2 flex items-center justify-center text-3xl font-bold text-slate-600 dark:text-slate-300">2</div>
+                                <div className="bg-slate-200 h-24 w-full rounded-t-lg mt-2 flex items-center justify-center text-3xl font-bold text-slate-600">2</div>
                             </div>
                         )}
 
@@ -91,7 +91,7 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                     <BulletCoin className="h-4 w-4 text-primary" />
                                     <span>{podiumDisplayUsers[1]?.points.toLocaleString()}</span>
                                 </div>
-                                <div className="bg-yellow-200 dark:bg-yellow-700/50 h-32 w-full rounded-t-lg mt-2 flex items-center justify-center text-4xl font-bold text-yellow-700 dark:text-yellow-200">1</div>
+                                <div className="bg-yellow-200 h-32 w-full rounded-t-lg mt-2 flex items-center justify-center text-4xl font-bold text-yellow-700">1</div>
                             </div>
                         )}
                         
@@ -109,7 +109,7 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
                                     <BulletCoin className="h-4 w-4 text-primary" />
                                     <span>{podiumDisplayUsers[2]?.points.toLocaleString()}</span>
                                 </div>
-                                <div className="bg-amber-200 dark:bg-amber-900/50 h-20 w-full rounded-t-lg mt-2 flex items-center justify-center text-2xl font-bold text-amber-800 dark:text-amber-300">3</div>
+                                <div className="bg-amber-200 h-20 w-full rounded-t-lg mt-2 flex items-center justify-center text-2xl font-bold text-amber-800">3</div>
                             </div>
                         )}
                     </div>
@@ -157,3 +157,5 @@ export function LeaderboardPodium({ users, isLoading }: { users: UserData[], isL
         </Card>
     )
 }
+
+    

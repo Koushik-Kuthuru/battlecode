@@ -44,7 +44,7 @@ function MissionChallengeCard({ challenge, isCompleted, isInProgress }: { challe
 
 
   return (
-    <Card className="flex flex-col h-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-slate-300 dark:border-slate-700 shadow-lg hover:shadow-xl transition-shadow duration-300">
+    <Card className="flex flex-col h-full bg-white/60 backdrop-blur-sm border-slate-300 shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
             <div className="flex justify-between items-start">
                 <CardTitle className="line-clamp-2">{challenge.title}</CardTitle>
@@ -273,7 +273,7 @@ export default function MissionsPage() {
 
 
   return (
-    <div className="flex-1 space-y-8 bg-gradient-to-br from-blue-100/40 via-sky-50/40 to-blue-200/40 dark:from-slate-900/40 dark:via-slate-800/40 dark:to-blue-900/40 -m-8 p-8">
+    <div className="flex-1 space-y-8 bg-gradient-to-br from-blue-100/40 via-sky-50/40 to-blue-200/40 -m-8 p-8">
         <div className="flex items-center justify-between space-y-2">
             <h2 className="text-3xl font-bold tracking-tight">Missions</h2>
         </div>
@@ -350,3 +350,5 @@ export default function MissionsPage() {
     </div>
   );
 }
+
+    

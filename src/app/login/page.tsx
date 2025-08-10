@@ -96,16 +96,16 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-300 dark:border-slate-700 shadow-lg">
+      <Card className="bg-white/80 backdrop-blur-sm border-slate-300 shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Welcome Back!</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Enter your credentials to access your account.</CardDescription>
+          <CardDescription className="text-slate-600">Enter your credentials to access your account.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="student-id">Student ID</Label>
-              <Input id="student-id" type="text" placeholder="YOUR_ID" required value={studentId} onChange={handleStudentIdChange} className="bg-white/50 dark:bg-slate-700/50" />
+              <Input id="student-id" type="text" placeholder="YOUR_ID" required value={studentId} onChange={handleStudentIdChange} className="bg-white/50" />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
@@ -114,7 +114,7 @@ export default function LoginPage() {
                   Forgot your password?
                 </Link>
               </div>
-              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white/50 dark:bg-slate-700/50" />
+              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white/50" />
             </div>
             <Button type="submit" className="w-full" onClick={handleLogin} disabled={isLoading}>
               {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging in...</> : 'Login'}
@@ -131,3 +131,5 @@ export default function LoginPage() {
     </AuthLayout>
   );
 }
+
+    

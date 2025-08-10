@@ -108,28 +108,28 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout>
-      <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-300 dark:border-slate-700 shadow-lg">
+      <Card className="bg-white/80 backdrop-blur-sm border-slate-300 shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Join SMEC Battle Code and start your coding journey.</CardDescription>
+          <CardDescription className="text-slate-600">Join SMEC Battle Code and start your coding journey.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="full-name">Full Name</Label>
-              <Input id="full-name" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-white/50 dark:bg-slate-700/50" />
+              <Input id="full-name" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-white/50" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white/50 dark:bg-slate-700/50" />
+              <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white/50" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="student-id">Student ID</Label>
-              <Input id="student-id" placeholder="Your_Student_ID" required value={studentId} onChange={handleStudentIdChange} maxLength={10} className="bg-white/50 dark:bg-slate-700/50" />
+              <Input id="student-id" placeholder="Your_Student_ID" required value={studentId} onChange={handleStudentIdChange} maxLength={10} className="bg-white/50" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white/50 dark:bg-slate-700/50" />
+              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white/50" />
             </div>
             <Button type="submit" className="w-full" onClick={handleRegister} disabled={isLoading}>
               {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating Account...</> : 'Create Account'}
@@ -146,3 +146,5 @@ export default function RegisterPage() {
     </AuthLayout>
   );
 }
+
+    
