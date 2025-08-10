@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowRight, Calendar, Loader2, Podcast, Users, Video } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Event } from '@/lib/types';
 
@@ -74,20 +74,23 @@ export default function EventsPage() {
 
   useEffect(() => {
     const eventsCollectionRef = collection(db, 'events');
-    const q = query(eventsCollectionRef, where("isEnabled", "==", true), orderBy('startDate', 'desc'));
+    const q = query(eventsCollectionRef, orderBy('startDate', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const now = new Date();
-      const eventsList = snapshot.docs.map(doc => {
-        const data = doc.data() as Omit<Event, 'id' | 'status'>;
-        let status: Event['status'] = 'upcoming';
-        if (data.startDate.toDate() <= now && data.endDate.toDate() >= now) {
-          status = 'live';
-        } else if (data.endDate.toDate() < now) {
-          status = 'past';
-        }
-        return { id: doc.id, ...data, status } as Event;
-      });
+      const eventsList = snapshot.docs
+        .map(doc => {
+            const data = doc.data() as Omit<Event, 'id' | 'status'>;
+            let status: Event['status'] = 'upcoming';
+            if (data.startDate.toDate() <= now && data.endDate.toDate() >= now) {
+            status = 'live';
+            } else if (data.endDate.toDate() < now) {
+            status = 'past';
+            }
+            return { id: doc.id, ...data, status } as Event;
+        })
+        .filter(event => event.isEnabled); // Filter on the client-side
+
       setEvents(eventsList);
       setIsLoading(false);
     });
