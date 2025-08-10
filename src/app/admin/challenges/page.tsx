@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { challenges as initialChallenges, type Challenge } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp, ShieldOff, Shield } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction, updateDoc } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { Switch } from '@/components/ui/switch';
 
@@ -187,31 +187,27 @@ export default function ManageChallengesPage() {
 
     try {
         await runTransaction(db, async (transaction) => {
-            // 1. Delete the main challenge document
             const challengeRef = doc(db, "challenges", challengeId);
             transaction.delete(challengeRef);
 
-            // 2. Get all users
             const usersSnapshot = await getDocs(collection(db, "users"));
 
-            // 3. For each user, remove challenge-related data
             for (const userDoc of usersSnapshot.docs) {
                 const userId = userDoc.id;
 
-                // Delete saved solution
                 const solutionRef = doc(db, `users/${userId}/solutions`, challengeId);
                 transaction.delete(solutionRef);
-
-                // Delete from 'inProgress' list
-                const inProgressRef = doc(db, `users/${userId}/challengeData`, 'inProgress');
-                transaction.update(inProgressRef, { [challengeId]: false });
-
-                // Delete from 'completed' list
-                const completedRef = doc(db, `users/${userId}/challengeData`, 'completed');
-                transaction.update(completedRef, { [challengeId]: false });
                 
-                // Note: We are not deleting submissions to preserve historical data,
-                // but you could add that logic here if needed.
+                const inProgressRef = doc(db, `users/${userId}/challengeData`, 'inProgress');
+                 transaction.update(inProgressRef, {
+                    [challengeId]: false
+                 });
+
+
+                const completedRef = doc(db, `users/${userId}/challengeData`, 'completed');
+                 transaction.update(completedRef, {
+                    [challengeId]: false
+                 });
             }
         });
 
