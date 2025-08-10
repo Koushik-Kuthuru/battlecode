@@ -99,11 +99,11 @@ export default function CompleteProfilePage() {
 
     try {
       // 1. Verify image using Genkit flow
-      toast({ title: 'Verifying Image...', description: 'Please wait while we analyze your profile picture.' });
-      const { hasFace } = await verifyUserImage({ photoDataUri: profile.imageUrl });
+      toast({ title: 'Verifying Image...', description: 'Please wait while our AI analyzes your profile picture.' });
+      const { hasFace, reasoning } = await verifyUserImage({ photoDataUri: profile.imageUrl });
 
       if (!hasFace) {
-        toast({ variant: 'destructive', title: 'Invalid Image', description: 'Please upload a clear photo of your face.' });
+        toast({ variant: 'destructive', title: 'Invalid Profile Picture', description: reasoning });
         setIsSaving(false);
         return;
       }
@@ -225,7 +225,7 @@ export default function CompleteProfilePage() {
               <Select value={profile.section} onValueChange={(value) => handleInputChange('section', value)}>
                 <SelectTrigger id="section">
                   <SelectValue placeholder="Select section" />
-                </SelectTrigger>
+                </Trigger>
                 <SelectContent>
                   <SelectItem value="A">Section A</SelectItem>
                   <SelectItem value="B">Section B</SelectItem>

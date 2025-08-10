@@ -36,13 +36,13 @@ const prompt = ai.definePrompt({
   output: {schema: VerifyUserImageOutputSchema},
   prompt: `You are an AI-powered image verification service for a student profile system. Your task is to determine if the provided image is a valid profile picture.
 
-A valid profile picture MUST contain a clear, discernible human face. It should not be an avatar, cartoon, object, animal, or group photo.
+A valid profile picture MUST contain a single, clear, discernible human face. It should not be an avatar, cartoon, object, animal, or group photo. The face should be reasonably forward-facing.
 
 Analyze the following image and determine if it meets the criteria.
 
 Image: {{media url=photoDataUri}}
 
-Set 'hasFace' to true if a single human face is clearly visible. Otherwise, set it to false. Provide a very brief reasoning for your decision.`,
+Set 'hasFace' to true if a single human face is clearly visible. Otherwise, set it to false. Provide a very brief, user-friendly reason for your decision, for example "No clear face was detected in the image." or "Group photos are not allowed, please upload a photo of just yourself."`,
 });
 
 const verifyUserImageFlow = ai.defineFlow(
