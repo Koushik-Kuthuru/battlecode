@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -6,6 +7,13 @@ import { app, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import type { Challenge } from "@/lib/data";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable"
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 export default function ChallengeDetail() {
   const params = useParams();
@@ -20,11 +28,13 @@ export default function ChallengeDetail() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (!currentUser && challenge) {
+        setIsLoading(false);
+      }
     });
     return () => unsubscribe();
-  }, [auth]);
+  }, [auth, challenge]);
 
-  // Fetch challenge data
   useEffect(() => {
     if (!challengeId) return;
     const fetchChallenge = async () => {
@@ -32,17 +42,22 @@ export default function ChallengeDetail() {
       const docRef = doc(db, "challenges", challengeId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setChallenge({ id: docSnap.id, ...docSnap.data() } as Challenge);
+        const challengeData = { id: docSnap.id, ...docSnap.data() } as Challenge;
+        setChallenge(challengeData);
+        // If user is already loaded and it's null, stop loading
+        if (auth.currentUser === null) {
+          setSolution(challengeData.solution); // Set default solution for non-logged in users
+          setIsLoading(false);
+        }
+      } else {
+        setIsLoading(false); // Challenge not found
       }
-      // setIsLoading(false) will be handled after fetching solution
     };
     fetchChallenge();
-  }, [challengeId]);
+  }, [challengeId, auth]);
 
-  // Fetch user’s saved solution
   useEffect(() => {
-    if (!user || !challengeId) {
-      if(challenge) setIsLoading(false); // If there's a challenge but no user, stop loading
+    if (!user || !challengeId || !challenge) {
       return;
     };
 
@@ -51,8 +66,8 @@ export default function ChallengeDetail() {
       const solSnap = await getDoc(solRef);
       if (solSnap.exists()) {
         setSolution(solSnap.data().code);
-      } else if (challenge) {
-        setSolution(challenge.solution); // Start with default solution if none saved
+      } else {
+        setSolution(challenge.solution);
       }
       setIsLoading(false);
     };
@@ -60,39 +75,68 @@ export default function ChallengeDetail() {
     fetchSolution();
   }, [user, challengeId, challenge]);
 
-  // Auto-save to cloud
-  const saveSolution = async (newCode: string) => {
+  const handleSolutionChange = async (newCode: string) => {
     setSolution(newCode);
     if (!user || !challengeId) return;
 
-    const solRef = doc(db, `users/${user.uid}/solutions`, challengeId);
-    await setDoc(solRef, {
-      code: newCode,
-      updatedAt: new Date(),
-    }, { merge: true });
+    try {
+        const solRef = doc(db, `users/${user.uid}/solutions`, challengeId);
+        await setDoc(solRef, {
+          code: newCode,
+          updatedAt: new Date(),
+        }, { merge: true });
 
-    const inProgressRef = doc(db, `users/${user.uid}/challengeData/inProgress`);
-    await setDoc(inProgressRef, { [challengeId]: true }, { merge: true });
+        const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
+        await setDoc(inProgressRef, { [challengeId]: true }, { merge: true });
+    } catch (error) {
+        console.error("Failed to save solution:", error);
+    }
   };
 
-  if (isLoading || !challenge) {
+  if (isLoading) {
     return <div className="flex h-full items-center justify-center">Loading challenge...</div>;
+  }
+  
+  if (!challenge) {
+     return <div className="flex h-full items-center justify-center">Challenge not found.</div>;
   }
 
   return (
-    <div className="flex flex-col h-full p-4 gap-4">
-      <div className="flex-shrink-0">
-        <h1 className="text-2xl font-bold mb-1">{challenge.title}</h1>
-        <p className="text-muted-foreground">{challenge.description}</p>
-      </div>
+    <ResizablePanelGroup direction="horizontal" className="flex-1">
+      <ResizablePanel defaultSize={50}>
+        <ScrollArea className="h-full p-6">
+            <h1 className="text-2xl font-bold mb-2">{challenge.title}</h1>
+            <div className="flex items-center gap-4 mb-4">
+                <Badge variant={challenge.difficulty === 'Easy' ? 'secondary' : challenge.difficulty === 'Medium' ? 'outline' : 'destructive'}>{challenge.difficulty}</Badge>
+                <p className="text-sm text-muted-foreground">Language: {challenge.language}</p>
+                <p className="text-sm font-bold text-primary">{challenge.points} Points</p>
+            </div>
+            <p className="text-base mb-6">{challenge.description}</p>
+            
+            <h2 className="text-xl font-semibold mb-3">Examples</h2>
+            {challenge.examples.map((example, index) => (
+              <div key={index} className="bg-muted p-4 rounded-md mb-4">
+                <p className="font-mono text-sm"><strong>Input:</strong> {example.input}</p>
+                <p className="font-mono text-sm"><strong>Output:</strong> {example.output}</p>
+                {example.explanation && <p className="text-sm mt-2 text-muted-foreground"><strong>Explanation:</strong> {example.explanation}</p>}
+              </div>
+            ))}
 
-      <div className="flex-grow relative border rounded-md overflow-hidden">
-        <CodeEditor
-          value={solution}
-          onChange={(val) => saveSolution(val)}
-          language={challenge.language.toLowerCase()}
-        />
-      </div>
-    </div>
+            <div className="flex flex-wrap gap-2 mt-6">
+                {challenge.tags.map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
+            </div>
+        </ScrollArea>
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize={50}>
+         <div className="h-full relative">
+            <CodeEditor
+              value={solution}
+              onChange={handleSolutionChange}
+              language={challenge.language.toLowerCase()}
+            />
+         </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
