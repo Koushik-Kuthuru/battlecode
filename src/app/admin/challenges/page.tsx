@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -41,6 +42,7 @@ const defaultFormData: FormData = {
   points: 10,
   description: '',
   tags: '',
+  starterCode: '',
   solution: '',
   examples: [{ input: '', output: '', explanation: '' }],
   testCases: [{ input: '', output: '', isHidden: false }],
@@ -56,7 +58,8 @@ export default function ManageChallengesPage() {
   const [languageFilter, setLanguageFilter] = useState('All');
   const [sortType, setSortType] = useState<SortType>('title');
   const [formData, setFormData] = useState<FormData>(defaultFormData);
-  const [isCodeEditorVisible, setIsCodeEditorVisible] = useState(false);
+  const [isStarterCodeEditorVisible, setIsStarterCodeEditorVisible] = useState(false);
+  const [isSolutionEditorVisible, setIsSolutionEditorVisible] = useState(false);
   const [challengeToDelete, setChallengeToDelete] = useState<string | null>(null);
   
   const db = getFirestore(app);
@@ -106,6 +109,10 @@ export default function ManageChallengesPage() {
     setFormData(prev => ({...prev, [field]: value}));
   }, []);
 
+  const handleStarterCodeChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, starterCode: value }));
+  }, []);
+
   const handleSolutionChange = useCallback((value: string) => {
     setFormData(prev => ({ ...prev, solution: value }));
   }, []);
@@ -138,7 +145,8 @@ export default function ManageChallengesPage() {
     setEditingChallengeId(null);
     setFormData(defaultFormData);
     setIsFormVisible(true);
-    setIsCodeEditorVisible(false);
+    setIsStarterCodeEditorVisible(false);
+    setIsSolutionEditorVisible(false);
   };
   
   const handleEditClick = (challenge: Challenge) => {
@@ -151,14 +159,16 @@ export default function ManageChallengesPage() {
         isEnabled: challenge.isEnabled !== false, // Default to true if undefined
       });
       setIsFormVisible(true);
-      setIsCodeEditorVisible(false);
+      setIsStarterCodeEditorVisible(false);
+      setIsSolutionEditorVisible(false);
   }
 
   const handleCancel = () => {
     setIsFormVisible(false);
     setEditingChallengeId(null);
     setFormData(defaultFormData);
-    setIsCodeEditorVisible(false);
+    setIsStarterCodeEditorVisible(false);
+    setIsSolutionEditorVisible(false);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -397,8 +407,26 @@ export default function ManageChallengesPage() {
                 </div>
 
                 <div className="space-y-2">
+                    <Label>Starter Code</Label>
+                    {isStarterCodeEditorVisible ? (
+                        <div className="h-64 rounded-md border">
+                            <CodeEditor
+                                value={formData.starterCode}
+                                onChange={handleStarterCodeChange}
+                                language={formData.language.toLowerCase()}
+                            />
+                        </div>
+                    ) : (
+                        <Button type="button" variant="outline" onClick={() => setIsStarterCodeEditorVisible(true)}>
+                            <Code className="mr-2 h-4 w-4" />
+                            View/Edit Starter Code
+                        </Button>
+                    )}
+                </div>
+
+                <div className="space-y-2">
                     <Label>Solution Code</Label>
-                    {isCodeEditorVisible ? (
+                    {isSolutionEditorVisible ? (
                         <div className="h-64 rounded-md border">
                             <CodeEditor
                                 value={formData.solution}
@@ -407,7 +435,7 @@ export default function ManageChallengesPage() {
                             />
                         </div>
                     ) : (
-                        <Button type="button" variant="outline" onClick={() => setIsCodeEditorVisible(true)}>
+                        <Button type="button" variant="outline" onClick={() => setIsSolutionEditorVisible(true)}>
                             <Code className="mr-2 h-4 w-4" />
                             View/Edit Solution
                         </Button>

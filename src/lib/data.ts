@@ -1,4 +1,5 @@
 
+
 export type Challenge = {
   id?: string;
   title: string;
@@ -17,6 +18,7 @@ export type Challenge = {
     output: string;
     isHidden?: boolean;
   }[];
+  starterCode: string;
   solution: string;
   isEnabled?: boolean;
 };
@@ -47,6 +49,11 @@ export const challenges: Challenge[] = [
         { input: 'nums = [-1, -3, 5, 9], target = 4', output: '[0, 2]', isHidden: true },
         { input: 'nums = [0, 4, 3, 0], target = 0', output: '[0, 3]', isHidden: true },
     ],
+    starterCode: `class Solution:
+    def twoSum(self, nums: list[int], target: int) -> list[int]:
+        # Write your code here
+        pass
+`,
     solution: `class Solution:
     def twoSum(self, nums: list[int], target: int) -> list[int]:
         num_map = {}
@@ -81,6 +88,21 @@ export const challenges: Challenge[] = [
         { input: '[]', output: '[]', isHidden: true },
         { input: '[1]', output: '[1]', isHidden: true },
     ],
+    starterCode: `/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        // Write your code here
+    }
+}`,
     solution: `/**
  * Definition for singly-linked list.
  * public class ListNode {
@@ -129,6 +151,15 @@ class Solution {
         { input: '5', output: '["1","2","Fizz","4","Buzz"]' },
         { input: '15', output: '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]', isHidden: true },
     ],
+    starterCode: `#include <vector>
+#include <string>
+
+class Solution {
+public:
+    std::vector<std::string> fizzBuzz(int n) {
+        // Write your code here
+    }
+};`,
     solution: `class Solution {
 public:
     vector<string> fizzBuzz(int n) {
@@ -172,6 +203,13 @@ public:
         { input: '[4,3,2,1,4]', output: '16', isHidden: true },
         { input: '[1,2,1]', output: '2', isHidden: true },
     ],
+    starterCode: `/**
+ * @param {number[]} height
+ * @return {number}
+ */
+var maxArea = function(height) {
+    // Write your code here
+};`,
     solution: `/**
  * @param {number[]} height
  * @return {number}
@@ -222,6 +260,11 @@ var maxArea = function(height) {
         { input: '" "', output: '1', isHidden: true },
         { input: '"dvdf"', output: '3', isHidden: true },
     ],
+    starterCode: `class Solution:
+    def lengthOfLongestSubstring(self, s: str) -> int:
+        # Write your code here
+        pass
+`,
     solution: `class Solution:
     def lengthOfLongestSubstring(self, s: str) -> int:
         char_set = set()
@@ -259,6 +302,26 @@ var maxArea = function(height) {
         { input: '[1,1]', output: 'false', isHidden: true },
         { input: '[5,4,6,null,null,3,7]', output: 'false', isHidden: true },
     ],
+    starterCode: `/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public boolean isValidBST(TreeNode root) {
+        // Write your code here
+    }
+}`,
     solution: `/**
  * Definition for a binary tree node.
  * public class TreeNode {
@@ -324,6 +387,11 @@ class Solution {
         { input: 'nums1 = [0,0], nums2 = [0,0]', output: '0.0', isHidden: true },
         { input: 'nums1 = [], nums2 = [1]', output: '1.0', isHidden: true },
     ],
+    starterCode: `#include <math.h>
+
+double findMedianSortedArrays(int* nums1, int nums1Size, int* nums2, int nums2Size) {
+    // Write your code here
+}`,
     solution: `double findMedianSortedArrays(int* nums1, int nums1Size, int* nums2, int nums2Size) {
     if (nums1Size > nums2Size) {
         return findMedianSortedArrays(nums2, nums2Size, nums1, nums1Size);
@@ -381,6 +449,11 @@ class Solution {
         { input: '[4,2,3]', output: '1', isHidden: true },
         { input: '[5,4,1,2]', output: '1', isHidden: true },
     ],
+    starterCode: `class Solution:
+    def trap(self, height: list[int]) -> int:
+        # Write your code here
+        pass
+`,
     solution: `class Solution:
     def trap(self, height: list[int]) -> int:
         if not height:
@@ -429,6 +502,15 @@ class Solution {
         { input: 's = "ab", p = ".*"', output: 'true' },
         { input: 's = "mississippi", p = "mis*is*p*."', output: 'false', isHidden: true },
     ],
+    starterCode: `#include <string>
+#include <vector>
+
+class Solution {
+public:
+    bool isMatch(std::string s, std::string p) {
+        // Write your code here
+    }
+};`,
     solution: `class Solution {
 public:
     bool isMatch(string s, string p) {
@@ -479,6 +561,23 @@ public:
         { input: '[]', output: '[]' },
         { input: '[[]]', output: '[]', isHidden: true },
     ],
+    starterCode: `/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+import java.util.PriorityQueue;
+
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        // Write your code here
+    }
+}`,
     solution: `/**
  * Definition for singly-linked list.
  * public class ListNode {

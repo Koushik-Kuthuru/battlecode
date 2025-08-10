@@ -1,4 +1,5 @@
 
+
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -39,7 +40,7 @@ export default function ChallengeDetail() {
     const fetchSolution = async () => {
       setLanguage(challenge.language.toLowerCase());
 
-      let userCode = challenge.solution; // Default to starter code
+      let userCode = challenge.starterCode; // Default to starter code
 
       if (user) {
         const solRef = doc(db, `users/${user.uid}/solutions`, challenge.id!);
