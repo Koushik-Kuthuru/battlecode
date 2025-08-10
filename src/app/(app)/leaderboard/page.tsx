@@ -5,15 +5,15 @@ import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Info, Trophy, User } from 'lucide-react';
+import { Info, ShieldCheck, Trophy, User, X, CheckCircle } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BulletCoin } from '@/components/icons';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 
 const BRANCH_MAP: Record<string, string> = {
     cse: 'CSE',
@@ -98,20 +98,73 @@ export default function LeaderboardPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
              <CardTitle className="text-3xl font-bold tracking-tight">Leaderboard</CardTitle>
-             <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" asChild>
-                            <Link href="/points">
+                <Dialog>
+                    <DialogTrigger asChild>
+                         <Button variant="ghost" size="icon">
                                <Info className="h-5 w-5 text-muted-foreground" />
-                            </Link>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>How are points calculated?</p>
-                    </TooltipContent>
-                </Tooltip>
-             </TooltipProvider>
+                         </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <BulletCoin className="h-6 w-6 text-primary" />
+                             Scoring System
+                          </DialogTitle>
+                          <DialogDescription>
+                            Understand how to climb the ranks and earn points.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-6 py-4">
+                            <div>
+                                <p className="mb-4 text-sm text-muted-foreground">
+                                    Points are awarded for each correctly solved challenge. Your code must pass all test cases. The points depend on the challenge difficulty.
+                                </p>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Difficulty</TableHead>
+                                            <TableHead className="text-right">Points</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell><strong className="text-green-500">Easy</strong></TableCell>
+                                            <TableCell className="text-right font-bold">10</TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell><strong className="text-yellow-500">Medium</strong></TableCell>
+                                            <TableCell className="text-right font-bold">25</TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell><strong className="text-red-500">Hard</strong></TableCell>
+                                            <TableCell className="text-right font-bold">50</TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                             <div className="space-y-2 rounded-lg border p-3 bg-muted/50">
+                                <h3 className="font-semibold flex items-center gap-2 text-sm">
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    First-Time Completion
+                                </h3>
+                                <p className="text-xs text-muted-foreground">
+                                    You only earn points the first time you solve a challenge. Resubmitting won't grant more points.
+                                </p>
+                            </div>
+
+                             <div className="space-y-2 rounded-lg border border-destructive/50 p-3 bg-destructive/10">
+                                <h3 className="font-semibold flex items-center gap-2 text-sm text-destructive">
+                                    <ShieldCheck className="h-4 w-4" />
+                                    Tab-Switching Penalty
+                                </h3>
+                                <p className="text-xs text-destructive/90">
+                                    Navigating away from the challenge page during a challenge will result in a point penalty. Focus and integrity are key!
+                                </p>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
           </div>
           <CardDescription>See who is at the top of the SMEC Battle Code arena.</CardDescription>
         </CardHeader>
