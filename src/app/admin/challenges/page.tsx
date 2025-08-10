@@ -10,9 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { challenges as initialChallenges, type Challenge } from '@/lib/data';
-import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp, ShieldOff, Shield } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp, ShieldOff, Shield, Code } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { Switch } from '@/components/ui/switch';
 
@@ -43,6 +43,7 @@ export default function ManageChallengesPage() {
   const [languageFilter, setLanguageFilter] = useState('All');
   const [sortType, setSortType] = useState<SortType>('title');
   const [formData, setFormData] = useState<FormData>(defaultFormData);
+  const [isCodeEditorVisible, setIsCodeEditorVisible] = useState(false);
   
   const db = getFirestore(app);
 
@@ -123,6 +124,7 @@ export default function ManageChallengesPage() {
     setEditingChallengeId(null);
     setFormData(defaultFormData);
     setIsFormVisible(true);
+    setIsCodeEditorVisible(false);
   };
   
   const handleEditClick = (challenge: Challenge) => {
@@ -133,12 +135,14 @@ export default function ManageChallengesPage() {
         testCases: challenge.testCases || [{ input: '', output: '', isHidden: false }],
       });
       setIsFormVisible(true);
+      setIsCodeEditorVisible(false);
   }
 
   const handleCancel = () => {
     setIsFormVisible(false);
     setEditingChallengeId(null);
     setFormData(defaultFormData);
+    setIsCodeEditorVisible(false);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -182,7 +186,7 @@ export default function ManageChallengesPage() {
     }
   };
   
-  const handleDelete = async (challengeId: string) => {
+   const handleDelete = async (challengeId: string) => {
     if (!window.confirm("Are you sure you want to delete this challenge? This will remove it for ALL users.")) return;
 
     try {
@@ -363,14 +367,21 @@ export default function ManageChallengesPage() {
                 </div>
 
                 <div className="space-y-2">
-                   <Label>Solution Code</Label>
-                   <div className="h-64 rounded-md border">
-                     <CodeEditor
-                       value={formData.solution}
-                       onChange={handleSolutionChange}
-                       language={formData.language.toLowerCase()}
-                     />
-                   </div>
+                    <Label>Solution Code</Label>
+                    {isCodeEditorVisible ? (
+                        <div className="h-64 rounded-md border">
+                            <CodeEditor
+                                value={formData.solution}
+                                onChange={handleSolutionChange}
+                                language={formData.language.toLowerCase()}
+                            />
+                        </div>
+                    ) : (
+                        <Button type="button" variant="outline" onClick={() => setIsCodeEditorVisible(true)}>
+                            <Code className="mr-2 h-4 w-4" />
+                            View/Edit Solution
+                        </Button>
+                    )}
                 </div>
 
                 <div className="flex gap-4 pt-4">
