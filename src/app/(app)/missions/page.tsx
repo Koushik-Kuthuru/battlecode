@@ -6,7 +6,7 @@ import { ChallengeCard } from '@/components/challenge-card';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
@@ -16,10 +16,72 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserData } from '@/lib/types';
+import { ArrowRight, CheckCircle, RefreshCw } from 'lucide-react';
+import { BulletCoin } from '@/components/icons';
+import { Badge } from '@/components/ui/badge';
 
 
 type Difficulty = 'All' | 'Easy' | 'Medium' | 'Hard';
 type Status = 'All' | 'Completed' | 'In Progress' | 'Not Started';
+
+function MissionChallengeCard({ challenge, isCompleted, isInProgress }: { challenge: Challenge; isCompleted: boolean; isInProgress: boolean; }) {
+    const difficultyColors = {
+        Easy: 'text-green-500 border-green-500/50 bg-green-500/10',
+        Medium: 'text-yellow-500 border-yellow-500/50 bg-yellow-500/10',
+        Hard: 'text-red-500 border-red-500/50 bg-red-500/10',
+    };
+
+    const getStatusInfo = () => {
+        if (isCompleted) {
+            return { text: 'Completed', icon: <CheckCircle className="h-4 w-4 text-green-500" />, buttonText: 'View Submission' };
+        }
+        if (isInProgress) {
+            return { text: 'In Progress', icon: <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />, buttonText: 'Continue' };
+        }
+        return { text: 'Not Started', icon: null, buttonText: 'Start Challenge' };
+    };
+
+    const { text: statusText, icon: statusIcon, buttonText } = getStatusInfo();
+
+
+  return (
+    <Card className="flex flex-col h-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-slate-300 dark:border-slate-700 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <CardHeader>
+            <div className="flex justify-between items-start">
+                <CardTitle className="line-clamp-2">{challenge.title}</CardTitle>
+                <Badge variant="outline" className={cn("text-xs whitespace-nowrap", difficultyColors[challenge.difficulty])}>
+                    {challenge.difficulty}
+                </Badge>
+            </div>
+            <CardDescription className="flex items-center gap-4 pt-2">
+                 <div className="flex items-center gap-1">
+                    <BulletCoin className="h-4 w-4 text-primary" />
+                    <span>{challenge.points} Points</span>
+                 </div>
+                 {statusIcon && (
+                    <div className="flex items-center gap-1 font-medium">
+                        {statusIcon}
+                        <span>{statusText}</span>
+                    </div>
+                 )}
+            </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-grow">
+            <p className="text-sm text-muted-foreground line-clamp-3">
+                {challenge.description}
+            </p>
+        </CardContent>
+        <CardFooter>
+            <Button asChild className="w-full">
+                <Link href={`/challenge/${challenge.id}`}>
+                    {buttonText} <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+            </Button>
+        </CardFooter>
+    </Card>
+  );
+}
+
 
 export default function MissionsPage() {
   const router = useRouter();
@@ -39,7 +101,7 @@ export default function MissionsPage() {
   
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const ITEMS_PER_PAGE = 6;
+  const ITEMS_PER_PAGE = 9;
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
@@ -207,13 +269,13 @@ export default function MissionsPage() {
 
 
   return (
-    <div className="flex-1 space-y-8">
+    <div className="flex-1 space-y-8 bg-gradient-to-br from-blue-100/40 via-sky-50/40 to-blue-200/40 dark:from-slate-900/40 dark:via-slate-800/40 dark:to-blue-900/40 -m-8 p-8">
         <div className="flex items-center justify-between space-y-2">
             <h2 className="text-3xl font-bold tracking-tight">Missions</h2>
         </div>
         
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
+         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 rounded-lg bg-background/70 backdrop-blur-sm border shadow-sm">
+            <h2 className="text-xl font-bold tracking-tight shrink-0">Your Challenges</h2>
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
               <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as Status)}>
                   <SelectTrigger className="w-full sm:w-[180px]">
@@ -226,19 +288,17 @@ export default function MissionsPage() {
                       <SelectItem value="Completed">Completed</SelectItem>
                   </SelectContent>
               </Select>
-              <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-full sm:w-auto">
-                  {difficultyFilters.map((filter) => (
-                      <Button
-                          key={filter}
-                          variant={difficultyFilter === filter ? 'default' : 'ghost'}
-                          size="sm"
-                          onClick={() => setDifficultyFilter(filter)}
-                          className="w-full sm:w-auto"
-                      >
-                          {filter}
-                      </Button>
-                  ))}
-              </div>
+               <Select value={difficultyFilter} onValueChange={(value) => setDifficultyFilter(value as Difficulty)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="Filter by difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="All">All Difficulties</SelectItem>
+                      <SelectItem value="Easy">Easy</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="Hard">Hard</SelectItem>
+                  </SelectContent>
+              </Select>
             </div>
         </div>
 
@@ -246,18 +306,14 @@ export default function MissionsPage() {
              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                {[...Array(6)].map((_, i) => (
                  <div key={`skeleton-initial-${i}`} className="flex flex-col space-y-3">
-                   <Skeleton className="h-[125px] w-full rounded-xl" />
-                   <div className="space-y-2">
-                     <Skeleton className="h-4 w-4/5" />
-                     <Skeleton className="h-4 w-3/5" />
-                   </div>
+                   <Skeleton className="h-[250px] w-full rounded-xl" />
                  </div>
                ))}
              </div>
         ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {displayedChallenges.map((challenge) => (
-                <ChallengeCard 
+                <MissionChallengeCard 
                   key={challenge.id} 
                   challenge={challenge} 
                   isCompleted={!!completedChallenges[challenge.id!]}
@@ -278,7 +334,7 @@ export default function MissionsPage() {
         )}
 
         {!isChallengesLoading && filteredChallenges.length === 0 && (
-          <div className="mt-16 flex flex-col items-center justify-center text-center">
+          <div className="mt-16 flex flex-col items-center justify-center text-center py-16 bg-background/50 rounded-lg">
               <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
               <p className="text-muted-foreground">
                 {difficultyFilter === 'All' && statusFilter === 'All'
