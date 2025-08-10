@@ -15,7 +15,7 @@ import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { app } from '@/lib/firebase';
-import AuthLayout from '@/components/auth-layout';
+import { SmecBattleCodeLogo } from '@/components/icons';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { verifyUserImage } from '@/ai/flows/verify-user-image';
 
@@ -152,95 +152,100 @@ export default function CompleteProfilePage() {
   }
 
   return (
-    <AuthLayout>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
-          <CardDescription>
-            Please provide a few more details to finish setting up your account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-            <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Action Required</AlertTitle>
-                <AlertDescription>
-                   All fields, including a clear profile picture of yourself, are mandatory to proceed.
-                </AlertDescription>
-            </Alert>
-        
-          <div className="flex flex-col items-center gap-4">
-            <Avatar className="h-28 w-28">
-              <AvatarImage src={profile.imageUrl} alt="User Profile" />
-              <AvatarFallback>
-                <UserIcon className="h-12 w-12" />
-              </AvatarFallback>
-            </Avatar>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Picture
-            </Button>
-            <Input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-          </div>
+    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex justify-center">
+          <SmecBattleCodeLogo className="h-16 w-16 text-primary" />
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
+            <CardDescription>
+              Please provide a few more details to finish setting up your account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+              <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Action Required</AlertTitle>
+                  <AlertDescription>
+                     All fields, including a clear profile picture of yourself, are mandatory to proceed.
+                  </AlertDescription>
+              </Alert>
+          
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="h-28 w-28">
+                <AvatarImage src={profile.imageUrl} alt="User Profile" />
+                <AvatarFallback>
+                  <UserIcon className="h-12 w-12" />
+                </AvatarFallback>
+              </Avatar>
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Picture
+              </Button>
+              <Input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="branch">Branch</Label>
-            <Select value={profile.branch} onValueChange={(value) => handleInputChange('branch', value)}>
-              <SelectTrigger id="branch">
-                <SelectValue placeholder="Select your branch" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cse">Computer Science Engineering</SelectItem>
-                <SelectItem value="ece">Electronics & Communication</SelectItem>
-                <SelectItem value="eee">Electrical & Electronics</SelectItem>
-                <SelectItem value="mech">Mechanical Engineering</SelectItem>
-                <SelectItem value="civil">Civil Engineering</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="year">Year</Label>
-              <Select value={profile.year} onValueChange={(value) => handleInputChange('year', value)}>
-                <SelectTrigger id="year">
-                  <SelectValue placeholder="Select year" />
+              <Label htmlFor="branch">Branch</Label>
+              <Select value={profile.branch} onValueChange={(value) => handleInputChange('branch', value)}>
+                <SelectTrigger id="branch">
+                  <SelectValue placeholder="Select your branch" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1st Year</SelectItem>
-                  <SelectItem value="2">2nd Year</SelectItem>
-                  <SelectItem value="3">3rd Year</SelectItem>
-                  <SelectItem value="4">4th Year</SelectItem>
+                  <SelectItem value="cse">Computer Science Engineering</SelectItem>
+                  <SelectItem value="ece">Electronics & Communication</SelectItem>
+                  <SelectItem value="eee">Electrical & Electronics</SelectItem>
+                  <SelectItem value="mech">Mechanical Engineering</SelectItem>
+                  <SelectItem value="civil">Civil Engineering</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="section">Section</Label>
-              <Select value={profile.section} onValueChange={(value) => handleInputChange('section', value)}>
-                <SelectTrigger id="section">
-                  <SelectValue placeholder="Select section" />
-                </Trigger>
-                <SelectContent>
-                  <SelectItem value="A">Section A</SelectItem>
-                  <SelectItem value="B">Section B</SelectItem>
-                  <SelectItem value="C">Section C</SelectItem>
-                  <SelectItem value="D">Section D</SelectItem>
-                </SelectContent>
-              </Select>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="year">Year</Label>
+                <Select value={profile.year} onValuechange={(value) => handleInputChange('year', value)}>
+                  <SelectTrigger id="year">
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1st Year</SelectItem>
+                    <SelectItem value="2">2nd Year</SelectItem>
+                    <SelectItem value="3">3rd Year</SelectItem>
+                    <SelectItem value="4">4th Year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="section">Section</Label>
+                <Select value={profile.section} onValueChange={(value) => handleInputChange('section', value)}>
+                  <SelectTrigger id="section">
+                    <SelectValue placeholder="Select section" />
+                  </Trigger>
+                  <SelectContent>
+                    <SelectItem value="A">Section A</SelectItem>
+                    <SelectItem value="B">Section B</SelectItem>
+                    <SelectItem value="C">Section C</SelectItem>
+                    <SelectItem value="D">Section D</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-          
-          <Button onClick={handleSave} className="w-full" disabled={isSaving}>
-            {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying & Saving...</> : 'Save and Continue'}
-          </Button>
-        </CardContent>
-      </Card>
-    </AuthLayout>
+            
+            <Button onClick={handleSave} className="w-full" disabled={isSaving}>
+              {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying & Saving...</> : 'Save and Continue'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
