@@ -445,7 +445,7 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
 
-             <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+             <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         <span>Leaderboard</span>
@@ -454,29 +454,23 @@ export default function DashboardPage() {
                         </Link>
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <div className="text-center">
-                            <p className="text-3xl font-bold">{userRank ?? 'N/A'}</p>
-                            <p className="text-xs text-muted-foreground">RANK</p>
-                        </div>
-                        <div className="flex flex-col items-center flex-1">
-                            <Avatar className="h-16 w-16 mb-2">
-                                <AvatarImage src={currentUser?.imageUrl} alt={currentUser?.name} />
-                                <AvatarFallback>
-                                    <User />
-                                </AvatarFallback>
-                            </Avatar>
-                            <p className="font-bold text-lg text-center">{currentUser?.name}</p>
-                            <div className="flex items-center gap-1 text-sm font-semibold text-primary">
-                                <BulletCoin className="h-4 w-4" />
-                                <span>{currentUser?.points ?? 0}</span>
-                            </div>
-                        </div>
+                <CardContent className="text-center">
+                    <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-primary">
+                        <AvatarImage src={currentUser?.imageUrl} />
+                        <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
+                    </Avatar>
+                    <h3 className="text-xl font-bold">{currentUser?.name}</h3>
+                    <div className="flex items-center justify-center gap-1 text-primary font-semibold mb-4">
+                        <BulletCoin className="h-5 w-5" />
+                        <span>{currentUser?.points ?? 0}</span>
                     </div>
 
+                    <div className="bg-yellow-200 dark:bg-yellow-700/50 py-4 rounded-b-lg -m-6 mt-6">
+                        <p className="text-yellow-800 dark:text-yellow-100 font-bold text-5xl">{userRank ?? 'N/A'}</p>
+                        <p className="text-xs text-yellow-700 dark:text-yellow-200/80 font-semibold tracking-widest">RANK</p>
+                    </div>
                     {topUser && (
-                         <div className="text-sm text-center bg-muted p-2 rounded-lg">
+                         <div className="text-sm text-center bg-muted p-2 rounded-lg mt-4">
                             <p>You are chasing <span className="font-semibold">{topUser.name}</span> with {topUser.points} points! 🔥</p>
                          </div>
                     )}
