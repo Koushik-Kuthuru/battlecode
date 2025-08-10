@@ -253,54 +253,56 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
   const resultPanel = (
     <ScrollArea className="h-full">
-    { isRunning ? (
-         <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-          <Loader2 className="h-12 w-12 animate-spin mb-4" />
-          <p className="font-semibold text-lg">Running test cases...</p>
-          <p>Please wait a moment.</p>
-        </div>
-    ) : runResult ? (
-        <div className="p-4 space-y-4">
-            <h2 className={cn("text-xl font-bold flex items-center gap-2", runResult.allPassed ? 'text-green-600' : 'text-red-600')}>
-                {runResult.allPassed ? <CheckCircle /> : <XCircle />}
-                {runResult.allPassed ? 'All Test Cases Passed!' : 'Some Test Cases Failed'}
-            </h2>
-            <p className="text-muted-foreground">{runResult.feedback}</p>
-            <Tabs value={activeResultTab} onValueChange={setActiveResultTab}>
-                <TabsList>
-                    {runResult.results.map((res, i) => (
-                        <TabsTrigger key={i} value={String(i)} className="flex items-center gap-2">
-                            Test Case {i + 1}
-                            {res.passed ? <CheckCircle className="text-green-500 h-4 w-4" /> : <XCircle className="text-red-500 h-4 w-4" />}
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-                {runResult.results.map((res, i) => (
-                    <TabsContent key={i} value={String(i)} className="mt-4 space-y-4">
-                        <div>
-                            <h3 className="font-semibold mb-2">Input</h3>
-                            <Textarea readOnly value={res.testCaseInput} className="font-mono text-sm" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <h3 className="font-semibold mb-2">Your Output</h3>
-                                <Textarea readOnly value={res.actualOutput} className="font-mono text-sm" />
-                            </div>
+      <div className="h-full">
+      { isRunning ? (
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <Loader2 className="h-12 w-12 animate-spin mb-4" />
+            <p className="font-semibold text-lg">Running test cases...</p>
+            <p>Please wait a moment.</p>
+          </div>
+      ) : runResult ? (
+          <div className="p-4 space-y-4">
+              <h2 className={cn("text-xl font-bold flex items-center gap-2", runResult.allPassed ? 'text-green-600' : 'text-red-600')}>
+                  {runResult.allPassed ? <CheckCircle /> : <XCircle />}
+                  {runResult.allPassed ? 'All Test Cases Passed!' : 'Some Test Cases Failed'}
+              </h2>
+              <p className="text-muted-foreground">{runResult.feedback}</p>
+              <Tabs value={activeResultTab} onValueChange={setActiveResultTab}>
+                  <TabsList>
+                      {runResult.results.map((res, i) => (
+                          <TabsTrigger key={i} value={String(i)} className="flex items-center gap-2">
+                              Test Case {i + 1}
+                              {res.passed ? <CheckCircle className="text-green-500 h-4 w-4" /> : <XCircle className="text-red-500 h-4 w-4" />}
+                          </TabsTrigger>
+                      ))}
+                  </TabsList>
+                  {runResult.results.map((res, i) => (
+                      <TabsContent key={i} value={String(i)} className="mt-4 space-y-4">
+                          <div>
+                              <h3 className="font-semibold mb-2">Input</h3>
+                              <Textarea readOnly value={res.testCaseInput} className="font-mono text-sm" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <h3 className="font-semibold mb-2">Expected Output</h3>
-                                <Textarea readOnly value={res.expectedOutput} className="font-mono text-sm" />
-                            </div>
-                        </div>
-                    </TabsContent>
-                ))}
-            </Tabs>
-        </div>
-    ) : (
-        <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-          <AlertCircle className="h-10 w-10 mb-4" />
-          <p>Run your code to see the results here.</p>
-        </div>
-    )}
+                                  <h3 className="font-semibold mb-2">Your Output</h3>
+                                  <Textarea readOnly value={res.actualOutput} className="font-mono text-sm" />
+                              </div>
+                                <div>
+                                  <h3 className="font-semibold mb-2">Expected Output</h3>
+                                  <Textarea readOnly value={res.expectedOutput} className="font-mono text-sm" />
+                              </div>
+                          </div>
+                      </TabsContent>
+                  ))}
+              </Tabs>
+          </div>
+      ) : (
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <AlertCircle className="h-10 w-10 mb-4" />
+            <p>Run your code to see the results here.</p>
+          </div>
+      )}
+      </div>
   </ScrollArea>
   );
 
