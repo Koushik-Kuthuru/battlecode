@@ -100,8 +100,6 @@ export default function ManageAdvertisementPage() {
     e.preventDefault();
     setIsSaving(true);
     
-    const dataToSave = { ...formData, createdAt: serverTimestamp() };
-
     try {
       if (editingAdId) {
         const adDocRef = doc(db, 'advertisements', editingAdId);
@@ -111,6 +109,7 @@ export default function ManageAdvertisementPage() {
           description: 'The ad has been successfully updated.',
         });
       } else {
+        const dataToSave = { ...formData, createdAt: serverTimestamp() };
         await addDoc(adsCollectionRef, dataToSave);
         toast({
           title: 'Advertisement Added!',
