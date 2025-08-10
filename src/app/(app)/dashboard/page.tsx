@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { BulletCoin } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Advertisement = {
   id: string;
@@ -300,8 +301,6 @@ export default function DashboardPage() {
       )
   }
 
-  const difficultyFilters: Difficulty[] = ['All', 'Easy', 'Medium', 'Hard'];
-
   return (
     <div className="flex-1 space-y-8">
         <div className="flex items-center justify-between space-y-2 md:hidden">
@@ -352,19 +351,17 @@ export default function DashboardPage() {
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <CardTitle>Your Challenges</CardTitle>
-                        <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
-                            {difficultyFilters.map((filter) => (
-                                <Button
-                                    key={filter}
-                                    variant={difficultyFilter === filter ? 'default' : 'ghost'}
-                                    size="sm"
-                                    onClick={() => setDifficultyFilter(filter)}
-                                    className="w-full sm:w-auto"
-                                >
-                                    {filter}
-                                </Button>
-                            ))}
-                        </div>
+                         <Select value={difficultyFilter} onValueChange={(value) => setDifficultyFilter(value as Difficulty)}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="Filter by difficulty" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="All">All Difficulties</SelectItem>
+                                <SelectItem value="Easy">Easy</SelectItem>
+                                <SelectItem value="Medium">Medium</SelectItem>
+                                <SelectItem value="Hard">Hard</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -508,5 +505,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
