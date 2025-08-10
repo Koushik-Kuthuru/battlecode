@@ -366,7 +366,7 @@ export default function DashboardPage() {
           </div>
 
           <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-8">
-            <Card className="bg-white dark:bg-slate-800">
+            <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         <span>Events</span>
@@ -388,7 +388,7 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
 
-             <Card className="bg-white dark:bg-slate-800">
+             <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         <span>Leaderboard</span>
@@ -423,5 +423,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
