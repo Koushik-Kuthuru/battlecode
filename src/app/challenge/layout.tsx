@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type EvaluateCodeOutput } from '@/ai/flows/evaluate-code';
 import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
 
 type CurrentUser = {
@@ -63,7 +64,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const [isChallengeLoading, setIsChallengeLoading] = useState(true);
   const [runResult, setRunResult] = useState<EvaluateCodeOutput | null>(null);
   const [activeTab, setActiveTab] = useState('description');
-
+  const [activeResultTab, setActiveResultTab] = useState('0');
 
   const auth = getAuth(app);
   const challengeId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -82,8 +83,6 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
             imageUrl: userData.imageUrl,
           });
         } else {
-          // This can happen if user is in auth but not firestore.
-          // For this app's logic, we treat them as logged out.
           setCurrentUser(null);
         }
       } else {
@@ -115,6 +114,12 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     fetchChallenge();
   }, [challengeId]);
 
+  useEffect(() => {
+    if(runResult) {
+        setActiveResultTab('0');
+    }
+  }, [runResult]);
+
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/login');
@@ -142,8 +147,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
            <header className="flex-shrink-0 flex items-center justify-between p-2 bg-slate-900 text-white border-b border-slate-700">
                <div className="flex items-center gap-4">
                     <Link href="/dashboard" className="flex items-center gap-2 font-semibold px-2">
-                        <SmecBattleCodeLogo className="h-8 w-8" />
-                        <span className="text-xl hidden sm:inline">SMEC Battle Code</span>
+                        <Home className="h-6 w-6" />
+                        <span className="text-xl hidden sm:inline">{isChallengeLoading ? "Loading..." : challenge?.title}</span>
                     </Link>
                </div>
                
@@ -232,31 +237,42 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                                   </ScrollArea>
                                </TabsContent>
                                <TabsContent value="result" className="mt-0 h-full">
-                                 <ScrollArea className="h-full p-6">
+                                 <ScrollArea className="h-full">
                                     {runResult ? (
-                                        <div className="space-y-4">
+                                        <div className="p-4 space-y-4">
                                             <h2 className={cn("text-xl font-bold flex items-center gap-2", runResult.allPassed ? 'text-green-600' : 'text-red-600')}>
                                                 {runResult.allPassed ? <CheckCircle /> : <XCircle />}
                                                 {runResult.allPassed ? 'All Test Cases Passed!' : 'Some Test Cases Failed'}
                                             </h2>
                                             <p className="text-muted-foreground">{runResult.feedback}</p>
-                                            <div className="space-y-3">
+                                            <Tabs value={activeResultTab} onValueChange={setActiveResultTab}>
+                                                <TabsList>
+                                                    {runResult.results.map((res, i) => (
+                                                        <TabsTrigger key={i} value={String(i)} className="flex items-center gap-2">
+                                                            Test Case {i + 1}
+                                                            {res.passed ? <CheckCircle className="text-green-500 h-4 w-4" /> : <XCircle className="text-red-500 h-4 w-4" />}
+                                                        </TabsTrigger>
+                                                    ))}
+                                                </TabsList>
                                                 {runResult.results.map((res, i) => (
-                                                    <div key={i} className="border p-3 rounded-md">
-                                                        <div className="flex justify-between items-center mb-2">
-                                                            <h3 className="font-semibold">Test Case {i + 1}</h3>
-                                                            <Badge variant={res.passed ? "secondary" : "destructive"}>
-                                                                {res.passed ? "Passed" : "Failed"}
-                                                            </Badge>
+                                                    <TabsContent key={i} value={String(i)} className="mt-4 space-y-4">
+                                                        <div>
+                                                            <h3 className="font-semibold mb-2">Input</h3>
+                                                            <Textarea readOnly value={res.testCaseInput} className="font-mono text-sm" />
                                                         </div>
-                                                        <div className="space-y-1 text-xs font-mono">
-                                                           <p><strong className="font-sans text-muted-foreground">Input:</strong> {res.testCaseInput}</p>
-                                                            <p><strong className="font-sans text-muted-foreground">Expected:</strong> {res.expectedOutput}</p>
-                                                            <p><strong className="font-sans text-muted-foreground">Your Output:</strong> {res.actualOutput}</p>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <h3 className="font-semibold mb-2">Your Output</h3>
+                                                                <Textarea readOnly value={res.actualOutput} className="font-mono text-sm" />
+                                                            </div>
+                                                             <div>
+                                                                <h3 className="font-semibold mb-2">Expected Output</h3>
+                                                                <Textarea readOnly value={res.expectedOutput} className="font-mono text-sm" />
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    </TabsContent>
                                                 ))}
-                                            </div>
+                                            </Tabs>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -282,5 +298,3 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     </ChallengeContext.Provider>
   );
 }
-
-    

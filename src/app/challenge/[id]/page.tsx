@@ -56,7 +56,7 @@ export default function ChallengeDetail() {
     };
 
     fetchSolution();
-  }, [challenge, user, db]);
+  }, [challenge, user]);
 
 
   const handleSolutionChange = (newCode: string) => {
@@ -88,7 +88,6 @@ export default function ChallengeDetail() {
   const handleRunCode = async () => {
     if (!challenge) return;
 
-    // Guard clause to check for test cases
     if (!challenge.testCases || challenge.testCases.length === 0) {
         toast({
             variant: "destructive",
@@ -98,9 +97,7 @@ export default function ChallengeDetail() {
         return;
     }
     
-    // Log the challenge object to the console for debugging
     console.log("Running evaluation with challenge data:", challenge);
-
 
     setIsRunning(true);
     setCanSubmit(false); // Reset submit state
@@ -186,7 +183,9 @@ export default function ChallengeDetail() {
              </SelectContent>
          </Select>
          <div className="flex items-center gap-2">
-           <Button variant="outline" size="sm" onClick={handleReset} disabled={isSaving || isRunning || isSubmitting}><RefreshCcw className="mr-2 h-4 w-4" /> Reset</Button>
+           <Button variant="outline" size="sm" onClick={handleReset} disabled={isSaving || isRunning || isSubmitting}>
+             <RefreshCcw className="mr-2 h-4 w-4" /> Reset
+           </Button>
            <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving || isRunning || isSubmitting}>
             {isSaving ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />} Save
            </Button>
@@ -199,7 +198,7 @@ export default function ChallengeDetail() {
             language={language}
           />
        </div>
-       <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t">
+       <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t bg-muted">
            <Button size="sm" onClick={handleRunCode} disabled={isSaving || isRunning || isSubmitting}>
              {isRunning ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Code className="mr-2 h-4 w-4" />} Run Code
            </Button>
