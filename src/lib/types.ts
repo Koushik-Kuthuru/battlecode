@@ -11,4 +11,5 @@ export type UserData = {
     year: string;
     imageUrl?: string;
     lastSeen?: Timestamp;
+    preferredLanguages?: string[];
 };

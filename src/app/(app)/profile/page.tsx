@@ -10,12 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { User, Upload, Mail, KeyRound, LogOut, CaseSensitive } from 'lucide-react';
+import { User, Upload, Mail, KeyRound, LogOut, CaseSensitive, Loader2 } from 'lucide-react';
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, type User as FirebaseUser, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 import { app } from '@/lib/firebase';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type CurrentUser = {
   uid: string;
@@ -29,7 +30,10 @@ type ProfileData = {
     year: string;
     section:string;
     imageUrl: string;
+    preferredLanguages: string[];
 }
+
+const LANGUAGES = ['C', 'C++', 'Java', 'Python', 'JavaScript'];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -40,6 +44,7 @@ export default function ProfilePage() {
     year: '',
     section: '',
     imageUrl: '',
+    preferredLanguages: [],
   });
   const [newImage, setNewImage] = useState<File | null>(null);
   const [newEmail, setNewEmail] = useState('');
@@ -74,6 +79,7 @@ export default function ProfilePage() {
                     year: userData.year || '',
                     section: userData.section || '',
                     imageUrl: userData.imageUrl || '',
+                    preferredLanguages: userData.preferredLanguages || [],
                 });
             } else {
                 router.push('/login');
@@ -87,9 +93,18 @@ export default function ProfilePage() {
     return () => unsubscribe();
   }, [auth, db, router]);
   
-  const handleInputChange = (field: keyof Omit<ProfileData, 'imageUrl'>, value: string) => {
+  const handleInputChange = (field: keyof Omit<ProfileData, 'imageUrl' | 'preferredLanguages'>, value: string) => {
       setProfile(prev => ({...prev, [field]: value}));
   }
+  
+  const handleLanguageChange = (language: string, checked: boolean) => {
+    setProfile(prev => {
+        const newLangs = checked 
+            ? [...prev.preferredLanguages, language]
+            : prev.preferredLanguages.filter(lang => lang !== language);
+        return {...prev, preferredLanguages: newLangs};
+    });
+  };
   
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -124,6 +139,7 @@ export default function ProfilePage() {
             year: profile.year,
             section: profile.section,
             imageUrl: finalImageUrl,
+            preferredLanguages: profile.preferredLanguages,
         });
 
         setProfile(prev => ({...prev, imageUrl: finalImageUrl}));
@@ -295,8 +311,24 @@ export default function ProfilePage() {
              </div>
           </div>
           
+           <div className="space-y-2">
+                <Label>Preferred Programming Languages</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-lg border p-4">
+                    {LANGUAGES.map(lang => (
+                        <div key={lang} className="flex items-center gap-2">
+                            <Checkbox 
+                                id={`prof-lang-${lang}`}
+                                checked={profile.preferredLanguages.includes(lang)}
+                                onCheckedChange={(checked) => handleLanguageChange(lang, !!checked)}
+                            />
+                            <Label htmlFor={`prof-lang-${lang}`} className="font-normal">{lang}</Label>
+                        </div>
+                    ))}
+                </div>
+            </div>
+          
           <Button onClick={handleSave} className="w-full md:w-auto" disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Profile Changes'}
+            {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Saving...</> : 'Save Profile Changes'}
           </Button>
 
           <Separator />

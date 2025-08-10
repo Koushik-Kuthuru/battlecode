@@ -17,6 +17,7 @@ import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage'
 import { app } from '@/lib/firebase';
 import { SmecBattleCodeLogo } from '@/components/icons';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type ProfileData = {
   branch: string;
@@ -24,7 +25,10 @@ type ProfileData = {
   section: string;
   imageUrl: string;
   imageFile: File | null;
+  preferredLanguages: string[];
 };
+
+const LANGUAGES = ['C', 'C++', 'Java', 'Python', 'JavaScript'];
 
 export default function CompleteProfilePage() {
   const router = useRouter();
@@ -36,6 +40,7 @@ export default function CompleteProfilePage() {
     section: '',
     imageUrl: '',
     imageFile: null,
+    preferredLanguages: [],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -65,8 +70,17 @@ export default function CompleteProfilePage() {
     return () => unsubscribe();
   }, [auth, db, router]);
 
-  const handleInputChange = (field: keyof Omit<ProfileData, 'imageUrl' | 'imageFile'>, value: string) => {
+  const handleInputChange = (field: keyof Omit<ProfileData, 'imageUrl' | 'imageFile' | 'preferredLanguages'>, value: string) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
+  };
+  
+  const handleLanguageChange = (language: string, checked: boolean) => {
+    setProfile(prev => {
+        const newLangs = checked 
+            ? [...prev.preferredLanguages, language]
+            : prev.preferredLanguages.filter(lang => lang !== language);
+        return {...prev, preferredLanguages: newLangs};
+    });
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,6 +122,7 @@ export default function CompleteProfilePage() {
         section: profile.section,
         imageUrl: profile.imageUrl || placeholderImageUrl, // Use uploaded image data URI as temp display if available
         profileComplete: true,
+        preferredLanguages: profile.preferredLanguages,
       });
 
       // Redirect immediately
@@ -247,6 +262,22 @@ export default function CompleteProfilePage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            
+            <div className="space-y-2">
+                <Label>Preferred Programming Languages</Label>
+                <div className="grid grid-cols-2 gap-2 rounded-lg border p-4">
+                    {LANGUAGES.map(lang => (
+                        <div key={lang} className="flex items-center gap-2">
+                            <Checkbox 
+                                id={`lang-${lang}`}
+                                checked={profile.preferredLanguages.includes(lang)}
+                                onCheckedChange={(checked) => handleLanguageChange(lang, !!checked)}
+                            />
+                            <Label htmlFor={`lang-${lang}`} className="font-normal">{lang}</Label>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             <Button onClick={handleSave} className="w-full" disabled={isSaving}>

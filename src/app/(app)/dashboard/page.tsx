@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ChallengeCard } from '@/components/challenge-card';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,12 +16,7 @@ import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
-
-type CurrentUser = {
-  uid: string;
-  name: string;
-  email: string;
-}
+import { UserData } from '@/lib/types';
 
 type Advertisement = {
   id: string;
@@ -45,8 +40,8 @@ export default function DashboardPage() {
   const loaderRef = useRef(null);
   const [completedChallenges, setCompletedChallenges] = useState<Record<string, boolean>>({});
   const [inProgressChallenges, setInProgressChallenges] = useState<Record<string, boolean>>({});
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(true);
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty>('All');
@@ -60,24 +55,20 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
+      setIsUserLoading(true);
       if (user) {
         const userDocRef = doc(db, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
+          const userData = userDocSnap.data() as UserData;
 
           if (!userData.profileComplete) {
               router.push('/complete-profile');
               return;
           }
 
-          setCurrentUser({
-            uid: user.uid,
-            name: userData.name,
-            email: user.email!,
-          });
-
-          // Fetch user-specific challenge data (completed, in-progress)
+          setCurrentUser({ ...userData, uid: user.uid, email: user.email! });
+          
           const completedChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/completed`));
           setCompletedChallenges(completedChallengesSnap.exists() ? completedChallengesSnap.data() : {});
           
@@ -90,7 +81,7 @@ export default function DashboardPage() {
       } else {
         router.push('/login');
       }
-      setIsLoading(false);
+      setIsUserLoading(false);
     });
 
     return () => unsubscribe();
@@ -143,7 +134,6 @@ export default function DashboardPage() {
         title: 'Error fetching challenges',
         description: 'Could not load challenges. Please try again later.'
       });
-      // Fallback to static data on error
       const challengesWithIds = initialChallenges.map((c, i) => ({...c, id: `fallback-${i}`}));
       setChallenges(challengesWithIds); 
     } finally {
@@ -152,14 +142,32 @@ export default function DashboardPage() {
   }, [db, toast]);
 
   useEffect(() => {
-    if (currentUser) {
+    if (!isUserLoading && currentUser) {
         fetchChallenges();
     }
-  }, [currentUser, fetchChallenges]);
+  }, [isUserLoading, currentUser, fetchChallenges]);
 
-  const filteredChallenges = challenges.filter(challenge => 
-    difficultyFilter === 'All' || challenge.difficulty === difficultyFilter
-  );
+  const filteredChallenges = useMemo(() => {
+    if (!currentUser) return [];
+    
+    const languageFilter = currentUser.preferredLanguages && currentUser.preferredLanguages.length > 0;
+
+    return challenges.filter(challenge => {
+        const difficultyMatch = difficultyFilter === 'All' || challenge.difficulty === difficultyFilter;
+        const languageMatch = !languageFilter || currentUser.preferredLanguages!.includes(challenge.language);
+        return difficultyMatch && languageMatch;
+    }).sort((a, b) => {
+        const aCompleted = !!completedChallenges[a.id!];
+        const bCompleted = !!completedChallenges[b.id!];
+        if (aCompleted !== bCompleted) return aCompleted ? 1 : -1;
+        
+        const aInProgress = !!inProgressChallenges[a.id!];
+        const bInProgress = !!inProgressChallenges[b.id!];
+        if (aInProgress !== bInProgress) return aInProgress ? -1 : 1;
+        
+        return 0;
+    });
+  }, [challenges, difficultyFilter, currentUser, completedChallenges, inProgressChallenges]);
 
   const loadMoreChallenges = useCallback(() => {
     const nextPage = page + 1;
@@ -172,16 +180,16 @@ export default function DashboardPage() {
   }, [page, filteredChallenges]);
 
   useEffect(() => {
-    if (challenges.length > 0) {
+    if (challenges.length > 0 && !isUserLoading) {
         const initialLoad = filteredChallenges.slice(0, ITEMS_PER_PAGE);
         setDisplayedChallenges(initialLoad);
         setPage(1);
         setHasMore(initialLoad.length < filteredChallenges.length);
     }
-  }, [challenges, difficultyFilter]);
+  }, [filteredChallenges, challenges.length, isUserLoading]);
 
   useEffect(() => {
-    if (!hasMore || isLoading || isChallengesLoading) return;
+    if (!hasMore || isUserLoading || isChallengesLoading) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -201,9 +209,11 @@ export default function DashboardPage() {
         observer.unobserve(currentLoader);
       }
     };
-  }, [hasMore, isLoading, isChallengesLoading, loadMoreChallenges]);
+  }, [hasMore, isUserLoading, isChallengesLoading, loadMoreChallenges]);
 
-  if (isLoading || !currentUser) {
+  const isLoading = isUserLoading || (isChallengesLoading && challenges.length === 0);
+
+  if (isLoading) {
       return (
           <div className="flex h-screen items-center justify-center">
               <div>Loading...</div>
@@ -216,10 +226,10 @@ export default function DashboardPage() {
   return (
     <div className="flex-1 space-y-8">
         <div className="flex items-center justify-between space-y-2 md:hidden">
-            <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser.name.split(' ')[0]} 👋</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser?.name.split(' ')[0]} 👋</h2>
         </div>
         <div className="hidden md:flex items-center justify-between space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser.name} 👋</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser?.name} 👋</h2>
         </div>
         
         {advertisements.length > 0 && (
@@ -274,7 +284,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        {isChallengesLoading ? (
+        {isChallengesLoading && challenges.length === 0 ? (
              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                {[...Array(6)].map((_, i) => (
                  <div key={`skeleton-initial-${i}`} className="flex flex-col space-y-3">
