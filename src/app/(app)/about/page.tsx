@@ -42,13 +42,13 @@ export default function AboutPage() {
             </p>
             <ul className="space-y-3 list-disc list-inside pl-4">
                 <li>
-                  <strong className="text-green-500">Easy Challenges (10 Points):</strong> Indicated by a <span className="font-bold">green</span> marker. These are designed to get you started, covering fundamental programming concepts and simple algorithms. Perfect for warming up!
+                  <strong className="text-green-500">Easy Challenges:</strong> Indicated by a <span className="font-bold">green</span> marker. These are designed to get you started, covering fundamental programming concepts and simple algorithms, and are worth <strong className="inline-flex items-center gap-1"><Award className="h-4 w-4" />10 Points</strong>. Perfect for warming up!
                 </li>
                 <li>
-                  <strong className="text-yellow-500">Medium Challenges (25 Points):</strong> Indicated by a <span className="font-bold">yellow</span> marker. These problems require a more solid grasp of data structures and common algorithms. They often mirror questions asked in the initial rounds of technical interviews.
+                  <strong className="text-yellow-500">Medium Challenges:</strong> Indicated by a <span className="font-bold">yellow</span> marker. These problems require a more solid grasp of data structures and common algorithms and are worth <strong className="inline-flex items-center gap-1"><Award className="h-4 w-4" />25 Points</strong>. They often mirror questions asked in the initial rounds of technical interviews.
                 </li>
                  <li>
-                  <strong className="text-red-500">Hard Challenges (50 Points):</strong> Indicated by a <span className="font-bold">red</span> marker. These are complex problems that demand advanced algorithmic knowledge, efficiency, and creative problem-solving skills, similar to what you might encounter in final interview rounds.
+                  <strong className="text-red-500">Hard Challenges:</strong> Indicated by a <span className="font-bold">red</span> marker. These are complex problems that demand advanced algorithmic knowledge, efficiency, and creative problem-solving skills, and are worth <strong className="inline-flex items-center gap-1"><Award className="h-4 w-4" />50 Points</strong>, similar to what you might encounter in final interview rounds.
                 </li>
             </ul>
              <p>
