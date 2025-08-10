@@ -16,6 +16,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  position?: 'top-right' | 'center';
 }
 
 const actionTypes = {
@@ -188,6 +189,7 @@ function useToast() {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    position: state.toasts[0]?.position || 'center',
   }
 }
 

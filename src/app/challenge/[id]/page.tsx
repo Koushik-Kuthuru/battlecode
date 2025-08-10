@@ -64,7 +64,7 @@ export default function ChallengeDetail() {
   
   const handleSave = async () => {
     if (!user || !challenge) {
-       toast({ variant: "destructive", title: "Error", description: "You must be logged in to save your progress." });
+       toast({ variant: "destructive", title: "Error", description: "You must be logged in to save your progress.", position: 'center' });
        return;
     }
     setIsSaving(true);
@@ -73,11 +73,11 @@ export default function ChallengeDetail() {
         await setDoc(solRef, { code: solution, language, updatedAt: new Date() }, { merge: true });
         const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
         await setDoc(inProgressRef, { [challenge.id!]: true }, { merge: true });
-        toast({ title: "Progress Saved!", description: "Your code has been saved successfully." });
+        toast({ title: "Progress Saved!", description: "Your code has been saved successfully.", position: 'center' });
         setInitialSolution(solution);
     } catch (error) {
         console.error("Failed to save solution:", error);
-         toast({ variant: "destructive", title: "Save Failed", description: "Could not save your code. Please try again." });
+         toast({ variant: "destructive", title: "Save Failed", description: "Could not save your code. Please try again.", position: 'center' });
     } finally {
         setIsSaving(false);
     }
@@ -95,6 +95,7 @@ export default function ChallengeDetail() {
             variant: "destructive",
             title: "Missing Test Cases",
             description: "This challenge has no visible test cases to run against. You can still submit.",
+            position: 'center',
         });
         return;
     }
@@ -111,13 +112,13 @@ export default function ChallengeDetail() {
         });
         setRunResult(result);
         if (result.allPassed) {
-            toast({ title: "All Visible Tests Passed!", description: "You can now try submitting your solution." });
+            toast({ title: "All Visible Tests Passed!", description: "You can now try submitting your solution.", position: 'center' });
         } else {
-             toast({ variant: "destructive", title: "Tests Failed", description: "Some test cases did not pass. Check the results." });
+             toast({ variant: "destructive", title: "Tests Failed", description: "Some test cases did not pass. Check the results.", position: 'center' });
         }
     } catch(error) {
         console.error("Error running code:", error);
-        toast({ variant: "destructive", title: "Evaluation Error", description: "Could not evaluate your code. Please try again." });
+        toast({ variant: "destructive", title: "Evaluation Error", description: "Could not evaluate your code. Please try again.", position: 'center' });
     } finally {
         setIsRunning(false);
     }
@@ -125,7 +126,7 @@ export default function ChallengeDetail() {
   
   const handleSubmit = async () => {
     if (!user || !challenge || !challengeId) {
-        toast({ variant: "destructive", title: "Submission Error", description: "You must be logged in to submit." });
+        toast({ variant: "destructive", title: "Submission Error", description: "You must be logged in to submit.", position: 'center' });
         return;
     }
     setIsSubmitting(true);
@@ -135,7 +136,7 @@ export default function ChallengeDetail() {
     try {
       const allTestCases = challenge.testCases || [];
       if (allTestCases.length === 0) {
-         toast({ variant: "destructive", title: "No Test Cases", description: "Cannot submit, no test cases exist." });
+         toast({ variant: "destructive", title: "No Test Cases", description: "Cannot submit, no test cases exist.", position: 'center' });
          setIsSubmitting(false);
          return;
       }
@@ -170,9 +171,9 @@ export default function ChallengeDetail() {
         if (!completedChallenges[challenge.id!]) {
             const currentPoints = userSnap.data()?.points || 0;
             await updateDoc(userRef, { points: currentPoints + challenge.points });
-            toast({ title: "Challenge Solved!", description: `You've earned ${challenge.points} points!` });
+            toast({ title: "Challenge Solved!", description: `You've earned ${challenge.points} points!`, position: 'center' });
         } else {
-            toast({ title: "Challenge Solved!", description: "You have already completed this challenge." });
+            toast({ title: "Challenge Solved!", description: "You have already completed this challenge.", position: 'center' });
         }
 
         const completedRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
@@ -183,12 +184,12 @@ export default function ChallengeDetail() {
         
         setActiveTab('submissions');
       } else {
-        toast({ variant: "destructive", title: "Submission Failed", description: "Your solution did not pass all test cases (including hidden ones)." });
+        toast({ variant: "destructive", title: "Submission Failed", description: "Your solution did not pass all test cases (including hidden ones).", position: 'center' });
       }
 
     } catch (error) {
       console.error("Error submitting code:", error);
-      toast({ variant: "destructive", title: "Submission Error", description: "An error occurred during submission." });
+      toast({ variant: "destructive", title: "Submission Error", description: "An error occurred during submission.", position: 'center' });
     } finally {
       setIsSubmitting(false);
     }
