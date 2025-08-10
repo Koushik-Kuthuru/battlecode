@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { challenges as initialChallenges, type Challenge } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp, ShieldOff, Shield, Code } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction, getDoc, deleteField, query, where } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction, getDoc, deleteField } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -198,43 +198,49 @@ export default function ManageChallengesPage() {
     }
   };
   
-   const handleDelete = async () => {
+  const handleDelete = async () => {
     if (!challengeToDelete) return;
+
+    // First, get all user documents. This is done outside the transaction.
+    const usersSnapshot = await getDocs(collection(db, "users"));
 
     try {
         await runTransaction(db, async (transaction) => {
             const challengeRef = doc(db, "challenges", challengeToDelete);
-            transaction.delete(challengeRef);
-
-            const usersSnapshot = await getDocs(collection(db, "users"));
             
+            // For each user, prepare to delete their challenge-related data.
             for (const userDoc of usersSnapshot.docs) {
                 const userId = userDoc.id;
 
-                // Delete solution document if it exists
+                // Path refs
                 const solutionRef = doc(db, `users/${userId}/solutions`, challengeToDelete);
+                const submissionsPath = `users/${userId}/submissions/${challengeToDelete}/attempts`;
+                const inProgressRef = doc(db, `users/${userId}/challengeData/inProgress`);
+                const completedRef = doc(db, `users/${userId}/challengeData/completed`);
+
+                // READS FIRST: Read all documents that might be written to.
+                const submissionsSnapshot = await getDocs(collection(db, submissionsPath));
+                const inProgressSnap = await transaction.get(inProgressRef);
+                const completedSnap = await transaction.get(completedRef);
+
+                // WRITES: Now perform all writes based on the reads.
                 transaction.delete(solutionRef);
 
-                // Delete all submissions for this challenge for this user
-                const submissionsPath = `users/${userId}/submissions/${challengeToDelete}/attempts`;
-                const submissionsSnapshot = await getDocs(collection(db, submissionsPath));
                 submissionsSnapshot.forEach(submissionDoc => {
                     transaction.delete(submissionDoc.ref);
                 });
 
-                // Correctly remove challenge from 'inProgress' and 'completed' maps
-                const inProgressRef = doc(db, `users/${userId}/challengeData/inProgress`);
-                const inProgressSnap = await transaction.get(inProgressRef);
                 if (inProgressSnap.exists()) {
                    transaction.update(inProgressRef, { [challengeToDelete]: deleteField() });
                 }
                 
-                const completedRef = doc(db, `users/${userId}/challengeData/completed`);
-                const completedSnap = await transaction.get(completedRef);
                 if (completedSnap.exists()) {
                     transaction.update(completedRef, { [challengeToDelete]: deleteField() });
                 }
             }
+
+            // Finally, delete the main challenge document.
+            transaction.delete(challengeRef);
         });
 
         toast({
@@ -247,7 +253,7 @@ export default function ManageChallengesPage() {
         toast({
             variant: "destructive",
             title: "Error Deleting Challenge",
-            description: "Could not delete the challenge. Please check Firestore permissions and try again.",
+            description: "Could not delete the challenge. Please check console for details.",
         });
     } finally {
         setChallengeToDelete(null);
