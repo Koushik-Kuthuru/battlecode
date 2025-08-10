@@ -466,7 +466,7 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="bg-yellow-200 dark:bg-yellow-700/50 py-4 rounded-b-lg -m-6 mt-6">
-                        <p className="text-yellow-800 dark:text-yellow-100 font-bold text-5xl">{userRank ?? 'N/A'}</p>
+                        <p className="text-yellow-800 dark:text-yellow-100 font-bold text-5xl">#{userRank ?? 'N/A'}</p>
                         <p className="text-xs text-yellow-700 dark:text-yellow-200/80 font-semibold tracking-widest">RANK</p>
                     </div>
                     {topUser && (
@@ -508,3 +508,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
