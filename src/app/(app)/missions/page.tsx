@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type CurrentUser = {
   uid: string;
@@ -34,6 +35,7 @@ type Advertisement = {
 }
 
 type Difficulty = 'All' | 'Easy' | 'Medium' | 'Hard';
+type Status = 'All' | 'Completed' | 'In Progress' | 'Not Started';
 
 export default function MissionsPage() {
   const router = useRouter();
@@ -50,6 +52,7 @@ export default function MissionsPage() {
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty>('All');
+  const [statusFilter, setStatusFilter] = useState<Status>('All');
   
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -157,9 +160,28 @@ export default function MissionsPage() {
     }
   }, [currentUser, fetchChallenges]);
 
-  const filteredChallenges = challenges.filter(challenge => 
-    difficultyFilter === 'All' || challenge.difficulty === difficultyFilter
-  );
+  const filteredChallenges = challenges.filter(challenge => {
+    const difficultyMatch = difficultyFilter === 'All' || challenge.difficulty === difficultyFilter;
+    
+    const isCompleted = !!completedChallenges[challenge.id!];
+    const isInProgress = !!inProgressChallenges[challenge.id!] && !isCompleted;
+
+    const statusMatch = () => {
+        switch (statusFilter) {
+            case 'Completed':
+                return isCompleted;
+            case 'In Progress':
+                return isInProgress;
+            case 'Not Started':
+                return !isCompleted && !isInProgress;
+            case 'All':
+            default:
+                return true;
+        }
+    };
+    
+    return difficultyMatch && statusMatch();
+  });
 
   const loadMoreChallenges = useCallback(() => {
     const nextPage = page + 1;
@@ -178,7 +200,7 @@ export default function MissionsPage() {
         setPage(1);
         setHasMore(initialLoad.length < filteredChallenges.length);
     }
-  }, [challenges, difficultyFilter]);
+  }, [challenges, difficultyFilter, statusFilter]);
 
   useEffect(() => {
     if (!hasMore || isLoading || isChallengesLoading) return;
@@ -212,6 +234,8 @@ export default function MissionsPage() {
   }
 
   const difficultyFilters: Difficulty[] = ['All', 'Easy', 'Medium', 'Hard'];
+  const statusFilters: Status[] = ['All', 'Not Started', 'In Progress', 'Completed'];
+
 
   return (
     <div className="flex-1 space-y-8">
@@ -256,18 +280,31 @@ export default function MissionsPage() {
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
-            <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
-                {difficultyFilters.map((filter) => (
-                    <Button
-                        key={filter}
-                        variant={difficultyFilter === filter ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setDifficultyFilter(filter)}
-                        className="w-full sm:w-auto"
-                    >
-                        {filter}
-                    </Button>
-                ))}
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as Status)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="All">All Statuses</SelectItem>
+                      <SelectItem value="Not Started">Not Started</SelectItem>
+                      <SelectItem value="In Progress">In Progress</SelectItem>
+                      <SelectItem value="Completed">Completed</SelectItem>
+                  </SelectContent>
+              </Select>
+              <div className="flex items-center gap-2 bg-muted p-1 rounded-lg w-full sm:w-auto">
+                  {difficultyFilters.map((filter) => (
+                      <Button
+                          key={filter}
+                          variant={difficultyFilter === filter ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => setDifficultyFilter(filter)}
+                          className="w-full sm:w-auto"
+                      >
+                          {filter}
+                      </Button>
+                  ))}
+              </div>
             </div>
         </div>
 
@@ -314,9 +351,9 @@ export default function MissionsPage() {
           <div className="mt-16 flex flex-col items-center justify-center text-center">
               <h3 className="text-2xl font-bold tracking-tight">No Challenges Found</h3>
               <p className="text-muted-foreground">
-                {difficultyFilter === 'All'
+                {difficultyFilter === 'All' && statusFilter === 'All'
                   ? 'It seems there are no challenges available right now.'
-                  : `No ${difficultyFilter.toLowerCase()} challenges found.`}
+                  : `No challenges found for the selected filters.`}
               </p>
           </div>
         )}
