@@ -1,8 +1,9 @@
 
+
 'use client'
 
 import { SmecBattleCodeLogo } from '@/components/icons';
-import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code, Loader2 } from 'lucide-react';
+import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code, Loader2, Award } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
@@ -33,6 +34,7 @@ import {
   AlertDialogAction,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
@@ -75,6 +77,13 @@ export const useChallenge = () => {
     return context;
 }
 
+type PenaltyDialogContent = {
+    type: 'warning' | 'penalty' | 'error';
+    title: string;
+    description: string;
+    points?: number;
+}
+
 
 export default function ChallengeLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -91,7 +100,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [isPenaltyDialogOpen, setIsPenaltyDialogOpen] = useState(false);
-  const [penaltyDialogContent, setPenaltyDialogContent] = useState({ title: '', description: '' });
+  const [penaltyDialogContent, setPenaltyDialogContent] = useState<PenaltyDialogContent | null>(null);
 
   const auth = getAuth(app);
   const challengeId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -186,6 +195,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                       // First offense: Show warning
                       transaction.set(penaltyDocRef, { warningCount: 1 });
                       setPenaltyDialogContent({
+                          type: 'warning',
                           title: "Warning: Tab Switch Detected",
                           description: "Navigating away from the challenge is discouraged. A point penalty will be applied on the next offense.",
                       });
@@ -200,8 +210,10 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                       transaction.update(userDocRef, { points: newPoints });
                       
                       setPenaltyDialogContent({
+                          type: 'penalty',
                           title: "Penalty Applied for Tab Switching",
-                          description: `You have lost ${penaltyPoints} points for navigating away from the challenge page again.`,
+                          description: `You have lost points for navigating away from the challenge page again.`,
+                          points: penaltyPoints
                       });
                       setIsPenaltyDialogOpen(true);
                   }
@@ -210,6 +222,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
           } catch (error) {
               console.error("Error applying penalty: ", error);
               setPenaltyDialogContent({
+                  type: 'error',
                   title: 'Error',
                   description: 'Could not process the tab switch penalty.',
               });
@@ -499,13 +512,34 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
         </div>
         <AlertDialog open={isPenaltyDialogOpen} onOpenChange={setIsPenaltyDialogOpen}>
             <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{penaltyDialogContent.title}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        {penaltyDialogContent.description}
+              {penaltyDialogContent && (
+                <>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className={cn(
+                        "text-2xl text-center mb-2",
+                         penaltyDialogContent.type === 'penalty' && "text-destructive"
+                    )}>
+                        {penaltyDialogContent.title}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-center">
+                      {penaltyDialogContent.description}
                     </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogAction onClick={() => setIsPenaltyDialogOpen(false)}>Okay</AlertDialogAction>
+                  </AlertDialogHeader>
+                  
+                  {penaltyDialogContent.type === 'penalty' && penaltyDialogContent.points && (
+                    <div className="my-4 flex items-center justify-center gap-2 text-2xl font-bold text-red-500">
+                        <span>- {penaltyDialogContent.points}</span>
+                        <Award className="h-7 w-7" />
+                    </div>
+                  )}
+
+                  <AlertDialogFooter>
+                     <AlertDialogAction onClick={() => setIsPenaltyDialogOpen(false)} className="w-full">
+                        Okay
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </>
+              )}
             </AlertDialogContent>
         </AlertDialog>
     </ChallengeContext.Provider>
