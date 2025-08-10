@@ -7,13 +7,6 @@ import { app, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import type { Challenge } from "@/lib/data";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Save, RefreshCcw } from "lucide-react";
@@ -63,7 +56,11 @@ export default function ChallengeDetail() {
       }
       setIsLoading(false);
     };
-    fetchChallenge();
+
+    // We need the user to be loaded before we can fetch their solution
+    if(user !== undefined) {
+        fetchChallenge();
+    }
   }, [challengeId, user, db]);
 
 
@@ -121,38 +118,18 @@ export default function ChallengeDetail() {
   }
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-      <ResizablePanel defaultSize={50} minSize={30}>
-        <ScrollArea className="h-full p-6">
-            <h1 className="text-2xl font-bold mb-2">{challenge.title}</h1>
-            <div className="flex items-center gap-4 mb-4">
-                <Badge variant={challenge.difficulty === 'Easy' ? 'secondary' : challenge.difficulty === 'Medium' ? 'outline' : 'destructive'}>{challenge.difficulty}</Badge>
-                <p className="text-sm text-muted-foreground">Language: {challenge.language}</p>
-                <p className="text-sm font-bold text-primary">{challenge.points} Points</p>
-            </div>
-            <p className="text-base mb-6 whitespace-pre-wrap">{challenge.description}</p>
-            
-            <div className="flex flex-wrap gap-2 mt-6">
-                {Array.isArray(challenge.tags) && challenge.tags.map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
-            </div>
-        </ScrollArea>
-      </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={50} minSize={30}>
-         <div className="h-full relative flex flex-col">
-            <div className="flex-grow relative">
-                 <CodeEditor
-                   value={solution}
-                   onChange={handleSolutionChange}
-                   language={challenge.language.toLowerCase()}
-                 />
-            </div>
-            <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t">
-                <Button variant="outline" onClick={handleSave}><Save className="mr-2 h-4 w-4"/> Save</Button>
-                <Button variant="destructive-outline" onClick={handleReset}><RefreshCcw className="mr-2 h-4 w-4" /> Reset</Button>
-            </div>
-         </div>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+     <div className="h-full relative flex flex-col">
+        <div className="flex-grow relative">
+             <CodeEditor
+               value={solution}
+               onChange={handleSolutionChange}
+               language={challenge.language.toLowerCase()}
+             />
+        </div>
+        <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t">
+            <Button variant="outline" onClick={handleSave}><Save className="mr-2 h-4 w-4"/> Save</Button>
+            <Button variant="destructive-outline" onClick={handleReset}><RefreshCcw className="mr-2 h-4 w-4" /> Reset</Button>
+        </div>
+     </div>
   );
 }

@@ -20,6 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { type Challenge } from '@/lib/data';
+import { Badge } from '@/components/ui/badge';
 
 type CurrentUser = {
   uid: string;
@@ -146,10 +147,10 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                </ResizablePanel>
                <ResizableHandle withHandle />
                <ResizablePanel defaultSize={35} minSize={20}>
-                  <Tabs defaultValue="test-cases" className="h-full flex flex-col">
+                  <Tabs defaultValue="description" className="h-full flex flex-col">
                     <div className="flex-shrink-0 flex items-center justify-between p-2 border-b">
                         <TabsList>
-                          <TabsTrigger value="test-cases">Test Cases</TabsTrigger>
+                          <TabsTrigger value="description">Description</TabsTrigger>
                           <TabsTrigger value="result">Result</TabsTrigger>
                         </TabsList>
                         <div className="flex items-center gap-2">
@@ -158,16 +159,34 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                         </div>
                     </div>
                     <div className="flex-grow overflow-auto">
-                        <TabsContent value="test-cases" className="mt-0 h-full">
-                           <ScrollArea className="h-full p-4">
-                             {challenge?.examples.map((example, index) => (
-                               <div key={index} className="bg-background p-3 rounded-md mb-3">
-                                 <p className="font-semibold text-sm mb-1">Example {index + 1}</p>
-                                 <p className="font-mono text-xs"><strong>Input:</strong> {example.input}</p>
-                                 <p className="font-mono text-xs"><strong>Output:</strong> {example.output}</p>
-                                 {example.explanation && <p className="text-xs mt-1 text-muted-foreground"><strong>Explanation:</strong> {example.explanation}</p>}
-                               </div>
-                             ))}
+                        <TabsContent value="description" className="mt-0 h-full">
+                           <ScrollArea className="h-full p-6">
+                            {challenge ? (
+                                <>
+                                  <h1 className="text-2xl font-bold mb-2">{challenge.title}</h1>
+                                  <div className="flex items-center gap-4 mb-4">
+                                      <Badge variant={challenge.difficulty === 'Easy' ? 'secondary' : challenge.difficulty === 'Medium' ? 'outline' : 'destructive'}>{challenge.difficulty}</Badge>
+                                      <p className="text-sm text-muted-foreground">Language: {challenge.language}</p>
+                                      <p className="text-sm font-bold text-primary">{challenge.points} Points</p>
+                                  </div>
+                                  <p className="text-base mb-6 whitespace-pre-wrap">{challenge.description}</p>
+                                  
+                                  {challenge?.examples.map((example, index) => (
+                                    <div key={index} className="bg-background p-3 rounded-md mb-3">
+                                      <p className="font-semibold text-sm mb-1">Example {index + 1}</p>
+                                      <p className="font-mono text-xs"><strong>Input:</strong> {example.input}</p>
+                                      <p className="font-mono text-xs"><strong>Output:</strong> {example.output}</p>
+                                      {example.explanation && <p className="text-xs mt-1 text-muted-foreground"><strong>Explanation:</strong> {example.explanation}</p>}
+                                    </div>
+                                  ))}
+
+                                  <div className="flex flex-wrap gap-2 mt-6">
+                                      {Array.isArray(challenge.tags) && challenge.tags.map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
+                                  </div>
+                                </>
+                            ) : (
+                                <div>Loading description...</div>
+                            )}
                            </ScrollArea>
                         </TabsContent>
                         <TabsContent value="result" className="mt-0 h-full">
