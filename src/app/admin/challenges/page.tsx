@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { challenges as initialChallenges, type Challenge } from '@/lib/data';
 import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp, ShieldOff, Shield, Code } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction, getDoc, deleteField } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch, runTransaction, getDoc, deleteField, query, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -206,21 +206,26 @@ export default function ManageChallengesPage() {
             const challengeRef = doc(db, "challenges", challengeToDelete);
             transaction.delete(challengeRef);
 
-            // Get all users to iterate through them
             const usersSnapshot = await getDocs(collection(db, "users"));
             for (const userDoc of usersSnapshot.docs) {
                 const userId = userDoc.id;
 
-                // Delete solution if it exists
+                // Delete solution document if it exists
                 const solutionRef = doc(db, `users/${userId}/solutions`, challengeToDelete);
                 transaction.delete(solutionRef);
-                
-                // Remove challenge from 'inProgress' map
-                const inProgressRef = doc(db, `users/${userId}/challengeData`, 'inProgress');
+
+                // Delete all submissions for this challenge for this user
+                const submissionsPath = `users/${userId}/submissions/${challengeToDelete}/attempts`;
+                const submissionsSnapshot = await getDocs(collection(db, submissionsPath));
+                submissionsSnapshot.forEach(submissionDoc => {
+                    transaction.delete(submissionDoc.ref);
+                });
+
+                // Remove challenge from 'inProgress' and 'completed' maps
+                const inProgressRef = doc(db, `users/${userId}/challengeData/inProgress`);
                 transaction.update(inProgressRef, { [challengeToDelete]: deleteField() });
 
-                // Remove challenge from 'completed' map
-                const completedRef = doc(db, `users/${userId}/challengeData`, 'completed');
+                const completedRef = doc(db, `users/${userId}/challengeData/completed`);
                 transaction.update(completedRef, { [challengeToDelete]: deleteField() });
             }
         });
@@ -229,13 +234,13 @@ export default function ManageChallengesPage() {
             title: "Challenge Deleted",
             description: "The challenge and all associated user data have been removed.",
         });
-        fetchChallenges(); // Refresh the list
+        fetchChallenges();
     } catch (error) {
         console.error("Error deleting challenge transactionally: ", error);
         toast({
             variant: "destructive",
             title: "Error Deleting Challenge",
-            description: "Could not delete the challenge. Please try again.",
+            description: "Could not delete the challenge. Please check Firestore permissions and try again.",
         });
     } finally {
         setChallengeToDelete(null);
@@ -487,7 +492,7 @@ export default function ManageChallengesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the challenge and all associated user data (solutions, progress, etc.) from the database.
+              This action cannot be undone. This will permanently delete the challenge and all associated user data (solutions, progress, submissions, etc.) from the database.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
