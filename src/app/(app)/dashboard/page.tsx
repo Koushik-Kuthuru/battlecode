@@ -478,13 +478,13 @@ export default function DashboardPage() {
 
              <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <CardHeader>
-                    <CardTitle>Learning Consistency</CardTitle>
-                    <CardDescription>Track your daily progress and consistency.</CardDescription>
+                    <CardTitle>Mission Report</CardTitle>
+                    <CardDescription>Your performance summary.</CardDescription>
                 </CardHeader>
                 <CardContent>
                    <div className="flex items-center justify-around text-center">
                         <div>
-                            <p className="text-sm text-muted-foreground">Today's Points</p>
+                            <p className="text-sm text-muted-foreground">Points Today</p>
                             <div className="flex items-center justify-center gap-2 mt-1">
                                 <Flame className="h-6 w-6 text-orange-500" />
                                 <span className="text-2xl font-bold">{todaysPoints}</span>
@@ -492,7 +492,7 @@ export default function DashboardPage() {
                         </div>
                         <Separator orientation="vertical" className="h-12" />
                          <div>
-                            <p className="text-sm text-muted-foreground">Total Points</p>
+                            <p className="text-sm text-muted-foreground">Lifetime Points</p>
                              <div className="flex items-center justify-center gap-2 mt-1">
                                 <BulletCoin className="h-6 w-6 text-primary" />
                                 <span className="text-2xl font-bold">{currentUser?.points ?? 0}</span>
