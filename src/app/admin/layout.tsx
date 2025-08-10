@@ -11,7 +11,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { getAuth, signOut } from 'firebase/auth';
@@ -34,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (isClient) {
         const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
         if (!user || !user.isAdmin) {
-            router.push('/admin-login');
+            router.push('/admin/login');
         } else {
             setCurrentUser(user);
         }
@@ -45,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     await signOut(auth);
     localStorage.removeItem('currentUser');
     setCurrentUser(null);
-    router.push('/admin-login');
+    router.push('/admin/login');
   }
 
   const navLinks = [

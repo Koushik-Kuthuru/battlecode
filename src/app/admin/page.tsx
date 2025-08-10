@@ -2,5 +2,7 @@
 import { redirect } from 'next/navigation';
 
 export default function AdminRootPage() {
-  redirect('/admin-login');
+  redirect('/admin/login');
 }
+
+    
