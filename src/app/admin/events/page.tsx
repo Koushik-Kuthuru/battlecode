@@ -35,6 +35,7 @@ const defaultFormData: FormData = {
   isEnabled: true,
   startDate: new Date(),
   endDate: new Date(new Date().setDate(new Date().getDate() + 1)),
+  registrationLink: '',
 };
 
 export default function ManageEventsPage() {
@@ -90,6 +91,7 @@ export default function ManageEventsPage() {
       ...event,
       startDate: event.startDate.toDate(),
       endDate: event.endDate.toDate(),
+      registrationLink: event.registrationLink || '',
     });
     setIsFormVisible(true);
   };
@@ -181,6 +183,10 @@ export default function ManageEventsPage() {
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" placeholder="A short, catchy description." value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} required />
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor='registrationLink'>Registration Link</Label>
+                <Input id='registrationLink' placeholder="https://forms.gle/..." value={formData.registrationLink} onChange={(e) => handleInputChange('registrationLink', e.target.value)} />
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                  <div className="space-y-2">
@@ -322,3 +328,4 @@ export default function ManageEventsPage() {
     </div>
   );
 }
+

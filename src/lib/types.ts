@@ -30,4 +30,6 @@ export type Event = {
   isEnabled: boolean;
   createdAt: Timestamp;
   status: 'live' | 'upcoming' | 'past';
+  registrationLink?: string;
 };
+

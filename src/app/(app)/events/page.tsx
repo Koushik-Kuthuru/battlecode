@@ -56,8 +56,8 @@ function EventCard({ event }: { event: Event }) {
             <Users className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">{event.enrolled} Enrolled</span>
         </div>
-        <Button asChild size="sm">
-            <Link href="#">
+        <Button asChild size="sm" disabled={!event.registrationLink}>
+            <Link href={event.registrationLink || '#'} target="_blank" rel="noopener noreferrer">
                 Register
             </Link>
         </Button>
