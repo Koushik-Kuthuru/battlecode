@@ -10,14 +10,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
+import Link from 'next/link';
 
 
 type CurrentUser = {
   uid: string;
   name: string;
   email: string;
+}
+
+type Advertisement = {
+  title: string;
+  description: string;
+  imageUrl: string;
+  buttonLink: string;
 }
 
 export default function DashboardPage() {
@@ -33,6 +41,7 @@ export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
+  const [advertisement, setAdvertisement] = useState<Advertisement | null>(null);
   
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -70,6 +79,20 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [auth, db, router]);
   
+  // Real-time listener for advertisement
+  useEffect(() => {
+    const adDocRef = doc(db, 'advertisements', 'dashboard_banner');
+    const unsubscribe = onSnapshot(adDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setAdvertisement(docSnap.data() as Advertisement);
+      } else {
+        setAdvertisement(null); // Or set a default
+      }
+    });
+    return () => unsubscribe();
+  }, [db]);
+
+
   const fetchChallenges = useCallback(async () => {
     setIsChallengesLoading(true);
     try {
@@ -175,20 +198,26 @@ export default function DashboardPage() {
             <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser.name} 👋</h2>
         </div>
         
-        <Card className="bg-slate-900 text-white border-0">
-          <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4 md:gap-6 w-full">
-                <div className="w-24 h-24 md:w-48 md:h-32 bg-gray-700 rounded-md flex-shrink-0">
-                    <img src="https://placehold.co/192x128" alt="Podcast" className="w-full h-full object-cover rounded-md" data-ai-hint="podcast cover" />
-                </div>
-                <div className="flex-1">
-                    <h3 className="text-lg md:text-xl font-bold leading-tight">WHAT GOOGLE LOOKS FOR IN FUTURE ENGINEERS</h3>
-                    <p className="text-muted-foreground text-white/80 text-sm md:text-base">Podcast with Leader Building Teams at Google</p>
-                </div>
-            </div>
-             <Button className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto mt-4 md:mt-0 flex-shrink-0">Register Now</Button>
-          </CardContent>
-        </Card>
+        {advertisement && (
+          <Card className="bg-slate-900 text-white border-0">
+            <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4 md:gap-6 w-full">
+                  <div className="w-24 h-24 md:w-48 md:h-32 bg-gray-700 rounded-md flex-shrink-0">
+                      <img src={advertisement.imageUrl || 'https://placehold.co/192x128'} alt={advertisement.title} className="w-full h-full object-cover rounded-md" data-ai-hint="advertisement banner" />
+                  </div>
+                  <div className="flex-1">
+                      <h3 className="text-lg md:text-xl font-bold leading-tight">{advertisement.title}</h3>
+                      <p className="text-muted-foreground text-white/80 text-sm md:text-base">{advertisement.description}</p>
+                  </div>
+              </div>
+               <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto mt-4 md:mt-0 flex-shrink-0">
+                  <Link href={advertisement.buttonLink || '#'} target="_blank" rel="noopener noreferrer">
+                    Register Now
+                  </Link>
+               </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
 
