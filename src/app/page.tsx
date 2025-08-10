@@ -61,39 +61,39 @@ export default function LandingPage() {
             </div>
         </section>
 
-        <section id="features" className="bg-muted py-20 md:py-32">
+        <section id="features" className="bg-slate-900 text-white py-20 md:py-32">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold">Why SMEC Battle Code?</h2>
-              <p className="max-w-xl mx-auto text-muted-foreground mt-4">
+              <p className="max-w-xl mx-auto text-slate-300 mt-4">
                 We provide the tools and environment to help you succeed in your coding journey.
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                <div className="p-4 bg-primary/10 rounded-full mb-4">
-                  <Code className="h-10 w-10 text-primary" />
+              <div className="flex flex-col items-center text-center p-8 bg-slate-800 rounded-lg shadow-lg border-2 border-transparent hover:border-sky-500 transition-all duration-300 transform hover:scale-105">
+                <div className="p-4 bg-sky-500/10 rounded-full mb-4">
+                  <Code className="h-10 w-10 text-sky-400" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Real-World Challenges</h3>
-                <p className="text-muted-foreground">
+                <p className="text-slate-400">
                   Solve problems that mirror technical interviews at top companies.
                 </p>
               </div>
-              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                <div className="p-4 bg-primary/10 rounded-full mb-4">
-                  <Trophy className="h-10 w-10 text-primary" />
+              <div className="flex flex-col items-center text-center p-8 bg-slate-800 rounded-lg shadow-lg border-2 border-transparent hover:border-amber-500 transition-all duration-300 transform hover:scale-105">
+                <div className="p-4 bg-amber-500/10 rounded-full mb-4">
+                  <Trophy className="h-10 w-10 text-amber-400" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Compete & Climb</h3>
-                <p className="text-muted-foreground">
+                <p className="text-slate-400">
                   Test your skills against fellow students and earn your spot on the leaderboard.
                 </p>
               </div>
-              <div className="flex flex-col items-center text-center p-8 bg-card rounded-lg shadow-md animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-                <div className="p-4 bg-primary/10 rounded-full mb-4">
-                  <BrainCircuit className="h-10 w-10 text-primary" />
+              <div className="flex flex-col items-center text-center p-8 bg-slate-800 rounded-lg shadow-lg border-2 border-transparent hover:border-emerald-500 transition-all duration-300 transform hover:scale-105">
+                <div className="p-4 bg-emerald-500/10 rounded-full mb-4">
+                  <BrainCircuit className="h-10 w-10 text-emerald-400" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Master Key Concepts</h3>
-                <p className="text-muted-foreground">
+                <p className="text-slate-400">
                   Strengthen your understanding of algorithms and data structures.
                 </p>
               </div>
