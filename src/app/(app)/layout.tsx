@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { SmecBattleCodeLogo } from '@/components/icons';
@@ -121,7 +122,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const navLinks = [
     { href: '/dashboard', label: 'Home', icon: Home },
-    { href: '/leaderboard', label: 'Leaderboard', icon: BarChart },
+    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/profile', label: 'My Profile', icon: User },
     { href: '/about', label: 'About', icon: Info },
     { href: '/points', label: 'Points System', icon: Award },
