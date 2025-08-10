@@ -150,7 +150,7 @@ export default function ChallengeDetail() {
 
       setRunResult(result);
       
-      const submissionStatus = result.allPassed ? 'Solved' : 'Failed';
+      const submissionStatus = result.allPassed ? 'Accepted' : 'Failed';
 
       const submissionsRef = collection(db, `users/${user.uid}/submissions/${challengeId}/attempts`);
       await addDoc(submissionsRef, {
