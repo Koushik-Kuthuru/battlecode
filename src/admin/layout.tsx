@@ -14,6 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { getAuth, signOut } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -22,6 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [currentUser, setCurrentUser] = useState<{name: string, email: string, isAdmin?: boolean} | null>(null);
   const { setTheme, theme } = useTheme();
   const [isClient, setIsClient] = useState(false);
+  const auth = getAuth(app);
 
   useEffect(() => {
     setIsClient(true);
@@ -38,7 +41,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [pathname, router, isClient]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut(auth);
     localStorage.removeItem('currentUser');
     setCurrentUser(null);
     router.push('/login');

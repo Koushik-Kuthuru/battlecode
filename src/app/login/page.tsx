@@ -59,12 +59,16 @@ export default function LoginPage() {
       // Sign in with Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
       
+      // For both admin and regular users, we set the item for their respective layouts
       const loggedInUser = {
+        uid: userCredential.user.uid,
         email: userCredential.user.email,
         name: userData.name,
         isAdmin: userData.isAdmin || false,
+        imageUrl: userData.imageUrl,
       };
       
+      // We set a generic 'currentUser' for admin checks or other cross-cutting concerns
       localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
 
       if(loggedInUser.isAdmin) {
