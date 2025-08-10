@@ -10,7 +10,7 @@ import React, { useEffect, useState, createContext, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { app, db } from '@/lib/firebase';
 import {
   ResizableHandle,
@@ -25,7 +25,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { type EvaluateCodeOutput } from '@/ai/flows/evaluate-code';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { formatDistanceToNow } from 'date-fns';
 
 type CurrentUser = {
   uid: string;
@@ -33,6 +34,17 @@ type CurrentUser = {
   email: string;
   imageUrl?: string;
 }
+
+export type Submission = {
+  id: string;
+  code: string;
+  language: string;
+  status: 'Accepted' | 'Failed';
+  timestamp: {
+    seconds: number;
+    nanoseconds: number;
+  };
+};
 
 type ChallengeContextType = {
   challenge: Challenge | null;
@@ -65,6 +77,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const [runResult, setRunResult] = useState<EvaluateCodeOutput | null>(null);
   const [activeTab, setActiveTab] = useState('description');
   const [activeResultTab, setActiveResultTab] = useState('0');
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
 
   const auth = getAuth(app);
   const challengeId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -113,6 +126,21 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     };
     fetchChallenge();
   }, [challengeId]);
+
+  useEffect(() => {
+    if (!currentUser || !challengeId) return;
+
+    const submissionsRef = collection(db, `users/${currentUser.uid}/submissions/${challengeId}/attempts`);
+    const q = query(submissionsRef, orderBy('timestamp', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const userSubmissions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Submission));
+      setSubmissions(userSubmissions);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser, challengeId]);
+
 
   useEffect(() => {
     if(runResult) {
@@ -195,6 +223,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                            <div className="flex-shrink-0 p-2 border-b border-r">
                                <TabsList>
                                  <TabsTrigger value="description">Description</TabsTrigger>
+                                 <TabsTrigger value="submissions">Submissions</TabsTrigger>
                                  <TabsTrigger value="result">Result</TabsTrigger>
                                </TabsList>
                            </div>
@@ -236,6 +265,41 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                                    )}
                                   </ScrollArea>
                                </TabsContent>
+                               <TabsContent value="submissions" className="mt-0 h-full">
+                                  <ScrollArea className="h-full">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Date</TableHead>
+                                          <TableHead>Status</TableHead>
+                                          <TableHead>Language</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {submissions.map((submission) => (
+                                          <TableRow key={submission.id}>
+                                            <TableCell>
+                                              {formatDistanceToNow(new Date(submission.timestamp.seconds * 1000), { addSuffix: true })}
+                                            </TableCell>
+                                            <TableCell>
+                                              <Badge variant={submission.status === 'Accepted' ? 'default' : 'destructive'}>
+                                                {submission.status}
+                                              </Badge>
+                                            </TableCell>
+                                            <TableCell>{submission.language}</TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                    {submissions.length === 0 && (
+                                       <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 text-center">
+                                          <AlertCircle className="h-10 w-10 mb-4" />
+                                          <p className="font-semibold">No Submissions Yet</p>
+                                          <p>Your submission history for this challenge will appear here.</p>
+                                        </div>
+                                    )}
+                                  </ScrollArea>
+                                </TabsContent>
                                <TabsContent value="result" className="mt-0 h-full">
                                  <ScrollArea className="h-full">
                                     {runResult ? (
@@ -298,3 +362,4 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     </ChallengeContext.Provider>
   );
 }
+

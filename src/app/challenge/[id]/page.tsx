@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CodeEditor } from "@/components/code-editor";
 import { app, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import type { Challenge } from "@/lib/data";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export default function ChallengeDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
+  const { id: challengeId } = useParams();
   
   const auth = getAuth(app);
 
@@ -126,7 +127,7 @@ export default function ChallengeDetail() {
   }
   
   const handleSubmit = async () => {
-    if (!user || !challenge) {
+    if (!user || !challenge || !challengeId) {
         toast({ variant: "destructive", title: "Submission Error", description: "You must be logged in to submit." });
         return;
     }
@@ -136,7 +137,14 @@ export default function ChallengeDetail() {
     }
     setIsSubmitting(true);
     try {
-      // Logic assumes canSubmit is true, so all tests have passed.
+      const submissionsRef = collection(db, `users/${user.uid}/submissions/${challengeId}/attempts`);
+      await addDoc(submissionsRef, {
+        code: solution,
+        language: language,
+        status: 'Accepted',
+        timestamp: serverTimestamp(),
+      });
+
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
       const currentPoints = userSnap.data()?.points || 0;
@@ -150,6 +158,7 @@ export default function ChallengeDetail() {
       
       toast({ title: "Challenge Passed!", description: `You've earned ${challenge.points} points!` });
       setCanSubmit(false); // Disable submit after successful submission
+      setActiveTab('submissions');
 
     } catch (error) {
       console.error("Error submitting code:", error);
@@ -209,3 +218,4 @@ export default function ChallengeDetail() {
     </div>
   );
 }
+
