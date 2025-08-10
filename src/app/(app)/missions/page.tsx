@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ChallengeCard } from '@/components/challenge-card';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,12 +17,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-type CurrentUser = {
-  uid: string;
-  name: string;
-  email: string;
-}
+import { UserData } from '@/lib/types';
 
 type Advertisement = {
   id: string;
@@ -47,7 +42,7 @@ export default function MissionsPage() {
   const loaderRef = useRef(null);
   const [completedChallenges, setCompletedChallenges] = useState<Record<string, boolean>>({});
   const [inProgressChallenges, setInProgressChallenges] = useState<Record<string, boolean>>({});
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
@@ -63,24 +58,20 @@ export default function MissionsPage() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
+      setIsLoading(true);
       if (user) {
         const userDocRef = doc(db, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
+          const userData = userDocSnap.data() as UserData;
 
           if (!userData.profileComplete) {
               router.push('/complete-profile');
               return;
           }
 
-          setCurrentUser({
-            uid: user.uid,
-            name: userData.name,
-            email: user.email!,
-          });
-
-          // Fetch user-specific challenge data (completed, in-progress)
+          setCurrentUser({ ...userData, uid: user.uid, email: user.email! });
+          
           const completedChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/completed`));
           setCompletedChallenges(completedChallengesSnap.exists() ? completedChallengesSnap.data() : {});
           
@@ -160,28 +151,35 @@ export default function MissionsPage() {
     }
   }, [currentUser, fetchChallenges]);
 
-  const filteredChallenges = challenges.filter(challenge => {
-    const difficultyMatch = difficultyFilter === 'All' || challenge.difficulty === difficultyFilter;
-    
-    const isCompleted = !!completedChallenges[challenge.id!];
-    const isInProgress = !!inProgressChallenges[challenge.id!] && !isCompleted;
+  const filteredChallenges = useMemo(() => {
+    if (!currentUser) return [];
 
-    const statusMatch = () => {
-        switch (statusFilter) {
-            case 'Completed':
-                return isCompleted;
-            case 'In Progress':
-                return isInProgress;
-            case 'Not Started':
-                return !isCompleted && !isInProgress;
-            case 'All':
-            default:
-                return true;
-        }
-    };
+    const languageFilter = currentUser.preferredLanguages && currentUser.preferredLanguages.length > 0;
     
-    return difficultyMatch && statusMatch();
-  });
+    return challenges.filter(challenge => {
+      const difficultyMatch = difficultyFilter === 'All' || challenge.difficulty === difficultyFilter;
+      const languageMatch = !languageFilter || currentUser.preferredLanguages!.includes(challenge.language);
+
+      const isCompleted = !!completedChallenges[challenge.id!];
+      const isInProgress = !!inProgressChallenges[challenge.id!] && !isCompleted;
+
+      const statusMatch = () => {
+          switch (statusFilter) {
+              case 'Completed':
+                  return isCompleted;
+              case 'In Progress':
+                  return isInProgress;
+              case 'Not Started':
+                  return !isCompleted && !isInProgress;
+              case 'All':
+              default:
+                  return true;
+          }
+      };
+      
+      return difficultyMatch && statusMatch() && languageMatch;
+    });
+  }, [challenges, difficultyFilter, statusFilter, currentUser, completedChallenges, inProgressChallenges]);
 
   const loadMoreChallenges = useCallback(() => {
     const nextPage = page + 1;
@@ -200,7 +198,8 @@ export default function MissionsPage() {
         setPage(1);
         setHasMore(initialLoad.length < filteredChallenges.length);
     }
-  }, [challenges, difficultyFilter, statusFilter]);
+  }, [filteredChallenges, challenges.length]);
+
 
   useEffect(() => {
     if (!hasMore || isLoading || isChallengesLoading) return;
