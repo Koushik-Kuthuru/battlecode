@@ -15,7 +15,7 @@ import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { app } from '@/lib/firebase';
-import { AuthLayout } from '@/components/auth-layout';
+import AuthLayout from '@/components/auth-layout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { verifyUserImage } from '@/ai/flows/verify-user-image';
 
