@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CodeEditor } from "@/components/code-editor";
 import { app, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, Timestamp, runTransaction, increment } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import type { Challenge } from "@/lib/data";
 import { Button } from "@/components/ui/button";
@@ -160,32 +160,41 @@ export default function ChallengeDetail() {
       });
       
       if (result.allPassed) {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        
-        const completedChallengesDocRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
-        const completedChallengesSnap = await getDoc(completedChallengesDocRef);
-        const completedData = completedChallengesSnap.exists() ? completedChallengesSnap.data() : {};
-        
-        if (!completedData[challenge.id!] || completedData[challenge.id!] === true) {
-            const currentPoints = userSnap.data()?.points || 0;
-            if (completedData[challenge.id!] !== true) {
-              await updateDoc(userRef, { points: currentPoints + challenge.points });
-              toast({ title: "Challenge Solved!", description: `You've earned ${challenge.points} points!`, position: 'center' });
-            } else {
-               toast({ title: "Challenge Accepted!", description: "You have already completed this challenge.", position: 'center' });
-            }
+        // Use a transaction to ensure atomicity
+        await runTransaction(db, async (transaction) => {
+            const userRef = doc(db, "users", user.uid);
+            const completedChallengesDocRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
             
-            await setDoc(completedChallengesDocRef, { 
-                [challenge.id!]: { completedAt: Timestamp.now() }
-            }, { merge: true });
+            const [userSnap, completedChallengesSnap] = await Promise.all([
+                transaction.get(userRef),
+                transaction.get(completedChallengesDocRef)
+            ]);
+            
+            const completedData = completedChallengesSnap.exists() ? completedChallengesSnap.data() : {};
+            
+            if (!completedData[challenge.id!]) {
+                // Not completed before, award points
+                transaction.update(userRef, { points: increment(challenge.points) });
+                
+                // Track daily points
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                const dailyPointsRef = doc(db, `users/${user.uid}/daily_points`, today);
+                transaction.set(dailyPointsRef, { points: increment(challenge.points) }, { merge: true });
 
-        } else {
-             toast({ title: "Challenge Accepted!", description: "You have already completed this challenge.", position: 'center' });
-        }
+                // Mark as completed
+                transaction.set(completedChallengesDocRef, { 
+                    [challenge.id!]: { completedAt: Timestamp.now() }
+                }, { merge: true });
 
-        const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
-        await setDoc(inProgressRef, { [challenge.id!]: false }, { merge: true });
+                toast({ title: "Challenge Solved!", description: `You've earned ${challenge.points} points!`, position: 'center' });
+            } else {
+                 toast({ title: "Challenge Accepted!", description: "You have already completed this challenge.", position: 'center' });
+            }
+
+            // Update progress status
+            const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
+            transaction.set(inProgressRef, { [challenge.id!]: false }, { merge: true });
+        });
         
         setActiveTab('submissions');
       } else {

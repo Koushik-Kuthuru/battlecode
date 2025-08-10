@@ -16,10 +16,11 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { UserData } from '@/lib/types';
-import { ArrowRight, Badge as BadgeIcon, Calendar, CheckCircle, Circle, RefreshCw, Trophy, User } from 'lucide-react';
+import { ArrowRight, Badge as BadgeIcon, Calendar, CheckCircle, Circle, Flame, RefreshCw, Trophy, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { BulletCoin } from '@/components/icons';
+import { Separator } from '@/components/ui/separator';
 
 type Advertisement = {
   id: string;
@@ -91,6 +92,7 @@ export default function DashboardPage() {
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty>('All');
   const [userRank, setUserRank] = useState<number | null>(null);
   const [topUser, setTopUser] = useState<UserData | null>(null);
+  const [todaysPoints, setTodaysPoints] = useState(0);
   
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -103,12 +105,11 @@ export default function DashboardPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
       setIsUserLoading(true);
       if (user) {
+        // User document listener
         const userDocRef = doc(db, 'users', user.uid);
-        
         const unsubscribeUser = onSnapshot(userDocRef, (userDocSnap) => {
           if (userDocSnap.exists()) {
             const userData = userDocSnap.data() as UserData;
-
             if (!userData.profileComplete) {
                 router.push('/complete-profile');
                 return;
@@ -119,13 +120,20 @@ export default function DashboardPage() {
           }
         });
 
+        // Today's points listener
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const dailyPointsRef = doc(db, `users/${user.uid}/daily_points`, today);
+        const unsubscribePoints = onSnapshot(dailyPointsRef, (docSnap) => {
+            setTodaysPoints(docSnap.exists() ? docSnap.data().points : 0);
+        });
+
+        // Challenge status listeners
         const completedChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/completed`));
         setCompletedChallenges(completedChallengesSnap.exists() ? completedChallengesSnap.data() : {});
-        
         const inProgressChallengesSnap = await getDoc(doc(db, `users/${user.uid}/challengeData/inProgress`));
         setInProgressChallenges(inProgressChallengesSnap.exists() ? inProgressChallengesSnap.data() : {});
 
-        // Fetch user rank and top user
+        // Leaderboard listener
         const usersQuery = query(collection(db, 'users'), orderBy('points', 'desc'));
         const unsubscribeLeaderboard = onSnapshot(usersQuery, (snapshot) => {
             let rank = -1;
@@ -147,6 +155,7 @@ export default function DashboardPage() {
         return () => {
           unsubscribeUser();
           unsubscribeLeaderboard();
+          unsubscribePoints();
         }
       } else {
         router.push('/login');
@@ -466,6 +475,33 @@ export default function DashboardPage() {
                     )}
                 </CardContent>
             </Card>
+
+             <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <CardHeader>
+                    <CardTitle>Learning Consistency</CardTitle>
+                    <CardDescription>Track your daily progress and consistency.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                   <div className="flex items-center justify-around text-center">
+                        <div>
+                            <p className="text-sm text-muted-foreground">Today's Points</p>
+                            <div className="flex items-center justify-center gap-2 mt-1">
+                                <Flame className="h-6 w-6 text-orange-500" />
+                                <span className="text-2xl font-bold">{todaysPoints}</span>
+                            </div>
+                        </div>
+                        <Separator orientation="vertical" className="h-12" />
+                         <div>
+                            <p className="text-sm text-muted-foreground">Total Points</p>
+                             <div className="flex items-center justify-center gap-2 mt-1">
+                                <BulletCoin className="h-6 w-6 text-primary" />
+                                <span className="text-2xl font-bold">{currentUser?.points ?? 0}</span>
+                            </div>
+                        </div>
+                   </div>
+                </CardContent>
+            </Card>
+
           </aside>
         </div>
     </div>
