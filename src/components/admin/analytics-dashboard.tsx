@@ -43,10 +43,10 @@ export function AnalyticsDashboard() {
       setIsLoading(true);
       try {
         // Fetch all data in parallel
-        const [usersSnapshot, challengesSnapshot, completedSnapshot] = await Promise.all([
+        const [usersSnapshot, challengesSnapshot, completedDocsSnapshot] = await Promise.all([
           getDocs(collection(db, 'users')),
           getDocs(collection(db, 'challenges')),
-          getDocs(collectionGroup(db, 'completed'))
+          getDocs(collection(db, 'challengeData'))
         ]);
         
         // --- Calculate Stats ---
@@ -60,13 +60,21 @@ export function AnalyticsDashboard() {
 
         // Most Solved Challenge
         const completionCounts: Record<string, number> = {};
+        
+        // Because 'completed' is a document inside 'challengeData', we can query the 'challengeData' collection directly
+        // However, the structure seems to be users/{uid}/challengeData/{doc}, so let's use a collectionGroup query
+        const completedSnapshot = await getDocs(collectionGroup(db, 'challengeData'));
+
         completedSnapshot.forEach(doc => {
-            const data = doc.data();
-            Object.keys(data).forEach(challengeId => {
-                if (data[challengeId]) { // Check if the value is true
-                     completionCounts[challengeId] = (completionCounts[challengeId] || 0) + 1;
-                }
-            });
+            if (doc.id === 'completed') {
+                const data = doc.data();
+                Object.keys(data).forEach(challengeId => {
+                    // Correctly check if the field value is an object with a timestamp
+                    if (data[challengeId] && typeof data[challengeId] === 'object' && data[challengeId].completedAt) {
+                         completionCounts[challengeId] = (completionCounts[challengeId] || 0) + 1;
+                    }
+                });
+            }
         });
         
         let mostSolvedId = 'N/A';
@@ -97,17 +105,22 @@ export function AnalyticsDashboard() {
         }
 
         completedSnapshot.forEach(doc => {
-            const data = doc.data();
-            Object.keys(data).forEach(challengeId => {
-                const completedTimestamp = data[challengeId]?.completedAt;
-                if (completedTimestamp && completedTimestamp instanceof Timestamp && completedTimestamp >= sevenDaysAgo) {
-                    const date = completedTimestamp.toDate();
-                    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    if (completionsByDay[formattedDate] !== undefined) {
-                        completionsByDay[formattedDate]++;
+             if (doc.id === 'completed') {
+                const data = doc.data();
+                Object.keys(data).forEach(challengeId => {
+                    const completedInfo = data[challengeId];
+                    if (completedInfo && completedInfo.completedAt && completedInfo.completedAt instanceof Timestamp) {
+                       const completedTimestamp = completedInfo.completedAt;
+                        if (completedTimestamp >= sevenDaysAgo) {
+                            const date = completedTimestamp.toDate();
+                            const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            if (completionsByDay[formattedDate] !== undefined) {
+                                completionsByDay[formattedDate]++;
+                            }
+                        }
                     }
-                }
-            });
+                });
+             }
         });
 
         const finalChartData = Object.entries(completionsByDay).map(([date, completions]) => ({
