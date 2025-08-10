@@ -101,40 +101,49 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="challenge-highlights" className="bg-muted py-20 md:py-32">
+        <section id="missions" className="bg-muted py-20 md:py-32">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold">Challenge Highlights</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">Start Your Mission</h2>
               <p className="max-w-xl mx-auto text-muted-foreground mt-4">
-                Here's a taste of the challenges that await you.
+                Challenges are organized by difficulty to guide your progress.
               </p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-primary transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold">Two Sum</h3>
-                        <Badge variant="outline" className="text-green-500 border-green-500/50">Easy</Badge>
+                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-green-500 transition-colors">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-2 bg-green-500/10 rounded-full">
+                           <ListChecks className="h-8 w-8 text-green-500" />
+                        </div>
+                        <h3 className="text-2xl font-bold">Easy</h3>
                     </div>
-                    <p className="text-sm text-muted-foreground">Find two numbers in an array that add up to a specific target.</p>
+                    <p className="text-sm text-muted-foreground mb-4">Perfect for beginners to get started with fundamental concepts and build confidence.</p>
+                    <p className="text-sm font-semibold">Languages: C++, Java, Python, JS</p>
                 </div>
-                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-primary transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold">Longest Substring</h3>
-                        <Badge variant="outline" className="text-yellow-500 border-yellow-500/50">Medium</Badge>
+                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-yellow-500 transition-colors">
+                    <div className="flex items-center gap-4 mb-4">
+                         <div className="p-2 bg-yellow-500/10 rounded-full">
+                           <Send className="h-8 w-8 text-yellow-500" />
+                        </div>
+                        <h3 className="text-2xl font-bold">Medium</h3>
                     </div>
-                    <p className="text-sm text-muted-foreground">Find the length of the longest substring without repeating characters.</p>
+                    <p className="text-sm text-muted-foreground mb-4">Challenge your problem-solving skills with questions that require a solid grasp of data structures.</p>
+                    <p className="text-sm font-semibold">Languages: C++, Java, Python, JS</p>
                 </div>
-                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-primary transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold">Trapping Rain Water</h3>
-                        <Badge variant="outline" className="text-red-500 border-red-500/50">Hard</Badge>
+                <div className="p-6 bg-card rounded-lg shadow-md border border-transparent hover:border-red-500 transition-colors">
+                     <div className="flex items-center gap-4 mb-4">
+                         <div className="p-2 bg-red-500/10 rounded-full">
+                           <Flame className="h-8 w-8 text-red-500" />
+                        </div>
+                        <h3 className="text-2xl font-bold">Hard</h3>
                     </div>
-                    <p className="text-sm text-muted-foreground">Compute how much water an elevation map can trap after raining.</p>
+                    <p className="text-sm text-muted-foreground mb-4">Test your limits with complex problems that demand advanced algorithmic knowledge and creativity.</p>
+                    <p className="text-sm font-semibold">Languages: C++, Java, Python, JS</p>
                 </div>
             </div>
             <div className="text-center mt-12">
                 <Button size="lg" asChild>
-                    <Link href="/register">View All Challenges</Link>
+                    <Link href="/register">Start a Mission</Link>
                 </Button>
             </div>
           </div>
@@ -314,3 +323,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
