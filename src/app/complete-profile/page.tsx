@@ -89,36 +89,57 @@ export default function CompleteProfilePage() {
   const handleSave = async () => {
     if (!user) return;
 
-    if (!profile.branch || !profile.year || !profile.section || !profile.imageFile || !profile.imageUrl) {
-        toast({ variant: 'destructive', title: 'Error', description: 'All fields are required, including a profile picture.' });
+    if (!profile.branch || !profile.year || !profile.section) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Please fill out all the fields.' });
         return;
     }
     
     setIsSaving(true);
-    toast({ title: 'Saving Profile...', description: 'Please wait a moment.' });
+    toast({ title: 'Saving Profile...', description: 'Redirecting you to the dashboard.' });
 
     try {
-      // Upload image to Firebase Storage
-      const storageRef = ref(storage, `profile-pictures/${user.uid}`);
-      const uploadResult = await uploadString(storageRef, profile.imageUrl, 'data_url');
-      const finalImageUrl = await getDownloadURL(uploadResult.ref);
-
-      // Update Firestore document
       const userDocRef = doc(db, 'users', user.uid);
+      const placeholderImageUrl = 'https://placehold.co/128x128.png';
+
+      // First, update the profile with text data and a placeholder image, and mark as complete
       await updateDoc(userDocRef, {
         branch: profile.branch,
         year: profile.year,
         section: profile.section,
-        imageUrl: finalImageUrl,
+        imageUrl: profile.imageUrl || placeholderImageUrl, // Use uploaded image data URI as temp display if available
         profileComplete: true,
       });
 
-      toast({
-        title: 'Profile Complete!',
-        description: 'Your profile has been saved. Redirecting you to the dashboard...',
-      });
-      
+      // Redirect immediately
       router.push('/dashboard');
+
+      // If an image was selected, upload it in the background
+      if (profile.imageUrl && profile.imageFile) {
+        const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+        
+        // This promise runs in the background. We don't await it here.
+        uploadString(storageRef, profile.imageUrl, 'data_url')
+          .then(uploadResult => getDownloadURL(uploadResult.ref))
+          .then(finalImageUrl => {
+            // Once the upload is complete, update the user's document with the final URL
+            return updateDoc(userDocRef, { imageUrl: finalImageUrl });
+          })
+          .then(() => {
+             console.log("User image updated in the background.");
+             // Optional: show a silent success toast
+             // toast({ title: 'Profile picture updated!', variant: 'default' });
+          })
+          .catch(error => {
+            console.error("Error saving image in background: ", error);
+            // Optionally inform the user that the image upload failed but their profile is otherwise complete
+            toast({
+              variant: 'destructive',
+              title: 'Image Upload Failed',
+              description: 'Your details were saved, but the profile picture failed to upload. You can try again from your profile page.',
+              duration: 8000
+            });
+          });
+      }
 
     } catch (error) {
       console.error("Error saving profile: ", error);
@@ -127,109 +148,105 @@ export default function CompleteProfilePage() {
         title: 'Error',
         description: 'Could not save your profile. Please try again.',
       });
-       setIsSaving(false);
+      setIsSaving(false); // Only stop saving if the initial save fails
     }
   };
 
+  if (isLoading || !user) {
+    return (
+       <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
-      {isLoading || !user ? (
-        <Loader2 className="h-8 w-8 animate-spin" />
-      ) : (
-        <div className="w-full max-w-md">
-          <div className="mb-8 flex justify-center">
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex justify-center">
             <SmecBattleCodeLogo className="h-16 w-16 text-primary" />
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
-              <CardDescription>
-                Please provide a few more details to finish setting up your account.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Action Required</AlertTitle>
-                <AlertDescription>
-                  All fields, including a profile picture, are mandatory to proceed.
-                </AlertDescription>
-              </Alert>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
+            <CardDescription>
+              Please provide a few more details to finish setting up your account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="h-28 w-28">
+                <AvatarImage src={profile.imageUrl} alt="User Profile" />
+                <AvatarFallback>
+                  <UserIcon className="h-12 w-12" />
+                </AvatarFallback>
+              </Avatar>
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Picture
+              </Button>
+              <Input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </div>
 
-              <div className="flex flex-col items-center gap-4">
-                <Avatar className="h-28 w-28">
-                  <AvatarImage src={profile.imageUrl} alt="User Profile" />
-                  <AvatarFallback>
-                    <UserIcon className="h-12 w-12" />
-                  </AvatarFallback>
-                </Avatar>
-                <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Picture
-                </Button>
-                <Input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="branch">Branch</Label>
+              <Select value={profile.branch} onValueChange={(value) => handleInputChange('branch', value)}>
+                <SelectTrigger id="branch">
+                  <SelectValue placeholder="Select your branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cse">Computer Science Engineering</SelectItem>
+                  <SelectItem value="ece">Electronics & Communication</SelectItem>
+                  <SelectItem value="eee">Electrical & Electronics</SelectItem>
+                  <SelectItem value="mech">Mechanical Engineering</SelectItem>
+                  <SelectItem value="civil">Civil Engineering</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="branch">Branch</Label>
-                <Select value={profile.branch} onValueChange={(value) => handleInputChange('branch', value)}>
-                  <SelectTrigger id="branch">
-                    <SelectValue placeholder="Select your branch" />
+                <Label htmlFor="year">Year</Label>
+                <Select value={profile.year} onValueChange={(value) => handleInputChange('year', value)}>
+                  <SelectTrigger id="year">
+                    <SelectValue placeholder="Select year" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cse">Computer Science Engineering</SelectItem>
-                    <SelectItem value="ece">Electronics & Communication</SelectItem>
-                    <SelectItem value="eee">Electrical & Electronics</SelectItem>
-                    <SelectItem value="mech">Mechanical Engineering</SelectItem>
-                    <SelectItem value="civil">Civil Engineering</SelectItem>
+                    <SelectItem value="1">1st Year</SelectItem>
+                    <SelectItem value="2">2nd Year</SelectItem>
+                    <SelectItem value="3">3rd Year</SelectItem>
+                    <SelectItem value="4">4th Year</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="year">Year</Label>
-                  <Select value={profile.year} onValueChange={(value) => handleInputChange('year', value)}>
-                    <SelectTrigger id="year">
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1st Year</SelectItem>
-                      <SelectItem value="2">2nd Year</SelectItem>
-                      <SelectItem value="3">3rd Year</SelectItem>
-                      <SelectItem value="4">4th Year</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="section">Section</Label>
-                  <Select value={profile.section} onValueChange={(value) => handleInputChange('section', value)}>
-                    <SelectTrigger id="section">
-                      <SelectValue placeholder="Select section" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A">Section A</SelectItem>
-                      <SelectItem value="B">Section B</SelectItem>
-                      <SelectItem value="C">Section C</SelectItem>
-                      <SelectItem value="D">Section D</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="section">Section</Label>
+                <Select value={profile.section} onValueChange={(value) => handleInputChange('section', value)}>
+                  <SelectTrigger id="section">
+                    <SelectValue placeholder="Select section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A">Section A</SelectItem>
+                    <SelectItem value="B">Section B</SelectItem>
+                    <SelectItem value="C">Section C</SelectItem>
+                    <SelectItem value="D">Section D</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
 
-              <Button onClick={handleSave} className="w-full" disabled={isSaving}>
-                {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save and Continue'}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            <Button onClick={handleSave} className="w-full" disabled={isSaving}>
+              {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save and Continue'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
