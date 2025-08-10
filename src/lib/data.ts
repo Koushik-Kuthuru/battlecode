@@ -25,155 +25,190 @@ export type Challenge = {
 
 export const challenges: Challenge[] = [
   {
-    title: 'Two Sum',
+    title: 'Palindrome Number',
     difficulty: 'Easy',
-    language: 'Python',
+    language: 'JavaScript',
     points: 10,
-    description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.',
-    tags: ['Array', 'Hash Table'],
+    description: 'Given an integer x, return true if x is a palindrome, and false otherwise.',
+    tags: ['Math'],
     examples: [
       {
-        input: 'nums = [2, 7, 11, 15], target = 9',
-        output: '[0, 1]',
-        explanation: 'Because nums[0] + nums[1] == 9, we return [0, 1].'
+        input: 'x = 121',
+        output: 'true',
+        explanation: '121 reads as 121 from left to right and from right to left.'
       },
       {
-        input: 'nums = [3, 2, 4], target = 6',
-        output: '[1, 2]'
+        input: 'x = -121',
+        output: 'false',
+        explanation: 'From left to right, it reads -121. From right to left, it becomes 121-. Therefore it is not a palindrome.'
+      },
+      {
+        input: 'x = 10',
+        output: 'false',
+        explanation: 'Reads 01 from right to left. Therefore it is not a palindrome.'
       }
     ],
     testCases: [
-        { input: 'nums = [2, 7, 11, 15], target = 9', output: '[0, 1]' },
-        { input: 'nums = [3, 2, 4], target = 6', output: '[1, 2]' },
-        { input: 'nums = [3, 3], target = 6', output: '[0, 1]', isHidden: true },
-        { input: 'nums = [-1, -3, 5, 9], target = 4', output: '[0, 2]', isHidden: true },
-        { input: 'nums = [0, 4, 3, 0], target = 0', output: '[0, 3]', isHidden: true },
+        { input: '121', output: 'true' },
+        { input: '-121', output: 'false' },
+        { input: '10', output: 'false' },
+        { input: '0', output: 'true', isHidden: true },
+    ],
+    starterCode: `/**
+ * @param {number} x
+ * @return {boolean}
+ */
+var isPalindrome = function(x) {
+    // Write your code here
+};`,
+    solution: `/**
+ * @param {number} x
+ * @return {boolean}
+ */
+var isPalindrome = function(x) {
+    if (x < 0) return false;
+    const s = String(x);
+    return s === s.split('').reverse().join('');
+};`,
+    isEnabled: true,
+  },
+   {
+    title: 'Valid Parentheses',
+    difficulty: 'Easy',
+    language: 'Python',
+    points: 10,
+    description: "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid. An input string is valid if: Open brackets must be closed by the same type of brackets. Open brackets must be closed in the correct order. Every close bracket has a corresponding open bracket of the same type.",
+    tags: ['Stack', 'String'],
+    examples: [
+      {
+        input: 's = "()"',
+        output: 'true'
+      },
+      {
+        input: 's = "()[]{}"',
+        output: 'true'
+      },
+      {
+        input: 's = "(]"',
+        output: 'false'
+      }
+    ],
+    testCases: [
+        { input: '"()"', output: 'true' },
+        { input: '"()[]{}"', output: 'true' },
+        { input: '"(]"', output: 'false' },
+        { input: '"{[]}"', output: 'true', isHidden: true },
+        { input: '"([)]"', output: 'false', isHidden: true },
     ],
     starterCode: `class Solution:
-    def twoSum(self, nums: list[int], target: int) -> list[int]:
+    def isValid(self, s: str) -> bool:
         # Write your code here
         pass
 `,
     solution: `class Solution:
-    def twoSum(self, nums: list[int], target: int) -> list[int]:
-        num_map = {}
-        for i, num in enumerate(nums):
-            complement = target - num
-            if complement in num_map:
-                return [num_map[complement], i]
-            num_map[num] = i
-`,
+    def isValid(self, s: str) -> bool:
+        stack = []
+        mapping = {")": "(", "}": "{", "]": "["}
+        for char in s:
+            if char in mapping:
+                top_element = stack.pop() if stack else '#'
+                if mapping[char] != top_element:
+                    return False
+            else:
+                stack.append(char)
+        return not stack`,
     isEnabled: true,
   },
   {
-    title: 'Reverse Linked List',
+    title: 'Best Time to Buy and Sell Stock',
     difficulty: 'Easy',
     language: 'Java',
-    points: 10,
-    description: 'Given the head of a singly linked list, reverse the list, and return the reversed list.',
-    tags: ['Linked List', 'Recursion'],
+    points: 15,
+    description: 'You are given an array prices where prices[i] is the price of a given stock on the ith day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock. Return the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.',
+    tags: ['Array', 'Dynamic Programming'],
     examples: [
       {
-        input: 'head = [1,2,3,4,5]',
-        output: '[5,4,3,2,1]'
+        input: 'prices = [7,1,5,3,6,4]',
+        output: '5',
+        explanation: 'Buy on day 2 (price = 1) and sell on day 5 (price = 6), profit = 6-1 = 5.'
       },
       {
-        input: 'head = [1,2]',
-        output: '[2,1]'
+        input: 'prices = [7,6,4,3,1]',
+        output: '0',
+        explanation: 'In this case, no transactions are done and the max profit is 0.'
       }
     ],
     testCases: [
-        { input: '[1,2,3,4,5]', output: '[5,4,3,2,1]' },
-        { input: '[1,2]', output: '[2,1]' },
-        { input: '[]', output: '[]', isHidden: true },
-        { input: '[1]', output: '[1]', isHidden: true },
+        { input: '[7,1,5,3,6,4]', output: '5' },
+        { input: '[7,6,4,3,1]', output: '0' },
+        { input: '[2,4,1]', output: '2', isHidden: true },
+        { input: '[1]', output: '0', isHidden: true },
     ],
-    starterCode: `/**
- * Definition for singly-linked list.
- * public class ListNode {
- *     int val;
- *     ListNode next;
- *     ListNode() {}
- *     ListNode(int val) { this.val = val; }
- *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
- * }
- */
-class Solution {
-    public ListNode reverseList(ListNode head) {
+    starterCode: `class Solution {
+    public int maxProfit(int[] prices) {
         // Write your code here
     }
 }`,
-    solution: `/**
- * Definition for singly-linked list.
- * public class ListNode {
- *     int val;
- *     ListNode next;
- *     ListNode() {}
- *     ListNode(int val) { this.val = val; }
- *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
- * }
- */
-class Solution {
-    public ListNode reverseList(ListNode head) {
-        ListNode prev = null;
-        ListNode current = head;
-        while (current != null) {
-            ListNode nextTemp = current.next;
-            current.next = prev;
-            prev = current;
-            current = nextTemp;
+    solution: `class Solution {
+    public int maxProfit(int[] prices) {
+        int minPrice = Integer.MAX_VALUE;
+        int maxProfit = 0;
+        for (int i = 0; i < prices.length; i++) {
+            if (prices[i] < minPrice) {
+                minPrice = prices[i];
+            } else if (prices[i] - minPrice > maxProfit) {
+                maxProfit = prices[i] - minPrice;
+            }
         }
-        return prev;
+        return maxProfit;
     }
 }`,
     isEnabled: true,
   },
   {
-    title: 'FizzBuzz',
-    difficulty: 'Easy',
+    title: 'Product of Array Except Self',
+    difficulty: 'Medium',
     language: 'C++',
-    points: 10,
-    description: 'Write a program that outputs the string representation of numbers from 1 to n. But for multiples of three it should output “Fizz” instead of the number and for the multiples of five output “Buzz”. For numbers which are multiples of both three and five output “FizzBuzz”.',
-    tags: ['Math', 'String'],
+    points: 25,
+    description: 'Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i]. The product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer. You must write an algorithm that runs in O(n) time and without using the division operation.',
+    tags: ['Array', 'Prefix Sum'],
     examples: [
       {
-        input: 'n = 3',
-        output: '["1","2","Fizz"]'
+        input: 'nums = [1,2,3,4]',
+        output: '[24,12,8,6]'
       },
       {
-        input: 'n = 5',
-        output: '["1","2","Fizz","4","Buzz"]'
+        input: 'nums = [-1,1,0,-3,3]',
+        output: '[0,0,9,0,0]'
       }
     ],
     testCases: [
-        { input: '1', output: '["1"]' },
-        { input: '3', output: '["1","2","Fizz"]' },
-        { input: '5', output: '["1","2","Fizz","4","Buzz"]' },
-        { input: '15', output: '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]', isHidden: true },
+        { input: '[1,2,3,4]', output: '[24,12,8,6]' },
+        { input: '[-1,1,0,-3,3]', output: '[0,0,9,0,0]' },
+        { input: '[1,0]', output: '[0,1]', isHidden: true },
     ],
     starterCode: `#include <vector>
-#include <string>
 
 class Solution {
 public:
-    std::vector<std::string> fizzBuzz(int n) {
+    std::vector<int> productExceptSelf(std::vector<int>& nums) {
         // Write your code here
     }
 };`,
     solution: `class Solution {
 public:
-    vector<string> fizzBuzz(int n) {
-        vector<string> answer;
-        for (int i = 1; i <= n; ++i) {
-            if (i % 3 == 0 && i % 5 == 0) {
-                answer.push_back("FizzBuzz");
-            } else if (i % 3 == 0) {
-                answer.push_back("Fizz");
-            } else if (i % 5 == 0) {
-                answer.push_back("Buzz");
-            } else {
-                answer.push_back(to_string(i));
-            }
+    vector<int> productExceptSelf(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> answer(n, 1);
+        int prefix = 1;
+        for (int i = 0; i < n; i++) {
+            answer[i] = prefix;
+            prefix *= nums[i];
+        }
+        int postfix = 1;
+        for (int i = n - 1; i >= 0; i--) {
+            answer[i] *= postfix;
+            postfix *= nums[i];
         }
         return answer;
     }
@@ -181,435 +216,171 @@ public:
     isEnabled: true,
   },
   {
-    title: 'Container With Most Water',
-    difficulty: 'Medium',
-    language: 'JavaScript',
-    points: 25,
-    description: 'You are given an integer array height of length n. There are n vertical lines drawn such as the two endpoints of the ith line are (i, 0) and (i, height[i]). Find two lines that together with the x-axis form a container, such that the container contains the most water.',
-    tags: ['Array', 'Two Pointers'],
-    examples: [
-      {
-        input: 'height = [1,8,6,2,5,4,8,3,7]',
-        output: '49'
-      },
-      {
-        input: 'height = [1,1]',
-        output: '1'
-      }
-    ],
-    testCases: [
-        { input: '[1,8,6,2,5,4,8,3,7]', output: '49' },
-        { input: '[1,1]', output: '1' },
-        { input: '[4,3,2,1,4]', output: '16', isHidden: true },
-        { input: '[1,2,1]', output: '2', isHidden: true },
-    ],
-    starterCode: `/**
- * @param {number[]} height
- * @return {number}
- */
-var maxArea = function(height) {
-    // Write your code here
-};`,
-    solution: `/**
- * @param {number[]} height
- * @return {number}
- */
-var maxArea = function(height) {
-    let max = 0;
-    let left = 0;
-    let right = height.length - 1;
-    while (left < right) {
-        const area = Math.min(height[left], height[right]) * (right - left);
-        max = Math.max(max, area);
-        if (height[left] < height[right]) {
-            left++;
-        } else {
-            right--;
-        }
-    }
-    return max;
-};`,
-    isEnabled: true,
-  },
-  {
-    title: 'Longest Substring Without Repeating Characters',
+    title: 'Number of Islands',
     difficulty: 'Medium',
     language: 'Python',
-    points: 25,
-    description: 'Given a string s, find the length of the longest substring without repeating characters.',
-    tags: ['Hash Table', 'String', 'Sliding Window'],
+    points: 30,
+    description: 'Given an m x n 2D binary grid grid which represents a map of \'1\'s (land) and \'0\'s (water), return the number of islands. An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are all surrounded by water.',
+    tags: ['Array', 'DFS', 'BFS', 'Matrix'],
     examples: [
       {
-        input: 's = "abcabcbb"',
-        output: '3'
-      },
-      {
-        input: 's = "bbbbb"',
+        input: `grid = [
+  ["1","1","1","1","0"],
+  ["1","1","0","1","0"],
+  ["1","1","0","0","0"],
+  ["0","0","0","0","0"]
+]`,
         output: '1'
       },
       {
-        input: 's = "pwwkew"',
+        input: `grid = [
+  ["1","1","0","0","0"],
+  ["1","1","0","0","0"],
+  ["0","0","1","0","0"],
+  ["0","0","0","1","1"]
+]`,
         output: '3'
       }
     ],
     testCases: [
-        { input: '"abcabcbb"', output: '3' },
-        { input: '"bbbbb"', output: '1' },
-        { input: '"pwwkew"', output: '3' },
-        { input: '""', output: '0', isHidden: true },
-        { input: '" "', output: '1', isHidden: true },
-        { input: '"dvdf"', output: '3', isHidden: true },
+      { input: '[["1","1","1"],["0","1","0"],["1","1","1"]]', output: '1' },
+      { input: '[["1","0","1","0","1"]]', output: '3', isHidden: true },
     ],
     starterCode: `class Solution:
-    def lengthOfLongestSubstring(self, s: str) -> int:
+    def numIslands(self, grid: list[list[str]]) -> int:
         # Write your code here
         pass
 `,
     solution: `class Solution:
-    def lengthOfLongestSubstring(self, s: str) -> int:
-        char_set = set()
-        left = 0
-        max_length = 0
-        for right in range(len(s)):
-            while s[right] in char_set:
-                char_set.remove(s[left])
-                left += 1
-            char_set.add(s[right])
-            max_length = max(max_length, right - left + 1)
-        return max_length`,
-    isEnabled: true,
-  },
-  {
-    title: 'Validate Binary Search Tree',
-    difficulty: 'Medium',
-    language: 'Java',
-    points: 25,
-    description: 'Given the root of a binary tree, determine if it is a valid binary search tree (BST).',
-    tags: ['Tree', 'DFS', 'BST'],
-    examples: [
-      {
-        input: 'root = [2,1,3]',
-        output: 'true'
-      },
-      {
-        input: 'root = [5,1,4,null,null,3,6]',
-        output: 'false'
-      }
-    ],
-    testCases: [
-        { input: '[2,1,3]', output: 'true' },
-        { input: '[5,1,4,null,null,3,6]', output: 'false' },
-        { input: '[1,1]', output: 'false', isHidden: true },
-        { input: '[5,4,6,null,null,3,7]', output: 'false', isHidden: true },
-    ],
-    starterCode: `/**
- * Definition for a binary tree node.
- * public class TreeNode {
- *     int val;
- *     TreeNode left;
- *     TreeNode right;
- *     TreeNode() {}
- *     TreeNode(int val) { this.val = val; }
- *     TreeNode(int val, TreeNode left, TreeNode right) {
- *         this.val = val;
- *         this.left = left;
- *         this.right = right;
- *     }
- * }
- */
-class Solution {
-    public boolean isValidBST(TreeNode root) {
-        // Write your code here
-    }
-}`,
-    solution: `/**
- * Definition for a binary tree node.
- * public class TreeNode {
- *     int val;
- *     TreeNode left;
- *     TreeNode right;
- *     TreeNode() {}
- *     TreeNode(int val) { this.val = val; }
- *     TreeNode(int val, TreeNode left, TreeNode right) {
- *         this.val = val;
- *         this.left = left;
- *         this.right = right;
- *     }
- * }
- */
-class Solution {
-    public boolean isValidBST(TreeNode root) {
-        return isValid(root, null, null);
-    }
-
-    private boolean isValid(TreeNode node, Integer lower, Integer upper) {
-        if (node == null) {
-            return true;
-        }
-        int val = node.val;
-        if (lower != null && val <= lower) {
-            return false;
-        }
-        if (upper != null && val >= upper) {
-            return false;
-        }
-        if (!isValid(node.right, val, upper)) {
-            return false;
-        }
-        if (!isValid(node.left, lower, val)) {
-            return false;
-        }
-        return true;
-    }
-}`,
-    isEnabled: true,
-  },
-  {
-    title: 'Median of Two Sorted Arrays',
-    difficulty: 'Hard',
-    language: 'C',
-    points: 50,
-    description: 'Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).',
-    tags: ['Array', 'Binary Search', 'Divide and Conquer'],
-    examples: [
-      {
-        input: 'nums1 = [1,3], nums2 = [2]',
-        output: '2.0'
-      },
-      {
-        input: 'nums1 = [1,2], nums2 = [3,4]',
-        output: '2.5'
-      }
-    ],
-    testCases: [
-        { input: 'nums1 = [1,3], nums2 = [2]', output: '2.0' },
-        { input: 'nums1 = [1,2], nums2 = [3,4]', output: '2.5' },
-        { input: 'nums1 = [0,0], nums2 = [0,0]', output: '0.0', isHidden: true },
-        { input: 'nums1 = [], nums2 = [1]', output: '1.0', isHidden: true },
-    ],
-    starterCode: `#include <math.h>
-
-double findMedianSortedArrays(int* nums1, int nums1Size, int* nums2, int nums2Size) {
-    // Write your code here
-}`,
-    solution: `double findMedianSortedArrays(int* nums1, int nums1Size, int* nums2, int nums2Size) {
-    if (nums1Size > nums2Size) {
-        return findMedianSortedArrays(nums2, nums2Size, nums1, nums1Size);
-    }
-    int x = nums1Size;
-    int y = nums2Size;
-    int low = 0;
-    int high = x;
-    while (low <= high) {
-        int partitionX = (low + high) / 2;
-        int partitionY = (x + y + 1) / 2 - partitionX;
-        
-        int maxX = (partitionX == 0) ? -2147483648 : nums1[partitionX - 1];
-        int minX = (partitionX == x) ? 2147483647 : nums1[partitionX];
-        
-        int maxY = (partitionY == 0) ? -2147483648 : nums2[partitionY - 1];
-        int minY = (partitionY == y) ? 2147483647 : nums2[partitionY];
-        
-        if (maxX <= minY && maxY <= minX) {
-            if ((x + y) % 2 == 0) {
-                return (double)(fmax(maxX, maxY) + fmin(minX, minY)) / 2;
-            } else {
-                return (double)fmax(maxX, maxY);
-            }
-        } else if (maxX > minY) {
-            high = partitionX - 1;
-        } else {
-            low = partitionX + 1;
-        }
-    }
-    return 0.0;
-}`,
-    isEnabled: true,
-  },
-  {
-    title: 'Trapping Rain Water',
-    difficulty: 'Hard',
-    language: 'Python',
-    points: 50,
-    description: 'Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.',
-    tags: ['Array', 'Two Pointers', 'Stack'],
-    examples: [
-      {
-        input: 'height = [0,1,0,2,1,0,1,3,2,1,2,1]',
-        output: '6'
-      },
-      {
-        input: 'height = [4,2,0,3,2,5]',
-        output: '9'
-      }
-    ],
-    testCases: [
-        { input: '[0,1,0,2,1,0,1,3,2,1,2,1]', output: '6' },
-        { input: '[4,2,0,3,2,5]', output: '9' },
-        { input: '[4,2,3]', output: '1', isHidden: true },
-        { input: '[5,4,1,2]', output: '1', isHidden: true },
-    ],
-    starterCode: `class Solution:
-    def trap(self, height: list[int]) -> int:
-        # Write your code here
-        pass
-`,
-    solution: `class Solution:
-    def trap(self, height: list[int]) -> int:
-        if not height:
+    def numIslands(self, grid: list[list[str]]) -> int:
+        if not grid:
             return 0
         
-        left, right = 0, len(height) - 1
-        left_max, right_max = height[left], height[right]
-        water = 0
+        rows, cols = len(grid), len(grid[0])
+        islands = 0
         
-        while left < right:
-            if left_max < right_max:
-                left += 1
-                left_max = max(left_max, height[left])
-                water += left_max - height[left]
-            else:
-                right -= 1
-                right_max = max(right_max, height[right])
-                water += right_max - height[right]
-        return water`,
+        def dfs(r, c):
+            if r < 0 or c < 0 or r >= rows or c >= cols or grid[r][c] == '0':
+                return
+            grid[r][c] = '0'
+            dfs(r + 1, c)
+            dfs(r - 1, c)
+            dfs(r, c + 1)
+            dfs(r, c - 1)
+            
+        for r in range(rows):
+            for c in range(cols):
+                if grid[r][c] == '1':
+                    islands += 1
+                    dfs(r, c)
+        return islands`,
     isEnabled: true,
   },
   {
-    title: 'Regular Expression Matching',
+    title: 'Word Break',
     difficulty: 'Hard',
-    language: 'C++',
+    language: 'Java',
     points: 50,
-    description: 'Given an input string (s) and a pattern (p), implement regular expression matching with support for \'.\' and \'*\' where \'.\' matches any single character and \'*\' matches zero or more of the preceding element.',
-    tags: ['String', 'Dynamic Programming', 'Recursion'],
+    description: 'Given a string s and a dictionary of strings wordDict, return true if s can be segmented into a space-separated sequence of one or more dictionary words. Note that the same word in the dictionary may be reused multiple times in the segmentation.',
+    tags: ['DP', 'Trie', 'Memoization'],
     examples: [
       {
-        input: 's = "aa", p = "a"',
+        input: 's = "leetcode", wordDict = ["leet","code"]',
+        output: 'true',
+        explanation: 'Return true because "leetcode" can be segmented as "leet code".'
+      },
+      {
+        input: 's = "applepenapple", wordDict = ["apple","pen"]',
+        output: 'true'
+      },
+      {
+        input: 's = "catsandog", wordDict = ["cats","dog","sand","and","cat"]',
         output: 'false'
-      },
-      {
-        input: 's = "aa", p = "a*"',
-        output: 'true'
-      },
-      {
-        input: 's = "ab", p = ".*"',
-        output: 'true'
       }
     ],
     testCases: [
-        { input: 's = "aa", p = "a"', output: 'false' },
-        { input: 's = "aa", p = "a*"', output: 'true' },
-        { input: 's = "ab", p = ".*"', output: 'true' },
-        { input: 's = "mississippi", p = "mis*is*p*."', output: 'false', isHidden: true },
+        { input: 's = "leetcode", wordDict = ["leet","code"]', output: 'true' },
+        { input: 's = "applepenapple", wordDict = ["apple","pen"]', output: 'true' },
+        { input: 's = "catsandog", wordDict = ["cats","dog","sand","and","cat"]', output: 'false' },
+        { input: 's = "a", wordDict = ["b"]', output: 'false', isHidden: true },
     ],
-    starterCode: `#include <string>
-#include <vector>
+    starterCode: `import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 class Solution {
-public:
-    bool isMatch(std::string s, std::string p) {
+    public boolean wordBreak(String s, List<String> wordDict) {
         // Write your code here
     }
-};`,
-    solution: `class Solution {
-public:
-    bool isMatch(string s, string p) {
-        int m = s.length(), n = p.length();
-        vector<vector<bool>> dp(m + 1, vector<bool>(n + 1, false));
-        dp[0][0] = true;
-        for (int j = 1; j <= n; j++) {
-            if (p[j - 1] == '*') {
-                dp[0][j] = dp[0][j - 2];
-            }
-        }
-        for (int i = 1; i <= m; i++) {
-            for (int j = 1; j <= n; j++) {
-                if (p[j - 1] == '.' || p[j - 1] == s[i - 1]) {
-                    dp[i][j] = dp[i - 1][j - 1];
-                } else if (p[j - 1] == '*') {
-                    dp[i][j] = dp[i][j - 2];
-                    if (p[j - 2] == '.' || p[j - 2] == s[i - 1]) {
-                        dp[i][j] = dp[i][j] || dp[i - 1][j];
-                    }
+}`,
+    solution: `import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+
+class Solution {
+    public boolean wordBreak(String s, List<String> wordDict) {
+        Set<String> wordSet = new HashSet<>(wordDict);
+        boolean[] dp = new boolean[s.length() + 1];
+        dp[0] = true;
+        for (int i = 1; i <= s.length(); i++) {
+            for (int j = 0; j < i; j++) {
+                if (dp[j] && wordSet.contains(s.substring(j, i))) {
+                    dp[i] = true;
+                    break;
                 }
             }
         }
-        return dp[m][n];
+        return dp[s.length()];
     }
-};`,
+}`,
     isEnabled: true,
   },
   {
-    title: 'Merge k Sorted Lists',
+    title: 'First Missing Positive',
     difficulty: 'Hard',
-    language: 'Java',
+    language: 'C',
     points: 50,
-    description: 'You are given an array of k linked-lists lists, each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it.',
-    tags: ['Linked List', 'Divide and Conquer', 'Heap'],
+    description: 'Given an unsorted integer array nums, return the smallest missing positive integer. You must implement an algorithm that runs in O(n) time and uses constant extra space.',
+    tags: ['Array', 'Hash Table'],
     examples: [
       {
-        input: 'lists = [[1,4,5],[1,3,4],[2,6]]',
-        output: '[1,1,2,3,4,4,5,6]'
+        input: 'nums = [1,2,0]',
+        output: '3'
       },
       {
-        input: 'lists = []',
-        output: '[]'
+        input: 'nums = [3,4,-1,1]',
+        output: '2'
+      },
+      {
+        input: 'nums = [7,8,9,11,12]',
+        output: '1'
       }
     ],
     testCases: [
-        { input: '[[1,4,5],[1,3,4],[2,6]]', output: '[1,1,2,3,4,4,5,6]' },
-        { input: '[]', output: '[]' },
-        { input: '[[]]', output: '[]', isHidden: true },
+        { input: '[1,2,0]', output: '3' },
+        { input: '[3,4,-1,1]', output: '2' },
+        { input: '[7,8,9,11,12]', output: '1' },
+        { input: '[1]', output: '2', isHidden: true },
     ],
-    starterCode: `/**
- * Definition for singly-linked list.
- * public class ListNode {
- *     int val;
- *     ListNode next;
- *     ListNode() {}
- *     ListNode(int val) { this.val = val; }
- *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
- * }
- */
-import java.util.PriorityQueue;
+    starterCode: `#include <stdio.h>
 
-class Solution {
-    public ListNode mergeKLists(ListNode[] lists) {
-        // Write your code here
-    }
+int firstMissingPositive(int* nums, int numsSize) {
+    // Write your code here
 }`,
-    solution: `/**
- * Definition for singly-linked list.
- * public class ListNode {
- *     int val;
- *     ListNode next;
- *     ListNode() {}
- *     ListNode(int val) { this.val = val; }
- *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
- * }
- */
-class Solution {
-    public ListNode mergeKLists(ListNode[] lists) {
-        if (lists == null || lists.length == 0) {
-            return null;
+    solution: `int firstMissingPositive(int* nums, int numsSize) {
+    for (int i = 0; i < numsSize; i++) {
+        while (nums[i] > 0 && nums[i] <= numsSize && nums[nums[i] - 1] != nums[i]) {
+            int temp = nums[nums[i] - 1];
+            nums[nums[i] - 1] = nums[i];
+            nums[i] = temp;
         }
-        PriorityQueue<ListNode> queue = new PriorityQueue<>(lists.length, (a, b) -> a.val - b.val);
-        ListNode dummy = new ListNode(0);
-        ListNode tail = dummy;
-        for (ListNode node : lists) {
-            if (node != null) {
-                queue.add(node);
-            }
-        }
-        while (!queue.isEmpty()) {
-            tail.next = queue.poll();
-            tail = tail.next;
-            if (tail.next != null) {
-                queue.add(tail.next);
-            }
-        }
-        return dummy.next;
     }
+    for (int i = 0; i < numsSize; i++) {
+        if (nums[i] != i + 1) {
+            return i + 1;
+        }
+    }
+    return numsSize + 1;
 }`,
     isEnabled: true,
   },
