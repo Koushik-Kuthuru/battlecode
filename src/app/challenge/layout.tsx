@@ -28,8 +28,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { useToast } from '@/hooks/use-toast';
-import { ToastAction } from '@/components/ui/toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type CurrentUser = {
   uid: string;
@@ -74,7 +80,6 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const params = useParams();
   const { setTheme, theme } = useTheme();
-  const { toast } = useToast();
   
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,6 +90,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const [activeResultTab, setActiveResultTab] = useState('0');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [isPenaltyDialogOpen, setIsPenaltyDialogOpen] = useState(false);
+  const [penaltyDialogContent, setPenaltyDialogContent] = useState({ title: '', description: '' });
 
   const auth = getAuth(app);
   const challengeId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -178,13 +185,11 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                   if (!penaltyDoc.exists()) {
                       // First offense: Show warning
                       transaction.set(penaltyDocRef, { warningCount: 1 });
-                      toast({
-                          variant: "destructive",
+                      setPenaltyDialogContent({
                           title: "Warning: Tab Switch Detected",
                           description: "Navigating away from the challenge is discouraged. A point penalty will be applied on the next offense.",
-                          duration: 8000,
-                          action: <ToastAction altText="Okay">Okay</ToastAction>
                       });
+                      setIsPenaltyDialogOpen(true);
                   } else {
                       // Second offense: Apply penalty
                       const difficultyPenaltyMap = { 'Easy': 5, 'Medium': 10, 'Hard': 20 };
@@ -193,29 +198,25 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                       const newPoints = Math.max(0, currentPoints - penaltyPoints);
                       
                       transaction.update(userDocRef, { points: newPoints });
-                      // We don't need to update the penalty doc again, just apply penalty every time now
                       
-                      toast({
-                          variant: "destructive",
+                      setPenaltyDialogContent({
                           title: "Penalty Applied for Tab Switching",
                           description: `You have lost ${penaltyPoints} points for navigating away from the challenge page again.`,
-                          duration: 8000,
-                          action: <ToastAction altText="Okay">Okay</ToastAction>
                       });
+                      setIsPenaltyDialogOpen(true);
                   }
               });
 
           } catch (error) {
               console.error("Error applying penalty: ", error);
-              toast({
-                  variant: 'destructive',
+              setPenaltyDialogContent({
                   title: 'Error',
                   description: 'Could not process the tab switch penalty.',
-                  action: <ToastAction altText="Okay">Okay</ToastAction>
               });
+              setIsPenaltyDialogOpen(true);
           }
       }
-  }, [currentUser, challenge, toast, db]);
+  }, [currentUser, challenge, db]);
 
   useEffect(() => {
       document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -496,6 +497,17 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                )}
             </main>
         </div>
+        <AlertDialog open={isPenaltyDialogOpen} onOpenChange={setIsPenaltyDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{penaltyDialogContent.title}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {penaltyDialogContent.description}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogAction onClick={() => setIsPenaltyDialogOpen(false)}>Okay</AlertDialogAction>
+            </AlertDialogContent>
+        </AlertDialog>
     </ChallengeContext.Provider>
   );
 }
