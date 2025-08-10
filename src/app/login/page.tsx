@@ -68,18 +68,7 @@ export default function LoginPage() {
       const userEmail = userData.email;
 
       // Sign in with Firebase Auth
-      const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
-      
-      if (!userCredential.user.emailVerified) {
-          toast({
-            variant: 'destructive',
-            title: 'Login Failed',
-            description: 'Please verify your email address before logging in.',
-          });
-          setIsLoading(false);
-          return;
-      }
-
+      await signInWithEmailAndPassword(auth, userEmail, password);
 
       router.push('/dashboard');
       toast({
