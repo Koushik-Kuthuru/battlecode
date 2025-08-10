@@ -245,6 +245,11 @@ export default function ProfilePage() {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="cse">Computer Science Engineering</SelectItem>
+                    <SelectItem value="csd">CSE (Data Science)</SelectItem>
+                    <SelectItem value="cse_aiml">CSE (AI & ML)</SelectItem>
+                    <SelectItem value="aiml">AI & Machine Learning</SelectItem>
+                    <SelectItem value="aids">AI & Data Science</SelectItem>
+                    <SelectItem value="it">Information Technology</SelectItem>
                     <SelectItem value="ece">Electronics & Communication</SelectItem>
                     <SelectItem value="eee">Electrical & Electronics</SelectItem>
                     <SelectItem value="mech">Mechanical Engineering</SelectItem>

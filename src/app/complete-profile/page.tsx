@@ -152,13 +152,16 @@ export default function CompleteProfilePage() {
     }
   };
 
-  if (isLoading || !user) {
+  if (isLoading) {
     return (
        <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
+  
+  if (!user) return null;
+
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
@@ -202,6 +205,11 @@ export default function CompleteProfilePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cse">Computer Science Engineering</SelectItem>
+                  <SelectItem value="csd">CSE (Data Science)</SelectItem>
+                  <SelectItem value="cse_aiml">CSE (AI & ML)</SelectItem>
+                  <SelectItem value="aiml">AI & Machine Learning</SelectItem>
+                  <SelectItem value="aids">AI & Data Science</SelectItem>
+                  <SelectItem value="it">Information Technology</SelectItem>
                   <SelectItem value="ece">Electronics & Communication</SelectItem>
                   <SelectItem value="eee">Electrical & Electronics</SelectItem>
                   <SelectItem value="mech">Mechanical Engineering</SelectItem>

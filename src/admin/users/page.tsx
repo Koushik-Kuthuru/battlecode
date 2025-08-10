@@ -25,6 +25,11 @@ type UserData = {
 
 const BRANCH_MAP: Record<string, string> = {
     cse: 'CSE',
+    csd: 'CSE (Data Science)',
+    cse_aiml: 'CSE (AI & ML)',
+    aiml: 'AI & Machine Learning',
+    aids: 'AI & Data Science',
+    it: 'Info. Tech.',
     ece: 'ECE',
     eee: 'EEE',
     mech: 'Mechanical',
