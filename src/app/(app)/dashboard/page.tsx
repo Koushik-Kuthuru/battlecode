@@ -16,7 +16,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { UserData, Event } from '@/lib/types';
-import { ArrowRight, Badge as BadgeIcon, Calendar, CheckCircle, Circle, Flame, RefreshCw, Trophy, User } from 'lucide-react';
+import { ArrowRight, Badge as BadgeIcon, Calendar, CheckCircle, Circle, Flame, RefreshCw, Trophy, User, Wifi } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { BulletCoin } from '@/components/icons';
@@ -96,6 +96,7 @@ export default function DashboardPage() {
   const [userRank, setUserRank] = useState<number | null>(null);
   const [topUser, setTopUser] = useState<UserData | null>(null);
   const [todaysPoints, setTodaysPoints] = useState(0);
+  const [onlineUsersCount, setOnlineUsersCount] = useState(0);
   
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -207,6 +208,26 @@ export default function DashboardPage() {
         });
         setLiveEventsCount(liveCount);
         setUpcomingEventsCount(upcomingCount);
+    });
+    return () => unsubscribe();
+  }, [db]);
+
+  // Real-time listener for online users
+  useEffect(() => {
+    const usersCollectionRef = collection(db, 'users');
+    const unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
+        let onlineCount = 0;
+        snapshot.forEach(doc => {
+            const user = doc.data() as UserData;
+            if (user.lastSeen) {
+                const lastSeenTime = user.lastSeen.toDate().getTime();
+                const fiveMinutesAgo = new Date().getTime() - (5 * 60 * 1000);
+                if (lastSeenTime > fiveMinutesAgo) {
+                    onlineCount++;
+                }
+            }
+        });
+        setOnlineUsersCount(onlineCount);
     });
     return () => unsubscribe();
   }, [db]);
@@ -451,6 +472,20 @@ export default function DashboardPage() {
           </div>
 
           <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                        <span>Live Participants</span>
+                        <Wifi className="h-5 w-5 text-green-500 animate-pulse" />
+                    </CardTitle>
+                    <CardDescription>Users currently active on the platform.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-4xl font-bold">{onlineUsersCount}</div>
+                    <p className="text-xs text-muted-foreground">Online Now</p>
+                </CardContent>
+            </Card>
+            
             <Card className="bg-white border border-slate-200">
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
