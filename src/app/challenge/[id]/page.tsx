@@ -87,6 +87,21 @@ export default function ChallengeDetail() {
   
   const handleRunCode = async () => {
     if (!challenge) return;
+
+    // Guard clause to check for test cases
+    if (!challenge.testCases || challenge.testCases.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Missing Test Cases",
+            description: "This challenge has no test cases to run against. Please contact an admin.",
+        });
+        return;
+    }
+    
+    // Log the challenge object to the console for debugging
+    console.log("Running evaluation with challenge data:", challenge);
+
+
     setIsRunning(true);
     setCanSubmit(false); // Reset submit state
     setRunResult(null); // Clear previous results
