@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (isClient) {
         const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
         if (!user || !user.isAdmin) {
-            router.push('/admin/login');
+            router.push('/admin-login');
         } else {
             setCurrentUser(user);
         }
@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     await signOut(auth);
     localStorage.removeItem('currentUser');
     setCurrentUser(null);
-    router.push('/admin/login');
+    router.push('/admin-login');
   }
 
   const navLinks = [
@@ -178,5 +178,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
-
-    
