@@ -182,7 +182,7 @@ export default function DashboardPage() {
 
     return challenges.filter(challenge => {
         const difficultyMatch = difficultyFilter === 'All' || challenge.difficulty === difficultyFilter;
-        const languageMatch = !languageFilter || currentUser.preferredLanguages!.includes(challenge.language);
+        const languageMatch = !languageFilter || currentUser.preferredLanguages!.some(lang => challenge.language === lang);
         return difficultyMatch && languageMatch;
     }).sort((a, b) => {
         const aCompleted = !!completedChallenges[a.id!];
@@ -359,13 +359,13 @@ export default function DashboardPage() {
                   <p className="text-muted-foreground">
                     {difficultyFilter === 'All'
                       ? 'It seems there are no challenges available right now.'
-                      : `No ${difficultyFilter.toLowerCase()} challenges found.`}
+                      : `No ${difficultyFilter.toLowerCase()} challenges found for your preferred languages.`}
                   </p>
               </div>
             )}
           </div>
 
-          <aside className="lg:col-span-1 space-y-6">
+          <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-8">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
@@ -423,4 +423,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

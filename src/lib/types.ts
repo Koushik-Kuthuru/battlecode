@@ -9,6 +9,8 @@ export type UserData = {
     points: number;
     branch: string;
     year: string;
+    section: string;
+    profileComplete?: boolean;
     imageUrl?: string;
     lastSeen?: Timestamp;
     preferredLanguages?: string[];
