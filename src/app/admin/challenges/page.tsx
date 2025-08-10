@@ -218,10 +218,10 @@ export default function ManageChallengesPage() {
                 const inProgressRef = doc(db, `users/${userId}/challengeData/inProgress`);
                 const completedRef = doc(db, `users/${userId}/challengeData/completed`);
 
-                // READS FIRST: Read all documents that might be written to.
+                // This is a simplified approach. For a large number of users, 
+                // you'd want to handle this in a batched server-side process.
+                // We read all potentially affected documents for a user.
                 const submissionsSnapshot = await getDocs(collection(db, submissionsPath));
-                const inProgressSnap = await transaction.get(inProgressRef);
-                const completedSnap = await transaction.get(completedRef);
 
                 // WRITES: Now perform all writes based on the reads.
                 transaction.delete(solutionRef);
@@ -230,13 +230,9 @@ export default function ManageChallengesPage() {
                     transaction.delete(submissionDoc.ref);
                 });
 
-                if (inProgressSnap.exists()) {
-                   transaction.update(inProgressRef, { [challengeToDelete]: deleteField() });
-                }
-                
-                if (completedSnap.exists()) {
-                    transaction.update(completedRef, { [challengeToDelete]: deleteField() });
-                }
+                // Use field deletion for progress/completion tracking
+                transaction.update(inProgressRef, { [challengeToDelete]: deleteField() });
+                transaction.update(completedRef, { [challengeToDelete]: deleteField() });
             }
 
             // Finally, delete the main challenge document.
@@ -247,7 +243,7 @@ export default function ManageChallengesPage() {
             title: "Challenge Deleted",
             description: "The challenge and all associated user data have been removed.",
         });
-        fetchChallenges();
+        fetchChallenges(); // Refresh the list
     } catch (error) {
         console.error("Error deleting challenge transactionally: ", error);
         toast({
@@ -519,5 +515,3 @@ export default function ManageChallengesPage() {
     </>
   );
 }
-
-    
