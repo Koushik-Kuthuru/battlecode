@@ -35,24 +35,24 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
 
     const dom = view.dom;
 
-    // Disable right-click
+    // Disable right-click context menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
     };
-
-    const preventDefault = (e: Event) => e.preventDefault();
     
-    // Disable copy/paste/cut
+    // Disable Ctrl+C and Ctrl+V
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v')) {
+            e.preventDefault();
+        }
+    };
+    
     dom.addEventListener('contextmenu', handleContextMenu);
-    dom.addEventListener('cut', preventDefault);
-    dom.addEventListener('copy', preventDefault);
-    dom.addEventListener('paste', preventDefault);
+    dom.addEventListener('keydown', handleKeyDown);
 
     return () => {
       dom.removeEventListener('contextmenu', handleContextMenu);
-      dom.removeEventListener('cut', preventDefault);
-      dom.removeEventListener('copy', preventDefault);
-      dom.removeEventListener('paste', preventDefault);
+      dom.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
