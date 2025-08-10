@@ -3,7 +3,7 @@
 'use client'
 
 import { SmecBattleCodeLogo } from '@/components/icons';
-import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code, Loader2, Award } from 'lucide-react';
+import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code, Loader2, Award, ArrowLeft } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
@@ -427,11 +427,13 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     <ChallengeContext.Provider value={contextValue}>
         <div className="flex h-screen w-full flex-col overflow-hidden">
            <header className="flex-shrink-0 flex items-center justify-between p-2 bg-slate-900 text-white border-b border-slate-700">
-               <div className="flex items-center gap-4">
-                    <Link href="/dashboard" className="flex items-center gap-2 font-semibold px-2">
-                        <SmecBattleCodeLogo className="h-8 w-8" />
-                        <span className="text-xl hidden sm:inline">SMEC Battle Code</span>
-                    </Link>
+               <div className="flex items-center gap-2">
+                    <Button variant="ghost" className="text-white hover:bg-slate-800" asChild>
+                        <Link href="/dashboard">
+                          <ArrowLeft className="h-5 w-5 md:mr-2" />
+                          <span className="hidden md:inline">Back to Dashboard</span>
+                        </Link>
+                    </Button>
                </div>
                
                <div className="flex items-center gap-2">
