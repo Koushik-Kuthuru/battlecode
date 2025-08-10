@@ -207,6 +207,7 @@ export default function ManageChallengesPage() {
             transaction.delete(challengeRef);
 
             const usersSnapshot = await getDocs(collection(db, "users"));
+            
             for (const userDoc of usersSnapshot.docs) {
                 const userId = userDoc.id;
 
@@ -221,12 +222,18 @@ export default function ManageChallengesPage() {
                     transaction.delete(submissionDoc.ref);
                 });
 
-                // Remove challenge from 'inProgress' and 'completed' maps
+                // Correctly remove challenge from 'inProgress' and 'completed' maps
                 const inProgressRef = doc(db, `users/${userId}/challengeData/inProgress`);
-                transaction.update(inProgressRef, { [challengeToDelete]: deleteField() });
-
+                const inProgressSnap = await transaction.get(inProgressRef);
+                if (inProgressSnap.exists()) {
+                   transaction.update(inProgressRef, { [challengeToDelete]: deleteField() });
+                }
+                
                 const completedRef = doc(db, `users/${userId}/challengeData/completed`);
-                transaction.update(completedRef, { [challengeToDelete]: deleteField() });
+                const completedSnap = await transaction.get(completedRef);
+                if (completedSnap.exists()) {
+                    transaction.update(completedRef, { [challengeToDelete]: deleteField() });
+                }
             }
         });
 
