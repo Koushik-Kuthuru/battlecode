@@ -89,17 +89,18 @@ export default function ChallengeDetail() {
   const handleRunCode = async () => {
     if (!challenge) return;
 
-    if (!challenge.testCases || challenge.testCases.length === 0) {
+    const visibleTestCases = challenge.testCases?.filter(tc => !tc.isHidden);
+
+    if (!visibleTestCases || visibleTestCases.length === 0) {
         toast({
             variant: "destructive",
             title: "Missing Test Cases",
-            description: "This challenge has no test cases to run against. Please contact an admin.",
+            description: "This challenge has no visible test cases to run against. You can still submit.",
         });
+        setCanSubmit(true); // Allow submission if there are no visible tests
         return;
     }
     
-    console.log("Running evaluation with challenge data:", challenge);
-
     setIsRunning(true);
     setCanSubmit(false); // Reset submit state
     setRunResult(null); // Clear previous results
@@ -109,12 +110,11 @@ export default function ChallengeDetail() {
             code: solution,
             programmingLanguage: language,
             problemDescription: challenge.description,
-            testCases: challenge.testCases,
+            testCases: visibleTestCases,
         });
         setRunResult(result);
         if (result.allPassed) {
-            setCanSubmit(true); // Enable submit button if all tests pass
-            toast({ title: "All Tests Passed!", description: "You can now submit your solution." });
+            toast({ title: "All Visible Tests Passed!", description: "You can now try submitting your solution." });
         } else {
              toast({ variant: "destructive", title: "Tests Failed", description: "Some test cases did not pass. Check the results." });
         }
@@ -123,6 +123,7 @@ export default function ChallengeDetail() {
         toast({ variant: "destructive", title: "Evaluation Error", description: "Could not evaluate your code. Please try again." });
     } finally {
         setIsRunning(false);
+        setCanSubmit(true); // Always allow submission after a run.
     }
   }
   
@@ -132,33 +133,57 @@ export default function ChallengeDetail() {
         return;
     }
      if (!canSubmit) {
-        toast({ variant: "destructive", title: "Submission Blocked", description: "Please run your code and ensure all test cases pass before submitting." });
+        toast({ variant: "destructive", title: "Submission Blocked", description: "Please run your code first." });
         return;
     }
     setIsSubmitting(true);
+    setRunResult(null);
+    setActiveTab('result');
+
     try {
+      const allTestCases = challenge.testCases || [];
+      if (allTestCases.length === 0) {
+         toast({ variant: "destructive", title: "No Test Cases", description: "Cannot submit, no test cases exist." });
+         setIsSubmitting(false);
+         return;
+      }
+      
+      const result = await evaluateCode({
+          code: solution,
+          programmingLanguage: language,
+          problemDescription: challenge.description,
+          testCases: allTestCases,
+      });
+
+      setRunResult(result);
+      
+      const submissionStatus = result.allPassed ? 'Accepted' : 'Failed';
+
       const submissionsRef = collection(db, `users/${user.uid}/submissions/${challengeId}/attempts`);
       await addDoc(submissionsRef, {
         code: solution,
         language: language,
-        status: 'Accepted',
+        status: submissionStatus,
         timestamp: serverTimestamp(),
       });
-
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-      const currentPoints = userSnap.data()?.points || 0;
-      await updateDoc(userRef, { points: currentPoints + challenge.points });
-
-      const completedRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
-      await setDoc(completedRef, { [challenge.id!]: true }, { merge: true });
       
-      const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
-      await setDoc(inProgressRef, { [challenge.id!]: false }, { merge: true });
-      
-      toast({ title: "Challenge Passed!", description: `You've earned ${challenge.points} points!` });
-      setCanSubmit(false); // Disable submit after successful submission
-      setActiveTab('submissions');
+      if (result.allPassed) {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        const currentPoints = userSnap.data()?.points || 0;
+        await updateDoc(userRef, { points: currentPoints + challenge.points });
+
+        const completedRef = doc(db, `users/${user.uid}/challengeData`, 'completed');
+        await setDoc(completedRef, { [challenge.id!]: true }, { merge: true });
+        
+        const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
+        await setDoc(inProgressRef, { [challenge.id!]: false }, { merge: true });
+        
+        toast({ title: "Challenge Passed!", description: `You've earned ${challenge.points} points!` });
+        setActiveTab('submissions');
+      } else {
+        toast({ variant: "destructive", title: "Submission Failed", description: "Your solution did not pass all test cases (including hidden ones)." });
+      }
 
     } catch (error) {
       console.error("Error submitting code:", error);
@@ -211,11 +236,10 @@ export default function ChallengeDetail() {
            <Button size="sm" onClick={handleRunCode} disabled={isSaving || isRunning || isSubmitting}>
              {isRunning ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Code className="mr-2 h-4 w-4" />} Run Code
            </Button>
-           <Button size="sm" variant="default" onClick={handleSubmit} disabled={isSaving || isRunning || isSubmitting || !canSubmit} title={!canSubmit ? "Run your code and pass all test cases to submit" : ""}>
+           <Button size="sm" variant="default" onClick={handleSubmit} disabled={isSaving || isRunning || isSubmitting}>
              {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Bug className="mr-2 h-4 w-4" />} Submit
            </Button>
        </div>
     </div>
   );
 }
-

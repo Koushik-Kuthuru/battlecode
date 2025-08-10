@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { challenges as initialChallenges, type Challenge } from '@/lib/data';
-import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, ArrowDownAZ, ArrowDownUp, ShieldOff, Shield } from 'lucide-react';
 import { CodeEditor } from '@/components/code-editor';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, addDoc, writeBatch } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
+import { Switch } from '@/components/ui/switch';
 
 type SortType = 'title' | 'difficulty';
 
@@ -30,7 +31,7 @@ const defaultFormData: FormData = {
   tags: '',
   solution: '',
   examples: [{ input: '', output: '', explanation: '' }],
-  testCases: [{ input: '', output: '' }],
+  testCases: [{ input: '', output: '', isHidden: false }],
 };
 
 export default function ManageChallengesPage() {
@@ -94,7 +95,7 @@ export default function ManageChallengesPage() {
     setFormData(prev => ({ ...prev, solution: value }));
   }, []);
 
-  const handleArrayChange = useCallback((arrayName: 'examples' | 'testCases', index: number, field: string, value: string) => {
+  const handleArrayChange = useCallback((arrayName: 'examples' | 'testCases', index: number, field: string, value: string | boolean) => {
     setFormData(prev => {
         const newArray = [...prev[arrayName]];
         // @ts-ignore
@@ -106,7 +107,7 @@ export default function ManageChallengesPage() {
   const addArrayItem = useCallback((arrayName: 'examples' | 'testCases') => {
     setFormData(prev => ({
         ...prev,
-        [arrayName]: [...prev[arrayName], arrayName === 'examples' ? { input: '', output: '', explanation: '' } : { input: '', output: '' }]
+        [arrayName]: [...prev[arrayName], arrayName === 'examples' ? { input: '', output: '', explanation: '' } : { input: '', output: '', isHidden: false }]
     }));
   }, []);
 
@@ -129,6 +130,7 @@ export default function ManageChallengesPage() {
       setFormData({
         ...challenge,
         tags: Array.isArray(challenge.tags) ? challenge.tags.join(', ') : '',
+        testCases: challenge.testCases || [{ input: '', output: '', isHidden: false }],
       });
       setIsFormVisible(true);
   }
@@ -301,9 +303,25 @@ export default function ManageChallengesPage() {
                 
                 <div className="space-y-4">
                    <Label>Test Cases</Label>
-                   {formData.testCases.map((_, index) => (
+                   {formData.testCases.map((testCase, index) => (
                      <Card key={index} className="p-4 relative bg-muted/50">
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="flex items-center justify-end gap-2 absolute top-2 right-2">
+                             <div className="flex items-center gap-2 text-sm">
+                                <Switch
+                                  id={`isHidden-${index}`}
+                                  checked={testCase.isHidden}
+                                  onCheckedChange={(checked) => handleArrayChange('testCases', index, 'isHidden', checked)}
+                                />
+                                <Label htmlFor={`isHidden-${index}`} className="flex items-center gap-1">
+                                  {testCase.isHidden ? <Shield className="h-4 w-4" /> : <ShieldOff className="h-4 w-4" />}
+                                  Hidden
+                                </Label>
+                             </div>
+                             <Button type="button" variant="destructive" size="icon" className="h-7 w-7" onClick={() => removeArrayItem('testCases', index)}>
+                               <Trash2 className="h-4 w-4" />
+                             </Button>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4 mt-8">
                             <div className="space-y-2">
                                 <Label>Input</Label>
                                 <Textarea value={formData.testCases[index].input} onChange={(e) => handleArrayChange('testCases', index, 'input', e.target.value)} required />
@@ -313,9 +331,6 @@ export default function ManageChallengesPage() {
                                 <Textarea value={formData.testCases[index].output} onChange={(e) => handleArrayChange('testCases', index, 'output', e.target.value)} required />
                             </div>
                         </div>
-                        <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => removeArrayItem('testCases', index)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                      </Card>
                    ))}
                    <Button type="button" variant="outline" onClick={() => addArrayItem('testCases')}>

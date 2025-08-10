@@ -15,6 +15,7 @@ export type Challenge = {
   testCases: {
     input: string;
     output: string;
+    isHidden?: boolean;
   }[];
   solution: string;
 };
@@ -41,9 +42,9 @@ export const challenges: Challenge[] = [
     testCases: [
         { input: 'nums = [2, 7, 11, 15], target = 9', output: '[0, 1]' },
         { input: 'nums = [3, 2, 4], target = 6', output: '[1, 2]' },
-        { input: 'nums = [3, 3], target = 6', output: '[0, 1]' },
-        { input: 'nums = [-1, -3, 5, 9], target = 4', output: '[0, 2]' },
-        { input: 'nums = [0, 4, 3, 0], target = 0', output: '[0, 3]' },
+        { input: 'nums = [3, 3], target = 6', output: '[0, 1]', isHidden: true },
+        { input: 'nums = [-1, -3, 5, 9], target = 4', output: '[0, 2]', isHidden: true },
+        { input: 'nums = [0, 4, 3, 0], target = 0', output: '[0, 3]', isHidden: true },
     ],
     solution: `class Solution:
     def twoSum(self, nums: list[int], target: int) -> list[int]:
@@ -75,8 +76,8 @@ export const challenges: Challenge[] = [
     testCases: [
         { input: '[1,2,3,4,5]', output: '[5,4,3,2,1]' },
         { input: '[1,2]', output: '[2,1]' },
-        { input: '[]', output: '[]' },
-        { input: '[1]', output: '[1]' },
+        { input: '[]', output: '[]', isHidden: true },
+        { input: '[1]', output: '[1]', isHidden: true },
     ],
     solution: `/**
  * Definition for singly-linked list.
@@ -123,7 +124,7 @@ class Solution {
         { input: '1', output: '["1"]' },
         { input: '3', output: '["1","2","Fizz"]' },
         { input: '5', output: '["1","2","Fizz","4","Buzz"]' },
-        { input: '15', output: '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]' },
+        { input: '15', output: '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]', isHidden: true },
     ],
     solution: `class Solution {
 public:
@@ -164,8 +165,8 @@ public:
     testCases: [
         { input: '[1,8,6,2,5,4,8,3,7]', output: '49' },
         { input: '[1,1]', output: '1' },
-        { input: '[4,3,2,1,4]', output: '16' },
-        { input: '[1,2,1]', output: '2' },
+        { input: '[4,3,2,1,4]', output: '16', isHidden: true },
+        { input: '[1,2,1]', output: '2', isHidden: true },
     ],
     solution: `/**
  * @param {number[]} height
@@ -212,9 +213,9 @@ var maxArea = function(height) {
         { input: '"abcabcbb"', output: '3' },
         { input: '"bbbbb"', output: '1' },
         { input: '"pwwkew"', output: '3' },
-        { input: '""', output: '0' },
-        { input: '" "', output: '1' },
-        { input: '"dvdf"', output: '3' },
+        { input: '""', output: '0', isHidden: true },
+        { input: '" "', output: '1', isHidden: true },
+        { input: '"dvdf"', output: '3', isHidden: true },
     ],
     solution: `class Solution:
     def lengthOfLongestSubstring(self, s: str) -> int:
@@ -249,8 +250,8 @@ var maxArea = function(height) {
     testCases: [
         { input: '[2,1,3]', output: 'true' },
         { input: '[5,1,4,null,null,3,6]', output: 'false' },
-        { input: '[1,1]', output: 'false' },
-        { input: '[5,4,6,null,null,3,7]', output: 'false' },
+        { input: '[1,1]', output: 'false', isHidden: true },
+        { input: '[5,4,6,null,null,3,7]', output: 'false', isHidden: true },
     ],
     solution: `/**
  * Definition for a binary tree node.
@@ -313,8 +314,8 @@ class Solution {
     testCases: [
         { input: 'nums1 = [1,3], nums2 = [2]', output: '2.0' },
         { input: 'nums1 = [1,2], nums2 = [3,4]', output: '2.5' },
-        { input: 'nums1 = [0,0], nums2 = [0,0]', output: '0.0' },
-        { input: 'nums1 = [], nums2 = [1]', output: '1.0' },
+        { input: 'nums1 = [0,0], nums2 = [0,0]', output: '0.0', isHidden: true },
+        { input: 'nums1 = [], nums2 = [1]', output: '1.0', isHidden: true },
     ],
     solution: `double findMedianSortedArrays(int* nums1, int nums1Size, int* nums2, int nums2Size) {
     if (nums1Size > nums2Size) {
@@ -369,8 +370,8 @@ class Solution {
     testCases: [
         { input: '[0,1,0,2,1,0,1,3,2,1,2,1]', output: '6' },
         { input: '[4,2,0,3,2,5]', output: '9' },
-        { input: '[4,2,3]', output: '1' },
-        { input: '[5,4,1,2]', output: '1' },
+        { input: '[4,2,3]', output: '1', isHidden: true },
+        { input: '[5,4,1,2]', output: '1', isHidden: true },
     ],
     solution: `class Solution:
     def trap(self, height: list[int]) -> int:
@@ -417,7 +418,7 @@ class Solution {
         { input: 's = "aa", p = "a"', output: 'false' },
         { input: 's = "aa", p = "a*"', output: 'true' },
         { input: 's = "ab", p = ".*"', output: 'true' },
-        { input: 's = "mississippi", p = "mis*is*p*."', output: 'false' },
+        { input: 's = "mississippi", p = "mis*is*p*."', output: 'false', isHidden: true },
     ],
     solution: `class Solution {
 public:
@@ -466,7 +467,7 @@ public:
     testCases: [
         { input: '[[1,4,5],[1,3,4],[2,6]]', output: '[1,1,2,3,4,4,5,6]' },
         { input: '[]', output: '[]' },
-        { input: '[[]]', output: '[]' },
+        { input: '[[]]', output: '[]', isHidden: true },
     ],
     solution: `/**
  * Definition for singly-linked list.
