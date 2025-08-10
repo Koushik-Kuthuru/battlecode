@@ -9,7 +9,7 @@ const firebaseConfig = {
   "projectId": "battlecode-45xsz",
   "appId": "1:996854652234:web:e7957387b9ff9b3b856e72",
   "storageBucket": "battlecode-45xsz.appspot.com",
-  "apiKey": "AIzaSyAz_mH_vB9t-0-dH5IqaxqJ9p95Y56iN0",
+  "apiKey": "AIzaSyAz_mH_vB9t-0-dH5IqaxqJ9p95Y56iN0o",
   "authDomain": "battlecode-45xsz.firebaseapp.com",
   "messagingSenderId": "996854652234"
 };
