@@ -1,4 +1,5 @@
 
+
 import { Timestamp } from "firebase/firestore";
 
 export type UserData = {
@@ -14,4 +15,19 @@ export type UserData = {
     imageUrl?: string;
     lastSeen?: Timestamp;
     preferredLanguages?: string[];
+};
+
+export type Event = {
+  id: string;
+  title: string;
+  type: 'Podcast' | 'Challenge' | 'Workshop';
+  imageUrl: string;
+  aiHint: string;
+  description: string;
+  startDate: Timestamp;
+  endDate: Timestamp;
+  enrolled: number;
+  isEnabled: boolean;
+  createdAt: Timestamp;
+  status: 'live' | 'upcoming' | 'past';
 };
