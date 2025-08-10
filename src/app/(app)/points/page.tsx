@@ -1,7 +1,9 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award } from 'lucide-react';
+import { Award, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function PointsPage() {
   return (
@@ -13,26 +15,70 @@ export default function PointsPage() {
             Scoring System
           </CardTitle>
           <CardDescription>
-            Understand how to climb the ranks.
+            Understand how to climb the ranks and earn points.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-            <p>
-                A score is awarded for each challenge you solve correctly by passing all the test cases. The number of points you receive is based on the difficulty of the challenge.
-            </p>
-            <ul className="space-y-3 list-disc list-inside">
-                <li>
-                    <strong className="text-green-500">Easy Challenges:</strong> Award <span className="font-bold">10</span> for completion. These are great for getting started and understanding fundamental concepts.
-                </li>
-                <li>
-                    <strong className="text-yellow-500">Medium Challenges:</strong> Award <span className="font-bold">25</span> for completion. These problems require a solid understanding of algorithms and data structures.
-                </li>
-                 <li>
-                    <strong className="text-red-500">Hard Challenges:</strong> Award <span className="font-bold">50</span> for completion. These are complex problems that will truly test your problem-solving abilities.
-                </li>
-            </ul>
-            <p>
-                Your total score is reflected on the leaderboard. Keep solving to increase your score and prove your skills!
+        <CardContent className="space-y-6">
+            <div>
+                <p className="mb-4">
+                    A score is awarded for each challenge you solve correctly. To solve a challenge, your submitted code must pass all predefined test cases, including both visible and hidden ones. The number of points you receive is based on the difficulty of the challenge.
+                </p>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Difficulty</TableHead>
+                            <TableHead>Points Awarded</TableHead>
+                            <TableHead>Description</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell>
+                                <strong className="text-green-500">Easy</strong>
+                            </TableCell>
+                            <TableCell className="font-bold">10 Points</TableCell>
+                            <TableCell>Great for getting started and understanding fundamental concepts.</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>
+                                <strong className="text-yellow-500">Medium</strong>
+                            </TableCell>
+                            <TableCell className="font-bold">25 Points</TableCell>
+                            <TableCell>Requires a solid understanding of algorithms and data structures.</TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>
+                                <strong className="text-red-500">Hard</strong>
+                            </TableCell>
+                            <TableCell className="font-bold">50 Points</TableCell>
+                            <TableCell>Complex problems that will truly test your problem-solving abilities.</TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+
+            <div className="space-y-2 rounded-lg border p-4 bg-muted/50">
+                <h3 className="font-semibold flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    First-Time Completion
+                </h3>
+                <p className="text-muted-foreground">
+                    You earn points for a specific challenge only on the first time you successfully solve it. You are free to resubmit improved solutions, but this will not grant additional points.
+                </p>
+            </div>
+
+             <div className="space-y-2 rounded-lg border p-4 bg-muted/50">
+                <h3 className="font-semibold flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-blue-600" />
+                    Integrity and Fair Play
+                </h3>
+                <p className="text-muted-foreground">
+                    Your total score is reflected on the leaderboard. Maintaining academic integrity is crucial. Any violation of the rules may result in a score reset or disqualification.
+                </p>
+            </div>
+
+            <p className="pt-4 text-center text-lg font-semibold">
+                Keep solving to increase your score and prove your skills!
             </p>
         </CardContent>
       </Card>
