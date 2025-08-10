@@ -215,10 +215,6 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                  </div>
             </div>
           ))}
-
-          <div className="flex flex-wrap gap-2 mt-6">
-              {Array.isArray(challenge.tags) && challenge.tags.map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
-          </div>
         </>
     ) : (
         <div>Challenge details not found.</div>
