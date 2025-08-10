@@ -102,9 +102,6 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                     <SmecBattleCodeLogo className="h-8 w-8" />
                     <span className="text-xl hidden sm:inline">SMEC Battle Code</span>
                 </Link>
-                <Button variant="ghost" asChild>
-                    <Link href="/dashboard"><Home className="mr-2"/> Dashboard</Link>
-                </Button>
            </div>
            
            <div className="flex items-center gap-2">
@@ -145,59 +142,61 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
         <main className="flex-1 flex flex-row overflow-hidden bg-muted/40">
            <ResizablePanelGroup direction="horizontal">
                <ResizablePanel defaultSize={50} minSize={30}>
-                 <Tabs defaultValue="description" className="h-full flex flex-col bg-background">
-                    <div className="flex-shrink-0 p-2 border-b border-r">
-                        <TabsList>
-                          <TabsTrigger value="description">Description</TabsTrigger>
-                          <TabsTrigger value="result">Result</TabsTrigger>
-                        </TabsList>
-                    </div>
-                    <div className="flex-grow overflow-auto border-r">
-                        <TabsContent value="description" className="mt-0 h-full">
-                           <ScrollArea className="h-full p-6">
-                            {isChallengeLoading ? (
-                                <div className="space-y-4">
-                                  <Skeleton className="h-8 w-3/4" />
-                                  <Skeleton className="h-4 w-1/2" />
-                                  <Skeleton className="h-20 w-full" />
-                                  <Skeleton className="h-12 w-full" />
-                                  <Skeleton className="h-12 w-full" />
-                                </div>
-                            ) : challenge ? (
-                                <>
-                                  <h1 className="text-2xl font-bold mb-2">{challenge.title}</h1>
-                                  <div className="flex items-center gap-4 mb-4">
-                                      <Badge variant={challenge.difficulty === 'Easy' ? 'secondary' : challenge.difficulty === 'Medium' ? 'outline' : 'destructive'}>{challenge.difficulty}</Badge>
-                                      <p className="text-sm text-muted-foreground">Language: {challenge.language}</p>
-                                      <p className="text-sm font-bold text-primary">{challenge.points} Points</p>
-                                  </div>
-                                  <p className="text-base mb-6 whitespace-pre-wrap">{challenge.description}</p>
-                                  
-                                  {challenge?.examples.map((example, index) => (
-                                    <div key={index} className="bg-muted p-3 rounded-md mb-3 border">
-                                      <p className="font-semibold text-sm mb-1">Example {index + 1}</p>
-                                      <p className="font-mono text-xs"><strong>Input:</strong> {example.input}</p>
-                                      <p className="font-mono text-xs"><strong>Output:</strong> {example.output}</p>
-                                      {example.explanation && <p className="text-xs mt-1 text-muted-foreground"><strong>Explanation:</strong> {example.explanation}</p>}
-                                    </div>
-                                  ))}
+                 <div className="h-full flex flex-col bg-background">
+                    <Tabs defaultValue="description" className="h-full flex flex-col">
+                       <div className="flex-shrink-0 p-2 border-b border-r">
+                           <TabsList>
+                             <TabsTrigger value="description">Description</TabsTrigger>
+                             <TabsTrigger value="result">Result</TabsTrigger>
+                           </TabsList>
+                       </div>
+                       <div className="flex-grow overflow-auto border-r">
+                           <TabsContent value="description" className="mt-0 h-full">
+                              <ScrollArea className="h-full p-6">
+                               {isChallengeLoading ? (
+                                   <div className="space-y-4">
+                                     <Skeleton className="h-8 w-3/4" />
+                                     <Skeleton className="h-4 w-1/2" />
+                                     <Skeleton className="h-20 w-full" />
+                                     <Skeleton className="h-12 w-full" />
+                                     <Skeleton className="h-12 w-full" />
+                                   </div>
+                               ) : challenge ? (
+                                   <>
+                                     <h1 className="text-2xl font-bold mb-2">{challenge.title}</h1>
+                                     <div className="flex items-center gap-4 mb-4">
+                                         <Badge variant={challenge.difficulty === 'Easy' ? 'secondary' : challenge.difficulty === 'Medium' ? 'outline' : 'destructive'}>{challenge.difficulty}</Badge>
+                                         <p className="text-sm text-muted-foreground">Language: {challenge.language}</p>
+                                         <p className="text-sm font-bold text-primary">{challenge.points} Points</p>
+                                     </div>
+                                     <p className="text-base mb-6 whitespace-pre-wrap">{challenge.description}</p>
+                                     
+                                     {challenge.examples.map((example, index) => (
+                                       <div key={index} className="bg-muted p-3 rounded-md mb-3 border">
+                                         <p className="font-semibold text-sm mb-1">Example {index + 1}</p>
+                                         <p className="font-mono text-xs"><strong>Input:</strong> {example.input}</p>
+                                         <p className="font-mono text-xs"><strong>Output:</strong> {example.output}</p>
+                                         {example.explanation && <p className="text-xs mt-1 text-muted-foreground"><strong>Explanation:</strong> {example.explanation}</p>}
+                                       </div>
+                                     ))}
 
-                                  <div className="flex flex-wrap gap-2 mt-6">
-                                      {Array.isArray(challenge.tags) && challenge.tags.map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
-                                  </div>
-                                </>
-                            ) : (
-                                <div>Challenge details not found.</div>
-                            )}
-                           </ScrollArea>
-                        </TabsContent>
-                        <TabsContent value="result" className="mt-0 h-full">
-                          <div className="p-4 text-sm text-muted-foreground">
-                            Run your code to see test case results here.
-                          </div>
-                        </TabsContent>
-                    </div>
-                  </Tabs>
+                                     <div className="flex flex-wrap gap-2 mt-6">
+                                         {Array.isArray(challenge.tags) && challenge.tags.map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
+                                     </div>
+                                   </>
+                               ) : (
+                                   <div>Challenge details not found.</div>
+                               )}
+                              </ScrollArea>
+                           </TabsContent>
+                           <TabsContent value="result" className="mt-0 h-full">
+                             <div className="p-4 text-sm text-muted-foreground">
+                               Run your code to see test case results here.
+                             </div>
+                           </TabsContent>
+                       </div>
+                     </Tabs>
+                 </div>
                </ResizablePanel>
                <ResizableHandle withHandle />
                <ResizablePanel defaultSize={50} minSize={30}>

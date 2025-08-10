@@ -9,8 +9,8 @@ import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import type { Challenge } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Save, RefreshCcw, Code, Bug } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Save, RefreshCcw, Code, Bug, Settings } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function ChallengeDetail() {
   const params = useParams();
@@ -18,6 +18,7 @@ export default function ChallengeDetail() {
   const challengeId = Array.isArray(params.id) ? params.id[0] : params.id;
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [solution, setSolution] = useState("");
+  const [language, setLanguage] = useState('python');
   const [initialSolution, setInitialSolution] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +34,7 @@ export default function ChallengeDetail() {
 
   useEffect(() => {
     if (!challengeId) return;
+
     const fetchChallengeAndSolution = async () => {
       setIsLoading(true);
       try {
@@ -42,6 +44,7 @@ export default function ChallengeDetail() {
         if (challengeSnap.exists()) {
           const challengeData = { id: challengeSnap.id, ...challengeSnap.data() } as Challenge;
           setChallenge(challengeData);
+          setLanguage(challengeData.language.toLowerCase());
 
           let userCode = challengeData.solution; // Default to starter code
 
@@ -69,10 +72,7 @@ export default function ChallengeDetail() {
       }
     };
 
-    // We can fetch the challenge right away, and then fetch the user's solution
-    // once the user object is available.
     fetchChallengeAndSolution();
-
   }, [challengeId, user, db, toast]);
 
 
@@ -104,7 +104,7 @@ export default function ChallengeDetail() {
             title: "Progress Saved!",
             description: "Your code has been saved successfully.",
         });
-        setInitialSolution(solution); // Update the baseline for reset
+        setInitialSolution(solution);
     } catch (error) {
         console.error("Failed to save solution:", error);
          toast({
@@ -121,34 +121,36 @@ export default function ChallengeDetail() {
       }
   };
 
-  if (isLoading || !challenge) {
-    return (
-      <div className="h-full w-full p-4 flex flex-col">
-        <Skeleton className="flex-grow w-full" />
-        <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-full relative flex flex-col bg-background">
+    <div className="h-full w-full flex flex-col bg-background">
+       <div className="flex-shrink-0 p-2 flex justify-between items-center border-b">
+         <Select value={language} onValueChange={setLanguage}>
+             <SelectTrigger className="w-[180px]">
+                 <SelectValue placeholder="Select language" />
+             </SelectTrigger>
+             <SelectContent>
+                <SelectItem value="c">C</SelectItem>
+                <SelectItem value="c++">C++</SelectItem>
+                <SelectItem value="java">Java</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="javascript">JavaScript</SelectItem>
+             </SelectContent>
+         </Select>
+         <div className="flex items-center gap-2">
+           <Button variant="outline" size="sm" onClick={handleReset}><RefreshCcw className="mr-2 h-4 w-4" /> Reset</Button>
+           <Button variant="outline" size="sm" onClick={handleSave}><Save className="mr-2 h-4 w-4"/> Save</Button>
+         </div>
+       </div>
        <div className="flex-grow relative">
-            <CodeEditor
-              value={solution}
-              onChange={handleSolutionChange}
-              language={challenge.language.toLowerCase()}
-            />
+          <CodeEditor
+            value={solution}
+            onChange={handleSolutionChange}
+            language={language}
+          />
        </div>
        <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t">
-           <Button variant="outline" size="sm" onClick={handleSave}><Save className="mr-2 h-4 w-4"/> Save</Button>
-           <Button variant="outline" size="sm" onClick={handleReset}><RefreshCcw className="mr-2 h-4 w-4" /> Reset</Button>
            <Button size="sm"><Code className="mr-2"/> Run Code</Button>
-           <Button size="sm" variant="outline"><Bug className="mr-2"/> Submit</Button>
+           <Button size="sm" variant="default"><Bug className="mr-2"/> Submit</Button>
        </div>
     </div>
   );
