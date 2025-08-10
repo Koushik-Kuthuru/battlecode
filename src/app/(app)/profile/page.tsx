@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { User, Upload, Mail, KeyRound, LogOut } from 'lucide-react';
+import { User, Upload, Mail, KeyRound, LogOut, CaseSensitive } from 'lucide-react';
 import { getAuth, onAuthStateChanged, updateEmail, EmailAuthProvider, reauthenticateWithCredential, type User as FirebaseUser, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
@@ -21,12 +21,13 @@ type CurrentUser = {
   uid: string;
   name: string;
   email: string;
+  studentId: string;
 }
 
 type ProfileData = {
     branch: string;
     year: string;
-    section: string;
+    section:string;
     imageUrl: string;
 }
 
@@ -65,6 +66,7 @@ export default function ProfilePage() {
                     uid: user.uid,
                     name: userData.name,
                     email: userEmail,
+                    studentId: userData.studentId,
                 });
                 setNewEmail(userEmail);
                 setProfile({
@@ -231,11 +233,15 @@ export default function ProfilePage() {
                 <Label>Name</Label>
                 <Input value={currentUser.name} disabled />
             </div>
-            <div className="space-y-2">
+             <div className="space-y-2">
+                <Label>Student ID</Label>
+                <Input value={currentUser.studentId} disabled />
+            </div>
+          </div>
+           <div className="space-y-2">
                 <Label>Email</Label>
                 <Input value={currentUser.email} disabled />
             </div>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="branch">Branch</Label>
