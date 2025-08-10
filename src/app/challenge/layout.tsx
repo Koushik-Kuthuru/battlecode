@@ -3,8 +3,7 @@
 'use client'
 
 import { SmecBattleCodeLogo, BulletCoin } from '@/components/icons';
-import { LogOut, Moon, Sun, User, Home, XCircle, CheckCircle, AlertCircle, Code, Loader2, ArrowLeft } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { LogOut, User, Home, XCircle, CheckCircle, AlertCircle, Code, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import React, { useEffect, useState, createContext, useContext, useCallback } from 'react';
@@ -88,7 +87,6 @@ type PenaltyDialogContent = {
 export default function ChallengeLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const params = useParams();
-  const { setTheme, theme } = useTheme();
   
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -446,17 +444,6 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                </div>
                
                <div className="flex items-center gap-2">
-                     <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                         className="text-slate-300 hover:bg-slate-800 hover:text-white"
-                      >
-                        <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                        <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                        <span className="sr-only">Toggle theme</span>
-                      </Button>
-                    
                     {currentUser ? (
                         <>
                             <Link href="/profile">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -8,6 +7,7 @@ import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
 import { cpp } from '@codemirror/lang-cpp';
 import { oneDark } from '@codemirror/theme-one-dark';
+import { keymap } from '@codemirror/view';
 import { Skeleton } from './ui/skeleton';
 
 interface CodeEditorProps {
@@ -25,45 +25,43 @@ const languageMap: Record<string, any> = {
   cpp: cpp(),
 };
 
+// Block shortcuts inside CodeMirror
+const blockShortcuts = keymap.of([
+  { key: 'Mod-c', preventDefault: true, run: () => true }, // Copy
+  { key: 'Mod-v', preventDefault: true, run: () => true }, // Paste
+  { key: 'Mod-x', preventDefault: true, run: () => true }, // Cut
+  { key: 'Mod-a', preventDefault: true, run: () => true }, // Select all
+]);
+
 export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
   const editorRef = useRef<ReactCodeMirrorRef>(null);
-  const langExtension = language ? languageMap[language.toLowerCase()] : javascript();
+  const langExtension = language
+    ? languageMap[language.toLowerCase()]
+    : javascript();
 
   useEffect(() => {
     const view = editorRef.current?.view;
     if (!view) return;
-  
+
     const dom = view.dom;
-  
-    // Disable right-click
+
+    // Block right-click
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
-  
-    // Disable copy, paste, cut, select all
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        const blockedKeys = ['c', 'v', 'x', 'a']; // copy, paste, cut, select all
-        if (blockedKeys.includes(e.key.toLowerCase())) {
-          e.preventDefault();
-        }
-      }
-    };
-  
-    // Disable drag & drop
+
+    // Block drag & drop
     const handleDrop = (e: DragEvent) => e.preventDefault();
-  
-    // Disable middle-click paste
+
+    // Block middle-click paste
     const handleMouseDown = (e: MouseEvent) => {
       if (e.button === 1) e.preventDefault();
     };
-  
+
     dom.addEventListener('contextmenu', handleContextMenu);
-    dom.addEventListener('keydown', handleKeyDown);
     dom.addEventListener('drop', handleDrop);
     dom.addEventListener('mousedown', handleMouseDown);
-  
+
     return () => {
       dom.removeEventListener('contextmenu', handleContextMenu);
-      dom.removeEventListener('keydown', handleKeyDown);
       dom.removeEventListener('drop', handleDrop);
       dom.removeEventListener('mousedown', handleMouseDown);
     };
@@ -80,7 +78,7 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
         ref={editorRef}
         value={value}
         height="100%"
-        extensions={[langExtension]}
+        extensions={[langExtension, blockShortcuts]}
         onChange={onChange}
         theme={oneDark}
         style={{
@@ -91,3 +89,4 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
     </div>
   );
 }
+
