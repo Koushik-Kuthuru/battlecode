@@ -10,10 +10,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import Link from 'next/link';
-
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import Autoplay from "embla-carousel-autoplay";
 
 type CurrentUser = {
   uid: string;
@@ -22,10 +23,13 @@ type CurrentUser = {
 }
 
 type Advertisement = {
+  id: string;
   title: string;
   description: string;
   imageUrl: string;
   buttonLink: string;
+  buttonText: string;
+  isEnabled: boolean;
 }
 
 export default function DashboardPage() {
@@ -41,11 +45,14 @@ export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
-  const [advertisement, setAdvertisement] = useState<Advertisement | null>(null);
+  const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   
   const auth = getAuth(app);
   const db = getFirestore(app);
   const ITEMS_PER_PAGE = 6;
+   const autoplay = useRef(
+    Autoplay({ delay: 5000, stopOnInteraction: true })
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
@@ -85,15 +92,16 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [auth, db, router]);
   
-  // Real-time listener for advertisement
+  // Real-time listener for advertisements
   useEffect(() => {
-    const adDocRef = doc(db, 'advertisements', 'dashboard_banner');
-    const unsubscribe = onSnapshot(adDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setAdvertisement(docSnap.data() as Advertisement);
-      } else {
-        setAdvertisement(null); // Or set a default
-      }
+    const adsCollectionRef = collection(db, 'advertisements');
+    const q = query(adsCollectionRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const adsList = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Advertisement))
+        .filter(ad => ad.isEnabled);
+      setAdvertisements(adsList);
     });
     return () => unsubscribe();
   }, [db]);
@@ -204,25 +212,39 @@ export default function DashboardPage() {
             <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser.name} 👋</h2>
         </div>
         
-        {advertisement && (
-          <Card className="bg-slate-900 text-white border-0">
-            <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4 md:gap-6 w-full">
-                  <div className="w-24 h-24 md:w-48 md:h-32 bg-gray-700 rounded-md flex-shrink-0">
-                      <img src={advertisement.imageUrl || 'https://placehold.co/192x128'} alt={advertisement.title} className="w-full h-full object-cover rounded-md" data-ai-hint="advertisement banner" />
-                  </div>
-                  <div className="flex-1">
-                      <h3 className="text-lg md:text-xl font-bold leading-tight">{advertisement.title}</h3>
-                      <p className="text-muted-foreground text-white/80 text-sm md:text-base">{advertisement.description}</p>
-                  </div>
-              </div>
-               <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto mt-4 md:mt-0 flex-shrink-0">
-                  <Link href={advertisement.buttonLink || '#'} target="_blank" rel="noopener noreferrer">
-                    Register Now
-                  </Link>
-               </Button>
-            </CardContent>
-          </Card>
+        {advertisements.length > 0 && (
+          <Carousel
+            plugins={[autoplay.current]}
+            onMouseEnter={autoplay.current.stop}
+            onMouseLeave={autoplay.current.reset}
+            className="w-full"
+            opts={{ loop: true }}
+          >
+            <CarouselContent>
+              {advertisements.map((ad) => (
+                <CarouselItem key={ad.id}>
+                  <Card className="bg-slate-900 text-white border-0 overflow-hidden">
+                    <CardContent className="p-0 flex flex-col md:flex-row items-stretch justify-between gap-0 h-64">
+                       <div className="w-full md:w-1/2 h-full">
+                          <img src={ad.imageUrl || 'https://placehold.co/600x400'} alt={ad.title} className="w-full h-full object-cover" data-ai-hint="advertisement event" />
+                        </div>
+                      <div className="w-full md:w-1/2 p-6 flex flex-col justify-center">
+                          <h3 className="text-xl md:text-2xl font-bold leading-tight">{ad.title}</h3>
+                          <p className="text-muted-foreground text-white/80 text-sm md:text-base mt-2">{ad.description}</p>
+                          <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto mt-6">
+                            <Link href={ad.buttonLink || '#'} target="_blank" rel="noopener noreferrer">
+                              {ad.buttonText || 'Learn More'}
+                            </Link>
+                          </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-4 hidden md:flex" />
+            <CarouselNext className="right-4 hidden md:flex" />
+          </Carousel>
         )}
 
         <h2 className="text-2xl font-bold tracking-tight">Your Challenges</h2>
