@@ -17,7 +17,7 @@ export default function LandingPage() {
         </Link>
         <nav className="flex items-center gap-2 sm:gap-4">
           <Button variant="ghost" asChild>
-            <Link href="/login">Login</Link>
+            <Link href="/register">Login</Link>
           </Button>
           <Button asChild>
             <Link href="/register">
@@ -42,7 +42,7 @@ export default function LandingPage() {
                 <Link href="/register">Get Started for Free</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="#features">Learn More</Link>
+                <Link href="/register">Learn More</Link>
               </Button>
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function LandingPage() {
             </div>
             <div className="text-center mt-12">
                 <Button size="lg" asChild>
-                    <Link href="/missions">View All Challenges</Link>
+                    <Link href="/register">View All Challenges</Link>
                 </Button>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function LandingPage() {
                 </div>
                  <div className="text-center mt-12">
                     <Button size="lg" variant="outline" asChild>
-                        <Link href="/leaderboard">View Full Leaderboard</Link>
+                        <Link href="/register">View Full Leaderboard</Link>
                     </Button>
                 </div>
             </div>
@@ -317,10 +317,10 @@ export default function LandingPage() {
                 <div>
                     <h4 className="font-semibold text-white mb-4">Quick Links</h4>
                     <ul className="space-y-2 text-sm">
-                        <li><a href="#features" className="hover:text-white">Features</a></li>
-                        <li><a href="#how-it-works" className="hover:text-white">How It Works</a></li>
-                        <li><a href="#rules" className="hover:text-white">Rules</a></li>
-                        <li><Link href="/leaderboard" className="hover:text-white">Leaderboard</Link></li>
+                        <li><a href="/register" className="hover:text-white">Features</a></li>
+                        <li><a href="/register" className="hover:text-white">How It Works</a></li>
+                        <li><a href="/register" className="hover:text-white">Rules</a></li>
+                        <li><Link href="/register" className="hover:text-white">Leaderboard</Link></li>
                     </ul>
                 </div>
                 <div>
@@ -333,18 +333,18 @@ export default function LandingPage() {
                  <div>
                     <h4 className="font-semibold text-white mb-4">Follow Us</h4>
                     <div className="flex space-x-4">
-                        <a href="#" className="hover:text-white">Twitter</a>
-                        <a href="#" className="hover:text-white">LinkedIn</a>
-                        <a href="#" className="hover:text-white">GitHub</a>
+                        <a href="/register" className="hover:text-white">Twitter</a>
+                        <a href="/register" className="hover:text-white">LinkedIn</a>
+                        <a href="/register" className="hover:text-white">GitHub</a>
                     </div>
                 </div>
             </div>
             <div className="mt-8 pt-8 border-t border-slate-700 text-center text-sm">
                 <p>&copy; {new Date().getFullYear()} SMEC Battle Code. All Rights Reserved.</p>
                  <div className="mt-2">
-                    <Link href="#" className="hover:text-white underline underline-offset-4">Terms of Service</Link>
+                    <Link href="/register" className="hover:text-white underline underline-offset-4">Terms of Service</Link>
                     <span className="mx-2">|</span>
-                    <Link href="#" className="hover:text-white underline underline-offset-4">Privacy Policy</Link>
+                    <Link href="/register" className="hover:text-white underline underline-offset-4">Privacy Policy</Link>
                 </div>
             </div>
         </div>
