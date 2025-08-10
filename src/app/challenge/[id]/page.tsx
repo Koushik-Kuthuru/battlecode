@@ -28,8 +28,10 @@ export default function ChallengeDetail() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      // If we have challenge data but the user logs out, stop loading.
-      if (!currentUser && challenge) {
+      if (!challenge) {
+        setIsLoading(true);
+      } else if (!currentUser) {
+        setSolution(challenge.solution);
         setIsLoading(false);
       }
     });
@@ -45,49 +47,38 @@ export default function ChallengeDetail() {
       if (docSnap.exists()) {
         const challengeData = { id: docSnap.id, ...docSnap.data() } as Challenge;
         setChallenge(challengeData);
-        // If user is already known to be null, stop loading
-        if (auth.currentUser === null) {
-          setSolution(challengeData.solution); 
-          setIsLoading(false);
-        }
       } else {
         setChallenge(null);
-        setIsLoading(false); // Challenge not found
+        setIsLoading(false);
       }
     };
     fetchChallenge();
-  }, [challengeId, auth]);
+  }, [challengeId]);
 
   useEffect(() => {
-    if (!challenge) {
-        // If challenge isn't loaded yet, or not found, we wait.
-        return;
-    };
+    if (!challenge) return;
 
     if (user) {
-        // User is logged in, fetch their saved solution
         const fetchSolution = async () => {
           const solRef = doc(db, `users/${user.uid}/solutions`, challenge.id!);
           const solSnap = await getDoc(solRef);
           if (solSnap.exists()) {
             setSolution(solSnap.data().code);
           } else {
-            // No saved solution, use the default from the challenge
             setSolution(challenge.solution);
           }
-          setIsLoading(false); // Done loading
+          setIsLoading(false);
         };
         fetchSolution();
     } else {
-        // User is not logged in, use default solution
         setSolution(challenge.solution);
-        setIsLoading(false); // Done loading
+        setIsLoading(false);
     }
   }, [user, challenge, db]);
 
   const handleSolutionChange = async (newCode: string) => {
     setSolution(newCode);
-    if (!user || !challengeId) return;
+    if (!user || !challengeId || !challenge) return;
 
     try {
         const solRef = doc(db, `users/${user.uid}/solutions`, challengeId);
@@ -97,7 +88,7 @@ export default function ChallengeDetail() {
         }, { merge: true });
 
         const inProgressRef = doc(db, `users/${user.uid}/challengeData`, 'inProgress');
-        await setDoc(inProgressRef, { [challengeId]: true }, { merge: true });
+        await setDoc(inProgressRef, { [challenge.id!]: true }, { merge: true });
     } catch (error) {
         console.error("Failed to save solution:", error);
     }
@@ -133,7 +124,7 @@ export default function ChallengeDetail() {
             ))}
 
             <div className="flex flex-wrap gap-2 mt-6">
-                {challenge.tags.map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
+                {Array.isArray(challenge.tags) && challenge.tags.map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
             </div>
         </ScrollArea>
       </ResizablePanel>
