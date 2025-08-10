@@ -5,12 +5,15 @@ import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, User } from 'lucide-react';
+import { Info, Trophy, User } from 'lucide-react';
 import { getFirestore, collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BulletCoin } from '@/components/icons';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const BRANCH_MAP: Record<string, string> = {
     cse: 'CSE',
@@ -93,7 +96,23 @@ export default function LeaderboardPage() {
     <div className="container mx-auto py-8 px-4 md:px-6">
       <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold tracking-tight">Leaderboard</CardTitle>
+          <div className="flex items-center gap-2">
+             <CardTitle className="text-3xl font-bold tracking-tight">Leaderboard</CardTitle>
+             <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link href="/points">
+                               <Info className="h-5 w-5 text-muted-foreground" />
+                            </Link>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>How are points calculated?</p>
+                    </TooltipContent>
+                </Tooltip>
+             </TooltipProvider>
+          </div>
           <CardDescription>See who is at the top of the SMEC Battle Code arena.</CardDescription>
         </CardHeader>
         <CardContent>

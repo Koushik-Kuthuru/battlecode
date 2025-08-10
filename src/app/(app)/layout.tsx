@@ -126,7 +126,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/profile', label: 'My Profile', icon: User },
     { href: '/about', label: 'About', icon: Info },
-    { href: '/points', label: 'Points System', icon: BulletCoin },
   ];
   
   if (isLoading || !currentUser) {
