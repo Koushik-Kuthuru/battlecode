@@ -17,7 +17,6 @@ import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage'
 import { app } from '@/lib/firebase';
 import { SmecBattleCodeLogo } from '@/components/icons';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { verifyUserImage } from '@/ai/flows/verify-user-image';
 
 type ProfileData = {
   branch: string;
@@ -96,26 +95,15 @@ export default function CompleteProfilePage() {
     }
     
     setIsSaving(true);
+    toast({ title: 'Saving Profile...', description: 'Please wait a moment.' });
 
     try {
-      // 1. Verify image using Genkit flow
-      toast({ title: 'Verifying Image...', description: 'Please wait while our AI analyzes your profile picture.' });
-      const { hasFace, reasoning } = await verifyUserImage({ photoDataUri: profile.imageUrl });
-
-      if (!hasFace) {
-        toast({ variant: 'destructive', title: 'Invalid Profile Picture', description: reasoning });
-        setIsSaving(false);
-        return;
-      }
-      
-      toast({ title: 'Image Verified!', description: 'Now saving your profile...' });
-
-      // 2. Upload image to Firebase Storage
+      // Upload image to Firebase Storage
       const storageRef = ref(storage, `profile-pictures/${user.uid}`);
       const uploadResult = await uploadString(storageRef, profile.imageUrl, 'data_url');
       const finalImageUrl = await getDownloadURL(uploadResult.ref);
 
-      // 3. Update Firestore document
+      // Update Firestore document
       const userDocRef = doc(db, 'users', user.uid);
       await updateDoc(userDocRef, {
         branch: profile.branch,
@@ -164,7 +152,7 @@ export default function CompleteProfilePage() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Action Required</AlertTitle>
                 <AlertDescription>
-                  All fields, including a clear profile picture of yourself, are mandatory to proceed.
+                  All fields, including a profile picture, are mandatory to proceed.
                 </AlertDescription>
               </Alert>
 
@@ -236,7 +224,7 @@ export default function CompleteProfilePage() {
               </div>
 
               <Button onClick={handleSave} className="w-full" disabled={isSaving}>
-                {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying & Saving...</> : 'Save and Continue'}
+                {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save and Continue'}
               </Button>
             </CardContent>
           </Card>
