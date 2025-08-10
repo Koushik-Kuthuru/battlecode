@@ -493,9 +493,9 @@ export default function DashboardPage() {
                         <span>{currentUser?.points ?? 0}</span>
                     </div>
 
-                    <div className="bg-yellow-200 py-4 rounded-b-lg -m-6 mt-6">
-                        <p className="text-yellow-800 font-bold text-5xl">#{userRank ?? 'N/A'}</p>
-                        <p className="text-xs text-yellow-700 font-semibold tracking-widest">RANK</p>
+                    <div className="bg-slate-100 py-4 rounded-b-lg -m-6 mt-6 border-t">
+                        <p className="text-slate-800 font-bold text-5xl">#{userRank ?? 'N/A'}</p>
+                        <p className="text-xs text-slate-500 font-semibold tracking-widest">RANK</p>
                     </div>
                     {topUser && (
                          <div className="text-sm text-center bg-muted p-2 rounded-lg mt-4">
