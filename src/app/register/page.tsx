@@ -69,12 +69,14 @@ export default function RegisterPage() {
         email: email,
         studentId: studentId.toUpperCase(),
         points: 0,
+        profileComplete: false, // Add this flag
       });
       
-      router.push('/login');
+      // Redirect to complete profile page instead of login
+      router.push('/complete-profile');
       toast({
-        title: 'Registration Successful!',
-        description: `Welcome, ${fullName}! A verification email has been sent to ${email}. Please verify your email before logging in.`,
+        title: 'Account Created!',
+        description: `Welcome, ${fullName}! Please complete your profile to continue.`,
       });
 
 

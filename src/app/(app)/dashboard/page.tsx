@@ -54,6 +54,12 @@ export default function DashboardPage() {
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
+
+          if (!userData.profileComplete) {
+              router.push('/complete-profile');
+              return;
+          }
+
           setCurrentUser({
             uid: user.uid,
             name: userData.name,

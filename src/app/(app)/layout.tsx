@@ -48,6 +48,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
+          
+          if (!userData.profileComplete) {
+              router.push('/complete-profile');
+              return;
+          }
+
           setCurrentUser({
             uid: user.uid,
             name: userData.name,
@@ -257,5 +263,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-    
