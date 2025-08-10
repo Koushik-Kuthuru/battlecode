@@ -456,18 +456,25 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center gap-4">
-                        <Avatar className="h-16 w-16">
-                            <AvatarImage src={currentUser?.imageUrl} alt={currentUser?.name} />
-                            <AvatarFallback>
-                                <User />
-                            </AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-bold text-lg">{currentUser?.name}</p>
-                            <p className="text-sm text-muted-foreground">Your Rank: <span className="font-semibold text-primary">{userRank ?? 'N/A'}</span></p>
-                            <p className="text-sm text-muted-foreground">Your Score: <span className="font-semibold text-primary">{currentUser?.points ?? 0}</span></p>
+                        <div className="text-center">
+                            <p className="text-3xl font-bold">{userRank ?? 'N/A'}</p>
+                            <p className="text-xs text-muted-foreground">RANK</p>
+                        </div>
+                        <div className="flex flex-col items-center flex-1">
+                            <Avatar className="h-16 w-16 mb-2">
+                                <AvatarImage src={currentUser?.imageUrl} alt={currentUser?.name} />
+                                <AvatarFallback>
+                                    <User />
+                                </AvatarFallback>
+                            </Avatar>
+                            <p className="font-bold text-lg text-center">{currentUser?.name}</p>
+                            <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                                <BulletCoin className="h-4 w-4" />
+                                <span>{currentUser?.points ?? 0}</span>
+                            </div>
                         </div>
                     </div>
+
                     {topUser && (
                          <div className="text-sm text-center bg-muted p-2 rounded-lg">
                             <p>You are chasing <span className="font-semibold">{topUser.name}</span> with {topUser.points} points! 🔥</p>
