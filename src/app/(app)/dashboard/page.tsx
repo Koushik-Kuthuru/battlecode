@@ -169,7 +169,7 @@ export default function DashboardPage() {
   return (
     <div className="flex-1 space-y-8">
         <div className="flex items-center justify-between space-y-2 md:hidden">
-            {/* This space is intentionally left blank for the mobile view header */}
+            <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser.name.split(' ')[0]} 👋</h2>
         </div>
         <div className="hidden md:flex items-center justify-between space-y-2">
             <h2 className="text-3xl font-bold tracking-tight">Welcome {currentUser.name} 👋</h2>
@@ -177,7 +177,7 @@ export default function DashboardPage() {
         
         <Card className="bg-slate-900 text-white border-0">
           <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-6 w-full">
+            <div className="flex items-center gap-4 md:gap-6 w-full">
                 <div className="w-24 h-24 md:w-48 md:h-32 bg-gray-700 rounded-md flex-shrink-0">
                     <img src="https://placehold.co/192x128" alt="Podcast" className="w-full h-full object-cover rounded-md" data-ai-hint="podcast cover" />
                 </div>
@@ -186,7 +186,7 @@ export default function DashboardPage() {
                     <p className="text-muted-foreground text-white/80 text-sm md:text-base">Podcast with Leader Building Teams at Google</p>
                 </div>
             </div>
-             <Button className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto mt-4 md:mt-0">Register Now</Button>
+             <Button className="bg-indigo-600 hover:bg-indigo-700 text-white w-full md:w-auto mt-4 md:mt-0 flex-shrink-0">Register Now</Button>
           </CardContent>
         </Card>
 

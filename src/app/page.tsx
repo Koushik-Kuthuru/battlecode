@@ -14,20 +14,20 @@ export default function LandingPage() {
           <SmecBattleCodeLogo className="h-8 w-8 text-primary" />
           <span className="text-xl font-bold">SMEC Battle Code</span>
         </Link>
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-2 sm:gap-4">
           <Button variant="ghost" asChild>
             <Link href="/login">Login</Link>
           </Button>
           <Button asChild>
             <Link href="/register">
-              Sign Up <ArrowRight className="ml-2 h-4 w-4" />
+              Sign Up <ArrowRight className="ml-2 h-4 w-4 hidden sm:inline" />
             </Link>
           </Button>
         </nav>
       </header>
 
       <main className="flex-1">
-        <section className="container mx-auto flex flex-col items-center justify-center text-center py-20 md:py-32">
+        <section className="container mx-auto flex flex-col items-center justify-center text-center py-20 md:py-32 px-4">
           <div className="animate-fade-in-up">
             <Badge className="mb-4">Exclusive for SMEC Students</Badge>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-6">
@@ -48,7 +48,7 @@ export default function LandingPage() {
         </section>
 
         <section id="features" className="bg-muted py-20 md:py-32">
-          <div className="container mx-auto">
+          <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold">Why SMEC Battle Code?</h2>
               <p className="max-w-xl mx-auto text-muted-foreground mt-4">
