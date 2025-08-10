@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ChallengeCard } from '@/components/challenge-card';
 import { type Challenge, challenges as initialChallenges } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
@@ -16,7 +15,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserData } from '@/lib/types';
-import { ArrowRight, CheckCircle, RefreshCw } from 'lucide-react';
+import { ArrowRight, CheckCircle, Code, RefreshCw } from 'lucide-react';
 import { BulletCoin } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 
@@ -53,10 +52,14 @@ function MissionChallengeCard({ challenge, isCompleted, isInProgress }: { challe
                     {challenge.difficulty}
                 </Badge>
             </div>
-            <CardDescription className="flex items-center gap-4 pt-2">
+            <CardDescription className="flex items-center gap-4 pt-2 flex-wrap">
                  <div className="flex items-center gap-1">
                     <BulletCoin className="h-4 w-4 text-primary" />
                     <span>{challenge.points} Points</span>
+                 </div>
+                  <div className="flex items-center gap-1">
+                    <Code className="h-4 w-4 text-sky-500" />
+                    <span>{challenge.language}</span>
                  </div>
                  {statusIcon && (
                     <div className="flex items-center gap-1 font-medium">
