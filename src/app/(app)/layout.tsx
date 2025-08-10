@@ -4,7 +4,7 @@
 
 import { SmecBattleCodeLogo, BulletCoin } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import { BarChart, Home, Info, LogOut, Moon, Settings, Sun, User, Trophy, ArrowRight, Menu, Flame } from 'lucide-react';
+import { BarChart, Home, Info, LogOut, Moon, Settings, Sun, User, Trophy, ArrowRight, Menu, Flame, Calendar } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -123,6 +123,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { href: '/dashboard', label: 'Home', icon: Home },
     { href: '/missions', label: 'Missions', icon: Flame },
+    { href: '/events', label: 'Events', icon: Calendar },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/profile', label: 'My Profile', icon: User },
     { href: '/about', label: 'About', icon: Info },

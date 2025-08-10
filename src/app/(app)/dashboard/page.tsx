@@ -424,7 +424,7 @@ export default function DashboardPage() {
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         <span>Events</span>
-                         <Link href="#" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+                         <Link href="/events" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
                             View <ArrowRight className="h-4 w-4" />
                         </Link>
                     </CardTitle>
