@@ -82,6 +82,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
             imageUrl: userData.imageUrl,
           });
         } else {
+          // This can happen if user is in auth but not firestore.
+          // For this app's logic, we treat them as logged out.
           setCurrentUser(null);
         }
       } else {
@@ -96,12 +98,19 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     if (!challengeId) return;
     setIsChallengeLoading(true);
     const fetchChallenge = async () => {
-      const docRef = doc(db, "challenges", challengeId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setChallenge({ id: docSnap.id, ...docSnap.data() } as Challenge);
+      try {
+        const docRef = doc(db, "challenges", challengeId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setChallenge({ id: docSnap.id, ...docSnap.data() } as Challenge);
+        } else {
+          console.error("No such challenge found in Firestore!");
+        }
+      } catch (error) {
+        console.error("Error fetching challenge:", error);
+      } finally {
+        setIsChallengeLoading(false);
       }
-      setIsChallengeLoading(false);
     };
     fetchChallenge();
   }, [challengeId]);
@@ -273,3 +282,5 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     </ChallengeContext.Provider>
   );
 }
+
+    
