@@ -8,6 +8,7 @@ import { getFirestore, collection, getDocs, doc, collectionGroup, query, where, 
 import { app } from '@/lib/firebase';
 import { Challenge } from '@/lib/data';
 import { Flame, ListChecks, Users, Wifi } from 'lucide-react';
+import { UserData } from '@/lib/types';
 
 type AnalyticsData = {
   totalUsers: number;
@@ -33,15 +34,19 @@ const StatCard = ({ title, value, icon: Icon }: { title: string; value: string |
     </Card>
 );
 
-export function AnalyticsDashboard() {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+export function AnalyticsDashboard({ users, isLoading: isUsersLoading }: { users: UserData[], isLoading: boolean }) {
+  const [analytics, setAnalytics] = useState<Omit<AnalyticsData, 'totalUsers' | 'activeUsers'> | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const db = getFirestore(app);
+  
+  const totalUsers = users.length;
+  const activeUsers = users.filter(u => u.lastSeen && (new Date().getTime() - u.lastSeen.toDate().getTime()) < 5 * 60 * 1000).length;
+
 
   useEffect(() => {
     const fetchAnalytics = async () => {
-      // We only need to fetch static data once
+      setIsLoading(true);
       const challengesSnapshot = await getDocs(collection(db, 'challenges'));
       const totalChallenges = challengesSnapshot.size;
       const challengesMap = new Map<string, string>();
@@ -49,26 +54,9 @@ export function AnalyticsDashboard() {
           challengesMap.set(doc.id, doc.data().title);
       });
 
-      // Set up real-time listener for users
-      const usersQuery = query(collection(db, 'users'));
-      const unsubscribeUsers = onSnapshot(usersQuery, (usersSnapshot) => {
-        const totalUsers = usersSnapshot.size;
-        let activeUsers = 0;
-        usersSnapshot.forEach(doc => {
-            const userData = doc.data();
-            if (userData.lastSeen && (new Date().getTime() - userData.lastSeen.toDate().getTime()) < 5 * 60 * 1000) {
-                activeUsers++;
-            }
-        });
-        setAnalytics(prev => ({...prev, totalUsers, activeUsers, totalChallenges} as AnalyticsData));
-      });
-
-      // Set up real-time listener for completions
        const completedQuery = query(collectionGroup(db, 'challengeData'));
        const unsubscribeCompletions = onSnapshot(completedQuery, (completedSnapshot) => {
-            // Most Solved Challenge
             const completionCounts: Record<string, number> = {};
-            // Chart Data
             const completionsByDay: Record<string, number> = {};
             const today = new Date();
             for (let i = 0; i < 7; i++) {
@@ -84,10 +72,8 @@ export function AnalyticsDashboard() {
                     Object.keys(data).forEach(challengeId => {
                         const completedInfo = data[challengeId];
                         if (completedInfo && completedInfo.completedAt && completedInfo.completedAt instanceof Timestamp) {
-                             // Tally for most solved
                              completionCounts[challengeId] = (completionCounts[challengeId] || 0) + 1;
                              
-                             // Tally for chart
                              const completedTimestamp = completedInfo.completedAt;
                              const sevenDaysAgo = new Date();
                              sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -112,7 +98,7 @@ export function AnalyticsDashboard() {
                 }
             });
             const mostSolvedChallenge = challengesMap.get(mostSolvedId) || 'N/A';
-            setAnalytics(prev => ({...prev, mostSolvedChallenge} as AnalyticsData));
+            setAnalytics({ totalChallenges, mostSolvedChallenge });
 
             const finalChartData = Object.entries(completionsByDay).map(([date, completions]) => ({
                 date,
@@ -123,7 +109,6 @@ export function AnalyticsDashboard() {
        });
        
        return () => {
-        unsubscribeUsers();
         unsubscribeCompletions();
        }
 
@@ -132,15 +117,15 @@ export function AnalyticsDashboard() {
     fetchAnalytics().catch(console.error);
   }, [db]);
 
-  if (isLoading) {
+  if (isLoading || isUsersLoading) {
     return <div>Loading analytics...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Users" value={analytics?.totalUsers ?? 0} icon={Users} />
-        <StatCard title="Active Users" value={analytics?.activeUsers ?? 0} icon={Wifi} />
+        <StatCard title="Total Users" value={totalUsers} icon={Users} />
+        <StatCard title="Active Users" value={activeUsers} icon={Wifi} />
         <StatCard title="Total Challenges" value={analytics?.totalChallenges ?? 0} icon={ListChecks} />
         <StatCard title="Most Solved Challenge" value={analytics?.mostSolvedChallenge ?? 'N/A'} icon={Flame} />
       </div>
@@ -169,5 +154,3 @@ export function AnalyticsDashboard() {
     </div>
   );
 }
-
-    
