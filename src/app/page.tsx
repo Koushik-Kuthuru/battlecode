@@ -100,57 +100,6 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-        
-        <section id="how-it-works" className="py-20 md:py-32">
-            <div className="container mx-auto px-4">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-4xl font-bold">How It Works</h2>
-                    <p className="max-w-xl mx-auto text-muted-foreground mt-4">
-                        Get started in just a few simple steps.
-                    </p>
-                </div>
-                <div className="max-w-3xl mx-auto">
-                    <div className="grid md:grid-cols-2 gap-x-8 gap-y-12">
-                        <div className="flex items-start gap-4">
-                             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-xl flex-shrink-0">
-                                <LogIn className="h-6 w-6" />
-                             </div>
-                             <div>
-                                <h3 className="text-lg font-semibold mb-1">1. Sign Up / Login</h3>
-                                <p className="text-muted-foreground">Create your account or log in using your SMEC student credentials to get started.</p>
-                             </div>
-                        </div>
-                         <div className="flex items-start gap-4">
-                             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-xl flex-shrink-0">
-                                <ListChecks className="h-6 w-6" />
-                             </div>
-                             <div>
-                                <h3 className="text-lg font-semibold mb-1">2. Choose a Challenge</h3>
-                                <p className="text-muted-foreground">Browse through a variety of challenges categorized by difficulty and programming language.</p>
-                             </div>
-                        </div>
-                         <div className="flex items-start gap-4">
-                             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-xl flex-shrink-0">
-                                <Send className="h-6 w-6" />
-                             </div>
-                             <div>
-                                <h3 className="text-lg font-semibold mb-1">3. Write & Submit Code</h3>
-                                <p className="text-muted-foreground">Use our built-in code editor to write, test, and submit your solution for evaluation.</p>
-                             </div>
-                        </div>
-                         <div className="flex items-start gap-4">
-                             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-xl flex-shrink-0">
-                                <Trophy className="h-6 w-6" />
-                             </div>
-                             <div>
-                                <h3 className="text-lg font-semibold mb-1">4. Climb the Leaderboard</h3>
-                                <p className="text-muted-foreground">Earn points for every correct submission and see your name rise to the top of the ranks.</p>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <section id="challenge-highlights" className="bg-muted py-20 md:py-32">
           <div className="container mx-auto px-4">
