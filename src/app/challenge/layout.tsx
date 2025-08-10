@@ -177,11 +177,9 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const handleVisibilityChange = useCallback(async () => {
       if (document.hidden && currentUser && challenge) {
           try {
-              const penaltyDocRef = doc(db, `users/${currentUser.uid}/penalties`, challenge.id!);
               const userDocRef = doc(db, `users/${currentUser.uid}`);
               
               await runTransaction(db, async (transaction) => {
-                  const penaltyDoc = await transaction.get(penaltyDocRef);
                   const userDoc = await transaction.get(userDocRef);
                   
                   if (!userDoc.exists()) {
@@ -190,33 +188,21 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
                   const userData = userDoc.data();
                   let currentPoints = userData.points || 0;
-
-                  if (!penaltyDoc.exists()) {
-                      // First offense: Show warning
-                      transaction.set(penaltyDocRef, { warningCount: 1 });
-                      setPenaltyDialogContent({
-                          type: 'warning',
-                          title: "Warning: Tab Switch Detected",
-                          description: "Navigating away from the challenge is discouraged. A point penalty will be applied on the next offense.",
-                      });
-                      setIsPenaltyDialogOpen(true);
-                  } else {
-                      // Second offense: Apply penalty
-                      const difficultyPenaltyMap = { 'Easy': 5, 'Medium': 10, 'Hard': 20 };
-                      const penaltyPoints = difficultyPenaltyMap[challenge.difficulty] || 10;
-                      
-                      const newPoints = Math.max(0, currentPoints - penaltyPoints);
-                      
-                      transaction.update(userDocRef, { points: newPoints });
-                      
-                      setPenaltyDialogContent({
-                          type: 'penalty',
-                          title: "Penalty Applied for Tab Switching",
-                          description: `You have lost points for navigating away from the challenge page again.`,
-                          points: penaltyPoints
-                      });
-                      setIsPenaltyDialogOpen(true);
-                  }
+                  
+                  const difficultyPenaltyMap = { 'Easy': 5, 'Medium': 10, 'Hard': 20 };
+                  const penaltyPoints = difficultyPenaltyMap[challenge.difficulty] || 10;
+                  
+                  const newPoints = currentPoints - penaltyPoints;
+                  
+                  transaction.update(userDocRef, { points: newPoints });
+                  
+                  setPenaltyDialogContent({
+                      type: 'penalty',
+                      title: "Penalty Applied for Tab Switching",
+                      description: `You have lost points for navigating away from the challenge page. This will affect your leaderboard score.`,
+                      points: penaltyPoints
+                  });
+                  setIsPenaltyDialogOpen(true);
               });
 
           } catch (error) {
