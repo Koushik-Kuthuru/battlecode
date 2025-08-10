@@ -9,7 +9,7 @@ import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import type { Challenge } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Save, RefreshCcw } from "lucide-react";
+import { Save, RefreshCcw, Code, Bug } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ChallengeDetail() {
@@ -33,38 +33,47 @@ export default function ChallengeDetail() {
 
   useEffect(() => {
     if (!challengeId) return;
-    const fetchChallenge = async () => {
+    const fetchChallengeAndSolution = async () => {
       setIsLoading(true);
-      const docRef = doc(db, "challenges", challengeId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const challengeData = { id: docSnap.id, ...docSnap.data() } as Challenge;
-        setChallenge(challengeData);
-        
-        // Only try to fetch solution if user is loaded
-        if (user) {
-            const solRef = doc(db, `users/${user.uid}/solutions`, challengeData.id!);
-            const solSnap = await getDoc(solRef);
-            const userCode = solSnap.exists() ? solSnap.data().code : challengeData.solution;
-            setSolution(userCode);
-            setInitialSolution(userCode);
-        } else if (user === null) { // User is not logged in
-            setSolution(challengeData.solution);
-            setInitialSolution(challengeData.solution);
-        }
+      try {
+        const challengeRef = doc(db, "challenges", challengeId);
+        const challengeSnap = await getDoc(challengeRef);
 
-      } else {
-        setChallenge(null);
+        if (challengeSnap.exists()) {
+          const challengeData = { id: challengeSnap.id, ...challengeSnap.data() } as Challenge;
+          setChallenge(challengeData);
+
+          let userCode = challengeData.solution; // Default to starter code
+
+          if (user) {
+            const solRef = doc(db, `users/${user.uid}/solutions`, challengeId);
+            const solSnap = await getDoc(solRef);
+            if (solSnap.exists()) {
+              userCode = solSnap.data().code;
+            }
+          }
+          setSolution(userCode);
+          setInitialSolution(userCode);
+        } else {
+          setChallenge(null);
+        }
+      } catch (error) {
+        console.error("Error fetching challenge details:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load challenge details."
+        });
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
-    // We need the user to be loaded before we can fetch their solution
-    // user !== undefined means onAuthStateChanged has run at least once
-    if(user !== undefined) {
-        fetchChallenge();
-    }
-  }, [challengeId, user, db]);
+    // We can fetch the challenge right away, and then fetch the user's solution
+    // once the user object is available.
+    fetchChallengeAndSolution();
+
+  }, [challengeId, user, db, toast]);
 
 
   const handleSolutionChange = (newCode: string) => {
@@ -114,14 +123,20 @@ export default function ChallengeDetail() {
 
   if (isLoading || !challenge) {
     return (
-      <div className="h-full w-full p-4">
-        <Skeleton className="h-full w-full" />
+      <div className="h-full w-full p-4 flex flex-col">
+        <Skeleton className="flex-grow w-full" />
+        <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full relative flex flex-col">
+    <div className="h-full relative flex flex-col bg-background">
        <div className="flex-grow relative">
             <CodeEditor
               value={solution}
@@ -129,9 +144,11 @@ export default function ChallengeDetail() {
               language={challenge.language.toLowerCase()}
             />
        </div>
-       <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t bg-background">
-           <Button variant="outline" onClick={handleSave}><Save className="mr-2 h-4 w-4"/> Save</Button>
-           <Button variant="destructive-outline" onClick={handleReset}><RefreshCcw className="mr-2 h-4 w-4" /> Reset</Button>
+       <div className="flex-shrink-0 p-2 flex justify-end items-center gap-2 border-t">
+           <Button variant="outline" size="sm" onClick={handleSave}><Save className="mr-2 h-4 w-4"/> Save</Button>
+           <Button variant="outline" size="sm" onClick={handleReset}><RefreshCcw className="mr-2 h-4 w-4" /> Reset</Button>
+           <Button size="sm"><Code className="mr-2"/> Run Code</Button>
+           <Button size="sm" variant="outline"><Bug className="mr-2"/> Submit</Button>
        </div>
     </div>
   );

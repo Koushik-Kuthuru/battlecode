@@ -2,7 +2,7 @@
 'use client'
 
 import { SmecBattleCodeLogo } from '@/components/icons';
-import { LogOut, Moon, Sun, User, Home, Code, Bug } from 'lucide-react';
+import { LogOut, Moon, Sun, User, Home } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
@@ -145,8 +145,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
         <main className="flex-1 flex flex-row overflow-hidden bg-muted/40">
            <ResizablePanelGroup direction="horizontal">
                <ResizablePanel defaultSize={50} minSize={30}>
-                 <Tabs defaultValue="description" className="h-full flex flex-col">
-                    <div className="flex-shrink-0 flex items-center justify-between p-2 border-b border-r">
+                 <Tabs defaultValue="description" className="h-full flex flex-col bg-background">
+                    <div className="flex-shrink-0 p-2 border-b border-r">
                         <TabsList>
                           <TabsTrigger value="description">Description</TabsTrigger>
                           <TabsTrigger value="result">Result</TabsTrigger>
@@ -174,7 +174,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                                   <p className="text-base mb-6 whitespace-pre-wrap">{challenge.description}</p>
                                   
                                   {challenge?.examples.map((example, index) => (
-                                    <div key={index} className="bg-background p-3 rounded-md mb-3 border">
+                                    <div key={index} className="bg-muted p-3 rounded-md mb-3 border">
                                       <p className="font-semibold text-sm mb-1">Example {index + 1}</p>
                                       <p className="font-mono text-xs"><strong>Input:</strong> {example.input}</p>
                                       <p className="font-mono text-xs"><strong>Output:</strong> {example.output}</p>
@@ -196,10 +196,6 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                             Run your code to see test case results here.
                           </div>
                         </TabsContent>
-                    </div>
-                    <div className="flex-shrink-0 flex items-center justify-end gap-2 p-2 border-t border-r">
-                       <Button><Code className="mr-2"/> Run Code</Button>
-                       <Button variant="outline"><Bug className="mr-2"/> Submit</Button>
                     </div>
                   </Tabs>
                </ResizablePanel>
