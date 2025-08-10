@@ -43,7 +43,7 @@ export type Submission = {
   timestamp: {
     seconds: number;
     nanoseconds: number;
-  };
+  } | null;
 };
 
 type ChallengeContextType = {
@@ -279,7 +279,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                                         {submissions.map((submission) => (
                                           <TableRow key={submission.id}>
                                             <TableCell>
-                                              {formatDistanceToNow(new Date(submission.timestamp.seconds * 1000), { addSuffix: true })}
+                                              {submission.timestamp ? formatDistanceToNow(new Date(submission.timestamp.seconds * 1000), { addSuffix: true }) : 'Just now'}
                                             </TableCell>
                                             <TableCell>
                                               <Badge variant={submission.status === 'Accepted' ? 'default' : 'destructive'}>
