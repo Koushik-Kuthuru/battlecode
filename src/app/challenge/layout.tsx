@@ -94,6 +94,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
   const [isLoading, setIsLoading] = useState(true);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isChallengeLoading, setIsChallengeLoading] = useState(true);
+  const [isChallengeCompleted, setIsChallengeCompleted] = useState(false);
   const [runResult, setRunResult] = useState<EvaluateCodeOutput | null>(null);
   const [activeTab, setActiveTab] = useState('description');
   const [activeResultTab, setActiveResultTab] = useState('0');
@@ -108,21 +109,22 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
+    const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
       if (user) {
         const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setCurrentUser({
-            uid: user.uid,
-            name: userData.name,
-            email: userData.email,
-            imageUrl: userData.imageUrl,
-          });
-        } else {
-          setCurrentUser(null);
-        }
+        getDoc(userDocRef).then(userDoc => {
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              setCurrentUser({
+                uid: user.uid,
+                name: userData.name,
+                email: userData.email,
+                imageUrl: userData.imageUrl,
+              });
+            } else {
+              setCurrentUser(null);
+            }
+        });
       } else {
         setCurrentUser(null);
       }
@@ -151,6 +153,20 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     };
     fetchChallenge();
   }, [challengeId]);
+  
+  useEffect(() => {
+      if (!currentUser || !challengeId) return;
+
+      const completedDocRef = doc(db, `users/${currentUser.uid}/challengeData`, 'completed');
+      const unsubscribe = onSnapshot(completedDocRef, (docSnap) => {
+          if (docSnap.exists() && docSnap.data()[challengeId]) {
+              setIsChallengeCompleted(true);
+          } else {
+              setIsChallengeCompleted(false);
+          }
+      });
+      return () => unsubscribe();
+  }, [currentUser, challengeId]);
 
   useEffect(() => {
     if (!currentUser || !challengeId) return;
@@ -175,7 +191,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
 
   // Anti-cheat tab switch detection
   const handleVisibilityChange = useCallback(async () => {
-      if (document.hidden && currentUser && challenge) {
+      if (document.hidden && currentUser && challenge && !isChallengeCompleted) {
           try {
               const userDocRef = doc(db, `users/${currentUser.uid}`);
               
@@ -215,7 +231,7 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
               setIsPenaltyDialogOpen(true);
           }
       }
-  }, [currentUser, challenge, db]);
+  }, [currentUser, challenge, db, isChallengeCompleted]);
 
   useEffect(() => {
       document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -533,3 +549,4 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
     </ChallengeContext.Provider>
   );
 }
+
