@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { getFirestore, doc, setDoc, addDoc, collection, onSnapshot, query, orderBy, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import { Loader2, PlusCircle, Trash2, Edit, X, Calendar as CalendarIcon, Link2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Edit, X, Calendar as CalendarIcon, Link2, Users } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Event } from '@/lib/types';
@@ -184,9 +184,15 @@ export default function ManageEventsPage() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" placeholder="A short, catchy description." value={formData.description} onChange={(e) => handleInputChange('description', e.target.value)} required />
               </div>
-               <div className="space-y-2">
-                <Label htmlFor='registrationLink'>Registration Link</Label>
-                <Input id='registrationLink' placeholder="https://forms.gle/..." value={formData.registrationLink} onChange={(e) => handleInputChange('registrationLink', e.target.value)} />
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor='registrationLink'>Registration Link</Label>
+                  <Input id='registrationLink' placeholder="https://forms.gle/..." value={formData.registrationLink} onChange={(e) => handleInputChange('registrationLink', e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor='enrolled'>Enrolled Count</Label>
+                  <Input id='enrolled' type="number" placeholder="0" value={formData.enrolled} onChange={(e) => handleInputChange('enrolled', parseInt(e.target.value, 10) || 0)} required />
+                </div>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                  <div className="space-y-2">
@@ -328,4 +334,5 @@ export default function ManageEventsPage() {
     </div>
   );
 }
+
 
