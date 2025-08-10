@@ -205,8 +205,8 @@ export default function ChallengeLayout({ children }: { children: React.ReactNod
                   const userData = userDoc.data();
                   let currentPoints = userData.points || 0;
                   
-                  const difficultyPenaltyMap = { 'Easy': 5, 'Medium': 10, 'Hard': 20 };
-                  const penaltyPoints = difficultyPenaltyMap[challenge.difficulty] || 10;
+                  const difficultyPenaltyMap = { 'Easy': 2, 'Medium': 5, 'Hard': 15 };
+                  const penaltyPoints = difficultyPenaltyMap[challenge.difficulty] || 5;
                   
                   const newPoints = currentPoints - penaltyPoints;
                   
