@@ -15,8 +15,8 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('admin@smec.ac.in');
-  const [password, setPassword] = useState('SmecAdmin@2024');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
