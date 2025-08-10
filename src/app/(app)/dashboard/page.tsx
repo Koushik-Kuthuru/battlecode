@@ -9,13 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs, setDoc, addDoc, writeBatch, onSnapshot, query, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
-import { UserData } from '@/lib/types';
+import { UserData, Event } from '@/lib/types';
 import { ArrowRight, Badge as BadgeIcon, Calendar, CheckCircle, Circle, Flame, RefreshCw, Trophy, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -90,6 +90,8 @@ export default function DashboardPage() {
   const [isUserLoading, setIsUserLoading] = useState(true);
   const [isChallengesLoading, setIsChallengesLoading] = useState(true);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
+  const [liveEventsCount, setLiveEventsCount] = useState(0);
+  const [upcomingEventsCount, setUpcomingEventsCount] = useState(0);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty>('All');
   const [userRank, setUserRank] = useState<number | null>(null);
   const [topUser, setTopUser] = useState<UserData | null>(null);
@@ -177,6 +179,34 @@ export default function DashboardPage() {
         .map(doc => ({ id: doc.id, ...doc.data() } as Advertisement))
         .filter(ad => ad.isEnabled);
       setAdvertisements(adsList);
+    });
+    return () => unsubscribe();
+  }, [db]);
+
+  // Real-time listener for events
+  useEffect(() => {
+    const eventsCollectionRef = collection(db, 'events');
+    const q = query(eventsCollectionRef, orderBy('startDate', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        let liveCount = 0;
+        let upcomingCount = 0;
+        const now = new Date();
+
+        snapshot.docs.forEach(doc => {
+            const event = doc.data() as Event;
+            if (event.isEnabled) {
+                const startDate = event.startDate.toDate();
+                const endDate = event.endDate.toDate();
+                if (startDate <= now && endDate >= now) {
+                    liveCount++;
+                } else if (startDate > now) {
+                    upcomingCount++;
+                }
+            }
+        });
+        setLiveEventsCount(liveCount);
+        setUpcomingEventsCount(upcomingCount);
     });
     return () => unsubscribe();
   }, [db]);
@@ -433,11 +463,11 @@ export default function DashboardPage() {
                 <CardContent className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="font-semibold">Live Now: {advertisements.length}</span>
+                        <span className="font-semibold">Live Now: {liveEventsCount}</span>
                     </div>
                      <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="h-5 w-5 text-amber-500" />
-                        <span className="font-semibold">Upcoming: 0</span>
+                        <span className="font-semibold">Upcoming: {upcomingEventsCount}</span>
                     </div>
                 </CardContent>
             </Card>
@@ -505,3 +535,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
