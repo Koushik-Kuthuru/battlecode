@@ -36,23 +36,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Special case for admin login
-    if (studentId === 'ADMIN0822' && password === 'admin0822') {
-      const adminUser = {
-        email: 'admin@smec.ac.in',
-        name: 'Admin',
-        isAdmin: true,
-      };
-      localStorage.setItem('currentUser', JSON.stringify(adminUser));
-      toast({
-        title: 'Admin Login Successful',
-        description: 'Welcome, Admin!',
-      });
-      router.push('/admin/dashboard');
-      setIsLoading(false);
-      return;
-    }
-
     try {
       // Find user by student ID in Firestore
       const usersRef = collection(db, "users");
@@ -71,34 +54,27 @@ export default function LoginPage() {
       
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
+
+      if (userData.isAdmin) {
+          toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: 'Please use the admin portal to log in.',
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const userEmail = userData.email;
 
       // Sign in with Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
       
-      const loggedInUser = {
-        uid: userCredential.user.uid,
-        email: userCredential.user.email,
-        name: userData.name,
-        isAdmin: userData.isAdmin || false,
-        imageUrl: userData.imageUrl,
-      };
-      
-      localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
-
-      if(loggedInUser.isAdmin) {
-        router.push('/admin/dashboard');
-        toast({
-          title: 'Admin Login Successful',
-          description: `Welcome back, ${userData.name}!`,
-        });
-      } else {
-        router.push('/dashboard');
-        toast({
-          title: 'Login Successful',
-          description: `Welcome back, ${userData.name}!`,
-        });
-      }
+      router.push('/dashboard');
+      toast({
+        title: 'Login Successful',
+        description: `Welcome back, ${userData.name}!`,
+      });
 
     } catch (error) {
       console.error("Login Error: ", error);
@@ -107,7 +83,6 @@ export default function LoginPage() {
         title: 'Login Failed',
         description: 'Invalid Student ID or password.',
       });
-      localStorage.removeItem('currentUser');
     } finally {
         setIsLoading(false);
     }
