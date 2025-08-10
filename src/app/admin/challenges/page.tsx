@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 
 
 type SortType = 'title' | 'difficulty';
@@ -43,6 +44,7 @@ const defaultFormData: FormData = {
   solution: '',
   examples: [{ input: '', output: '', explanation: '' }],
   testCases: [{ input: '', output: '', isHidden: false }],
+  isEnabled: true,
 };
 
 export default function ManageChallengesPage() {
@@ -100,7 +102,7 @@ export default function ManageChallengesPage() {
     fetchChallenges();
   }, [fetchChallenges]);
   
-  const handleInputChange = useCallback((field: keyof Omit<FormData, 'examples' | 'testCases'>, value: string | number) => {
+  const handleInputChange = useCallback((field: keyof Omit<FormData, 'examples' | 'testCases'>, value: string | number | boolean) => {
     setFormData(prev => ({...prev, [field]: value}));
   }, []);
 
@@ -142,9 +144,11 @@ export default function ManageChallengesPage() {
   const handleEditClick = (challenge: Challenge) => {
       setEditingChallengeId(challenge.id!);
       setFormData({
+        ...defaultFormData, // ensure all fields are present
         ...challenge,
         tags: Array.isArray(challenge.tags) ? challenge.tags.join(', ') : '',
         testCases: challenge.testCases || [{ input: '', output: '', isHidden: false }],
+        isEnabled: challenge.isEnabled !== false, // Default to true if undefined
       });
       setIsFormVisible(true);
       setIsCodeEditorVisible(false);
@@ -409,6 +413,11 @@ export default function ManageChallengesPage() {
                         </Button>
                     )}
                 </div>
+                
+                <div className="flex items-center space-x-2 pt-4">
+                    <Switch id="isEnabled" checked={formData.isEnabled} onCheckedChange={(checked) => handleInputChange('isEnabled', checked)} />
+                    <Label htmlFor="isEnabled">Enable this challenge</Label>
+                </div>
 
                 <div className="flex gap-4 pt-4">
                     <Button type="submit">{editingChallengeId ? 'Update Challenge' : 'Create Challenge'}</Button>
@@ -476,6 +485,9 @@ export default function ManageChallengesPage() {
                       <p className="text-sm text-muted-foreground">{challenge.difficulty} - {challenge.points} Points - {challenge.language}</p>
                     </div>
                      <div className="flex items-center gap-2">
+                        <Badge variant={challenge.isEnabled !== false ? 'default' : 'secondary'}>
+                            {challenge.isEnabled !== false ? 'Enabled' : 'Disabled'}
+                        </Badge>
                         <Button variant="outline" size="sm" onClick={() => handleEditClick(challenge)}>
                              <Edit className="mr-2 h-4 w-4" />
                              Edit

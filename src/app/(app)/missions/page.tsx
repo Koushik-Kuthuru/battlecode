@@ -194,6 +194,7 @@ export default function MissionsPage() {
     return challenges.filter(challenge => {
       const difficultyMatch = difficultyFilter === 'All' || challenge.difficulty === difficultyFilter;
       const languageMatch = !languageFilter || (currentUser.preferredLanguages && currentUser.preferredLanguages.includes(challenge.language));
+      const isEnabled = challenge.isEnabled !== false; // Default to true if undefined
 
       const isCompleted = !!completedChallenges[challenge.id!];
       const isInProgress = !!inProgressChallenges[challenge.id!] && !isCompleted;
@@ -212,7 +213,7 @@ export default function MissionsPage() {
           }
       };
       
-      return difficultyMatch && statusMatch() && languageMatch;
+      return difficultyMatch && statusMatch() && languageMatch && isEnabled;
     });
   }, [challenges, difficultyFilter, statusFilter, currentUser, completedChallenges, inProgressChallenges]);
 

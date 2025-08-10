@@ -18,6 +18,7 @@ export type Challenge = {
     isHidden?: boolean;
   }[];
   solution: string;
+  isEnabled?: boolean;
 };
 
 export const challenges: Challenge[] = [
@@ -54,7 +55,8 @@ export const challenges: Challenge[] = [
             if complement in num_map:
                 return [num_map[complement], i]
             num_map[num] = i
-`
+`,
+    isEnabled: true,
   },
   {
     title: 'Reverse Linked List',
@@ -101,7 +103,8 @@ class Solution {
         }
         return prev;
     }
-}`
+}`,
+    isEnabled: true,
   },
   {
     title: 'FizzBuzz',
@@ -143,7 +146,8 @@ public:
         }
         return answer;
     }
-};`
+};`,
+    isEnabled: true,
   },
   {
     title: 'Container With Most Water',
@@ -186,7 +190,8 @@ var maxArea = function(height) {
         }
     }
     return max;
-};`
+};`,
+    isEnabled: true,
   },
   {
     title: 'Longest Substring Without Repeating Characters',
@@ -228,7 +233,8 @@ var maxArea = function(height) {
                 left += 1
             char_set.add(s[right])
             max_length = max(max_length, right - left + 1)
-        return max_length`
+        return max_length`,
+    isEnabled: true,
   },
   {
     title: 'Validate Binary Search Tree',
@@ -292,7 +298,8 @@ class Solution {
         }
         return true;
     }
-}`
+}`,
+    isEnabled: true,
   },
   {
     title: 'Median of Two Sorted Arrays',
@@ -348,7 +355,8 @@ class Solution {
         }
     }
     return 0.0;
-}`
+}`,
+    isEnabled: true,
   },
   {
     title: 'Trapping Rain Water',
@@ -391,7 +399,8 @@ class Solution {
                 right -= 1
                 right_max = max(right_max, height[right])
                 water += right_max - height[right]
-        return water`
+        return water`,
+    isEnabled: true,
   },
   {
     title: 'Regular Expression Matching',
@@ -445,7 +454,8 @@ public:
         }
         return dp[m][n];
     }
-};`
+};`,
+    isEnabled: true,
   },
   {
     title: 'Merge k Sorted Lists',
@@ -501,7 +511,8 @@ class Solution {
         }
         return dummy.next;
     }
-}`
+}`,
+    isEnabled: true,
   },
 ];
 

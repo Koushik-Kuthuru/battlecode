@@ -265,7 +265,8 @@ export default function DashboardPage() {
     return challenges.filter(challenge => {
         const difficultyMatch = difficultyFilter === 'All' || challenge.difficulty === difficultyFilter;
         const languageMatch = !languageFilter || currentUser.preferredLanguages!.some(lang => challenge.language === lang);
-        return difficultyMatch && languageMatch;
+        const isEnabled = challenge.isEnabled !== false; // Default to true if undefined
+        return difficultyMatch && languageMatch && isEnabled;
     }).sort((a, b) => {
         const aCompleted = !!completedChallenges[a.id!];
         const bCompleted = !!completedChallenges[b.id!];
